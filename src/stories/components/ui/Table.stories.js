@@ -43,11 +43,21 @@ export const WithCustomRender = {
     data: sampleData,
     renderCell: (row, colKey) => {
       if (colKey === 'status') {
-        return <Badge type={row.status}>{row.status === 'active' ? 'Ativo' : 'Inativo'}</Badge>;
+        return (
+          <Badge type={row.status}>
+            {row.status === 'active' ? 'Ativo' : 'Inativo'}
+          </Badge>
+        );
       }
       if (colKey === 'acoes') {
         return (
-          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              justifyContent: 'flex-end',
+            }}
+          >
             <Button variant="info" size="small">
               <Edit size={16} />
             </Button>
@@ -89,7 +99,11 @@ export const LargeDataset = {
     })),
     renderCell: (row, colKey) => {
       if (colKey === 'status') {
-        return <Badge type={row.status}>{row.status === 'active' ? 'Ativo' : 'Inativo'}</Badge>;
+        return (
+          <Badge type={row.status}>
+            {row.status === 'active' ? 'Ativo' : 'Inativo'}
+          </Badge>
+        );
       }
       return row[colKey];
     },
@@ -104,9 +118,24 @@ export const SimpleColumns = {
       { key: 'funcao', label: 'Função' },
     ],
     data: [
-      { id: 1, nome: 'João Silva', email: 'joao@example.com', funcao: 'Veterinário' },
-      { id: 2, nome: 'Maria Santos', email: 'maria@example.com', funcao: 'Gerente' },
-      { id: 3, nome: 'Pedro Oliveira', email: 'pedro@example.com', funcao: 'Funcionário' },
+      {
+        id: 1,
+        nome: 'João Silva',
+        email: 'joao@example.com',
+        funcao: 'Veterinário',
+      },
+      {
+        id: 2,
+        nome: 'Maria Santos',
+        email: 'maria@example.com',
+        funcao: 'Gerente',
+      },
+      {
+        id: 3,
+        nome: 'Pedro Oliveira',
+        email: 'pedro@example.com',
+        funcao: 'Funcionário',
+      },
     ],
   },
 };

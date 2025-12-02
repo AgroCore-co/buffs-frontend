@@ -1,6 +1,6 @@
 /**
  * Error Logger - Rastreamento e Monitoramento de Erros
- * 
+ *
  * Captura erros não tratados e envia para serviços de monitoramento
  */
 

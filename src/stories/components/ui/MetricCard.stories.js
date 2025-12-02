@@ -47,7 +47,13 @@ export const WithLucideIcon = {
 
 export const AllExamples = {
   render: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '1rem',
+      }}
+    >
       <MetricCard
         title="Total de Animais"
         value="1.234"

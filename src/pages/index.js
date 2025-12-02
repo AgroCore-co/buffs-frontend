@@ -1,6 +1,6 @@
-import { useEffect } from "react";
-import { useRouter } from "next/router";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
   const router = useRouter();
@@ -9,9 +9,9 @@ export default function Home() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.replace("/proprietario");
+        router.replace('/proprietario');
       } else {
-        router.replace("/auth/login");
+        router.replace('/auth/login');
       }
     }
   }, [user, loading, router]);

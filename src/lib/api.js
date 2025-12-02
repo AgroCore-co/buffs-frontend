@@ -26,17 +26,17 @@ export const getRefreshToken = () => {
 
 export const setAuthTokens = (access, refresh) => {
   if (typeof window === 'undefined') return;
-  
+
   if (access) localStorage.setItem('access_token', access);
   if (refresh) localStorage.setItem('refresh_token', refresh);
-  
+
   // Atualiza o header padrão para requisições futuras
   api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
 };
 
 export const clearAuthTokens = () => {
   if (typeof window === 'undefined') return;
-  
+
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   delete api.defaults.headers.common['Authorization'];
@@ -81,7 +81,9 @@ api.interceptors.response.use(
 
     // Caso 1: Erro genérico ou sem response (Network Error)
     if (!error.response) {
-      return Promise.reject(new Error('Erro de conexão. Verifique sua internet.'));
+      return Promise.reject(
+        new Error('Erro de conexão. Verifique sua internet.')
+      );
     }
 
     // Caso 2: Não é 401 ou já tentou retry -> Rejeita
@@ -108,7 +110,7 @@ api.interceptors.response.use(
 
     try {
       const refreshToken = getRefreshToken();
-      
+
       if (!refreshToken) {
         throw new Error('No refresh token available');
       }
@@ -116,32 +118,31 @@ api.interceptors.response.use(
       // Faz a chamada de refresh
       // NOTA: Usei axios.post puro para não cair nos interceptors da instância 'api'
       const { data } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, 
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
         { refresh_token: refreshToken }
       );
 
       const { access_token, refresh_token: newRefreshToken } = data;
 
       setAuthTokens(access_token, newRefreshToken);
-      
+
       // Processa a fila de requisições pausadas com o novo token
       processQueue(null, access_token);
 
       // Refaz a requisição original
       originalRequest.headers.Authorization = `Bearer ${access_token}`;
       return api(originalRequest);
-
     } catch (refreshError) {
       // Se o refresh falhar, processa a fila com erro e desloga
       processQueue(refreshError, null);
       clearAuthTokens();
-      
+
       if (logoutCallback) {
         logoutCallback();
       } else if (typeof window !== 'undefined') {
         window.location.href = '/auth/login';
       }
-      
+
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

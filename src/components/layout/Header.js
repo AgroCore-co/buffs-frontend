@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Search,
   HelpCircle,
@@ -16,18 +16,17 @@ import {
   ChevronDown,
   Maximize2,
   Minimize2,
-} from "lucide-react";
-
+} from 'lucide-react';
 
 export default function Header() {
   const { user, logout } = useAuth();
 
   const getInitials = (name) => {
-    if (!name) return "US";
+    if (!name) return 'US';
     return name
-      .split(" ")
+      .split(' ')
       .map((n) => n[0])
-      .join("")
+      .join('')
       .toUpperCase()
       .slice(0, 2);
   };
@@ -54,8 +53,8 @@ export default function Header() {
       <div className="flex items-center gap-4">
         <div className="h-6 w-px bg-[#ce7d0a]/10 mx-1" />
 
-           {/* Lado Esquerdo: Breadcrumbs e Info do Projeto */}
-      {/* <div className="flex items-center gap-3">
+        {/* Lado Esquerdo: Breadcrumbs e Info do Projeto */}
+        {/* <div className="flex items-center gap-3">
         <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#f8fcfa] border border-[#ce7d0a]/20 text-[#ce7d0a]">
           <Hexagon size={18} />
         </div>
@@ -89,7 +88,7 @@ export default function Header() {
           {/* Botão de modo fullscreen */}
           <button
             className="p-2 rounded-full hover:bg-[#f8fcfa] hover:text-[#ce7d0a] transition-colors text-[#404040]/70"
-            title={isFullscreen ? "Sair do modo tela cheia" : "Modo tela cheia"}
+            title={isFullscreen ? 'Sair do modo tela cheia' : 'Modo tela cheia'}
             onClick={handleToggleFullscreen}
           >
             {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
@@ -100,17 +99,17 @@ export default function Header() {
         <div className="flex items-center gap-3 pl-2 cursor-pointer group">
           <div className="text-right hidden md:block">
             <p className="text-xs font-bold text-[#404040] leading-none">
-              {user?.nome || "Usuário"}
+              {user?.nome || 'Usuário'}
             </p>
             <p className="text-[10px] text-[#ce7d0a] font-medium leading-none mt-1">
-              {user?.cargo || "Admin"}
+              {user?.cargo || 'Admin'}
             </p>
           </div>
 
           <div className="relative">
             <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ffcf78] text-[#404040] shadow-sm border-2 border-white ring-1 ring-[#ce7d0a]/20 group-hover:ring-[#ffcf78] transition-all">
               <span className="text-xs font-bold">
-                {user ? getInitials(user.nome) : "US"}
+                {user ? getInitials(user.nome) : 'US'}
               </span>
             </button>
             {/* Dropdown Menu (Simplificado para o exemplo) */}

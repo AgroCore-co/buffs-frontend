@@ -16,10 +16,11 @@ module.exports = {
           // Padrão: <tipo>: <descrição>
           // Remove quebras de linha para validação
           const message = raw.trim();
-          const pattern = /^(feat|fix|refactor|docs|style|test|perf|chore):\s.+/;
-          
+          const pattern =
+            /^(feat|fix|refactor|docs|style|test|perf|chore):\s.+/;
+
           const isValid = pattern.test(message);
-          
+
           return [
             isValid,
             isValid
@@ -38,7 +39,7 @@ Mensagem recebida: "${raw}"
 Regras:
   • Use dois-pontos (:) seguido de espaço
   • Descrição deve ter pelo menos 1 caractere
-  • Tipos devem ser em minúsculas`
+  • Tipos devem ser em minúsculas`,
           ];
         },
       },

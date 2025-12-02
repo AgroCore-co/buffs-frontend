@@ -19,6 +19,7 @@ src/logger/
 Sistema de logs com níveis de severidade e formatação.
 
 **Níveis de Log:**
+
 - `DEBUG`: Informações detalhadas (apenas desenvolvimento)
 - `INFO`: Informações gerais
 - `WARN`: Avisos
@@ -64,6 +65,7 @@ Captura e rastreia erros não tratados automaticamente.
 
 **Inicialização automática:**
 O ErrorLogger é inicializado automaticamente no cliente e captura:
+
 - Erros não tratados (`window.onerror`)
 - Promises rejeitadas não tratadas (`unhandledrejection`)
 
@@ -112,10 +114,9 @@ const result = await errorLogger.withErrorLogging(
 );
 
 // HOF para adicionar logging a funções
-const fetchUsersWithLogging = errorLogger.wrapWithErrorLogging(
-  fetchUsers,
-  { operation: 'fetchUsers' }
-);
+const fetchUsersWithLogging = errorLogger.wrapWithErrorLogging(fetchUsers, {
+  operation: 'fetchUsers',
+});
 ```
 
 ### 3. Performance Monitor (`performanceMonitor.js`)
@@ -177,10 +178,10 @@ api.interceptors.request.use(
   (config) => {
     // Log da requisição
     logger.apiRequest(config.method.toUpperCase(), config.url, config.data);
-    
+
     // Inicia medição de performance
     config.metadata = { startTime: performance.now() };
-    
+
     return config;
   },
   (error) => {
@@ -194,7 +195,7 @@ api.interceptors.response.use(
   (response) => {
     // Calcula duração
     const duration = performance.now() - response.config.metadata.startTime;
-    
+
     // Log da resposta
     logger.apiResponse(
       response.config.method.toUpperCase(),
@@ -202,19 +203,19 @@ api.interceptors.response.use(
       response.status,
       response.data
     );
-    
+
     // Log de performance
     logger.performance(
       `API ${response.config.method.toUpperCase()} ${response.config.url}`,
       Math.round(duration)
     );
-    
+
     return response;
   },
   (error) => {
     // Captura erro
     errorLogger.captureApiError(error, error.config);
-    
+
     return Promise.reject(error);
   }
 );
@@ -234,14 +235,14 @@ function UserList() {
   useEffect(() => {
     async function loadUsers() {
       performanceMonitor.start('loadUsers');
-      
+
       try {
         const response = await api.get('/users');
-        
+
         logger.info('Users loaded', {
           count: response.data.length,
         });
-        
+
         performanceMonitor.end('loadUsers', {
           usersLoaded: response.data.length,
         });
@@ -252,10 +253,10 @@ function UserList() {
         });
       }
     }
-    
+
     loadUsers();
   }, []);
-  
+
   return <div>...</div>;
 }
 ```
@@ -320,10 +321,11 @@ NEXT_PUBLIC_LOGROCKET_APP_ID=your-logrocket-id
    - `error`: Erros que precisam atenção
 
 2. **Sempre inclua contexto:**
+
    ```javascript
    // ❌ Ruim
    logger.error('Failed');
-   
+
    // ✅ Bom
    logger.error('Failed to save user', {
      userId: 123,
@@ -333,6 +335,7 @@ NEXT_PUBLIC_LOGROCKET_APP_ID=your-logrocket-id
    ```
 
 3. **Capture erros com stack trace:**
+
    ```javascript
    try {
      // código
@@ -342,6 +345,7 @@ NEXT_PUBLIC_LOGROCKET_APP_ID=your-logrocket-id
    ```
 
 4. **Monitore performance de operações lentas:**
+
    ```javascript
    performanceMonitor.measure('heavyOperation', async () => {
      // operação pesada
@@ -350,10 +354,9 @@ NEXT_PUBLIC_LOGROCKET_APP_ID=your-logrocket-id
 
 5. **Use wrappers para funções críticas:**
    ```javascript
-   const safeFunction = errorLogger.wrapWithErrorLogging(
-     riskyFunction,
-     { context: 'important' }
-   );
+   const safeFunction = errorLogger.wrapWithErrorLogging(riskyFunction, {
+     context: 'important',
+   });
    ```
 
 ## Exemplos Práticos
@@ -363,23 +366,23 @@ NEXT_PUBLIC_LOGROCKET_APP_ID=your-logrocket-id
 ```javascript
 async function handleSubmit(data) {
   logger.userAction('form_submit', { form: 'userRegistration' });
-  
+
   performanceMonitor.start('userRegistration');
-  
+
   try {
     const response = await errorLogger.withErrorLogging(
       () => api.post('/users', data),
       { operation: 'createUser', data }
     );
-    
+
     logger.info('User registered successfully', {
       userId: response.data.id,
     });
-    
+
     performanceMonitor.end('userRegistration', {
       success: true,
     });
-    
+
     return response.data;
   } catch (error) {
     performanceMonitor.end('userRegistration', {
@@ -396,10 +399,10 @@ async function handleSubmit(data) {
 useEffect(() => {
   // Monitora Web Vitals
   performanceMonitor.monitorWebVitals();
-  
+
   // Loga métricas de navegação
   performanceMonitor.logNavigationMetrics();
-  
+
   // Loga recursos carregados
   performanceMonitor.logResourceMetrics();
 }, []);
@@ -408,13 +411,16 @@ useEffect(() => {
 ## Troubleshooting
 
 **Logs não aparecem em produção:**
+
 - Verifique `NEXT_PUBLIC_ENABLE_LOGS=true` no `.env`
 - Configure serviços externos (Sentry, LogRocket)
 
 **Performance Observer não funciona:**
+
 - Verifique suporte do navegador
 - Use feature detection antes de usar
 
 **Muitos logs no console:**
+
 - Use `logger.debug()` para logs detalhados
 - Em produção, apenas `info`, `warn` e `error` são enviados para serviços externos

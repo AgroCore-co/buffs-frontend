@@ -1,6 +1,6 @@
 /**
  * Logger - Exports centralizados
- * 
+ *
  * Exporta todas as funcionalidades de logging do sistema
  */
 

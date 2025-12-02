@@ -11,7 +11,15 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'outline', 'success', 'danger', 'info', 'report'],
+      options: [
+        'primary',
+        'secondary',
+        'outline',
+        'success',
+        'danger',
+        'info',
+        'report',
+      ],
       description: 'Variante visual do botão',
     },
     size: {
@@ -140,7 +148,14 @@ export const Disabled = {
 
 export const AllVariants = {
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '300px' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        width: '300px',
+      }}
+    >
       <Button variant="primary">Primary</Button>
       <Button variant="secondary">Secondary</Button>
       <Button variant="outline">Outline</Button>
@@ -154,10 +169,23 @@ export const AllVariants = {
 
 export const AllSizes = {
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
-      <Button variant="primary" size="small">Small</Button>
-      <Button variant="primary" size="medium">Medium</Button>
-      <Button variant="primary" size="large">Large</Button>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        alignItems: 'flex-start',
+      }}
+    >
+      <Button variant="primary" size="small">
+        Small
+      </Button>
+      <Button variant="primary" size="medium">
+        Medium
+      </Button>
+      <Button variant="primary" size="large">
+        Large
+      </Button>
     </div>
   ),
 };

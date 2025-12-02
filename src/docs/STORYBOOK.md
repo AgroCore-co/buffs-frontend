@@ -204,6 +204,7 @@ export const Interactive = {
 ### `.storybook/main.js`
 
 Configuração principal do Storybook, incluindo:
+
 - Localização dos arquivos story em `src/stories/`
 - Addons habilitados (styling-webpack, essentials, interactions)
 - Framework: React com Webpack 5
@@ -215,6 +216,7 @@ Configuração principal do Storybook, incluindo:
 ### `.storybook/preview.js`
 
 Configuração global de visualização:
+
 - Importação dos estilos globais (Tailwind CSS)
 - React disponibilizado globalmente
 - Configuração de backgrounds (light, dark, gray)
@@ -249,6 +251,7 @@ npm install <pacote> --legacy-peer-deps
 ### Estilos não carregando
 
 Certifique-se de que:
+
 1. `src/styles/globals.css` está importado em `.storybook/preview.js`
 2. O addon `@storybook/addon-styling-webpack` está configurado
 3. PostCSS está processando o Tailwind CSS corretamente
@@ -256,6 +259,7 @@ Certifique-se de que:
 ### Componentes do Next.js não funcionam
 
 O Storybook usa mocks para componentes do Next.js:
+
 - `next/link` é substituído por um mock em `.storybook/nextLinkMock.js`
 - Componentes que dependem de contextos do Next.js podem precisar de decorators
 

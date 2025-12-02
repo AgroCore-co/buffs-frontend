@@ -1,10 +1,10 @@
-"use client";
-import React from "react";
+'use client';
+import React from 'react';
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";   
-import { ROUTES, getRedirectRoute } from "@/constants/routes"; // Importamos getRedirectRoute
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { ROUTES, getRedirectRoute } from '@/constants/routes'; // Importamos getRedirectRoute
 
 /**
  * Hook para proteger componentes/páginas no Client Side.

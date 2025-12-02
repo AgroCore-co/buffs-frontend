@@ -1,18 +1,18 @@
-import Link from "next/link";
-import Image from "next/image";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext"; // Importação do Contexto
-import styles from "@/styles/Login.module.css";
-import Button from "@/components/ui/Button";
+import Link from 'next/link';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext'; // Importação do Contexto
+import styles from '@/styles/Login.module.css';
+import Button from '@/components/ui/Button';
 
 export default function Login() {
   // Adicionamos user, isAuthenticated, loading e getRedirectRoute ao destructuring
-  const { login, user, isAuthenticated, loading, getRedirectRoute } = useAuth(); 
+  const { login, user, isAuthenticated, loading, getRedirectRoute } = useAuth();
   const router = useRouter();
-  
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false); // Renomeei para evitar conflito com 'loading' do contexto
@@ -27,8 +27,8 @@ export default function Login() {
 
   const validate = () => {
     const newErrors = {};
-    if (!email) newErrors.email = "Email é obrigatório.";
-    if (!password) newErrors.password = "Senha é obrigatória.";
+    if (!email) newErrors.email = 'Email é obrigatório.';
+    if (!password) newErrors.password = 'Senha é obrigatória.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -47,9 +47,10 @@ export default function Login() {
     } catch (err) {
       // Captura o erro vindo do api.js ou auth.service.js
       setErrors({
-        general: err.message || "Falha ao realizar login. Verifique suas credenciais.",
+        general:
+          err.message || 'Falha ao realizar login. Verifique suas credenciais.',
       });
-      setIsSubmitting(false); 
+      setIsSubmitting(false);
     }
   };
 
@@ -58,8 +59,16 @@ export default function Login() {
     return (
       <div className={`${styles.container} ${styles.loginPage}`}>
         {/* Você pode colocar um Spinner aqui se tiver um componente de Loader */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%' }}>
-           <p style={{ color: '#666' }}>Verificando sessão...</p>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            width: '100%',
+          }}
+        >
+          <p style={{ color: '#666' }}>Verificando sessão...</p>
         </div>
       </div>
     );
@@ -87,11 +96,14 @@ export default function Login() {
 
           <form className={styles.form} onSubmit={handleSubmit} noValidate>
             {errors.general && (
-              <div className={styles.error} style={{ marginBottom: 12, textAlign: "center" }}>
+              <div
+                className={styles.error}
+                style={{ marginBottom: 12, textAlign: 'center' }}
+              >
                 {errors.general}
               </div>
             )}
-            
+
             <div className={styles.inputGroup}>
               <input
                 type="email"
@@ -126,7 +138,7 @@ export default function Login() {
 
             <div className={styles.inputGroup}>
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
@@ -144,23 +156,23 @@ export default function Login() {
               <button
                 type="button"
                 className={styles.icon}
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 aria-pressed={showPassword}
                 tabIndex={0}
                 onClick={() => setShowPassword((v) => !v)}
                 disabled={isSubmitting}
                 style={{
-                  background: "none",
-                  border: "none",
+                  background: 'none',
+                  border: 'none',
                   padding: 0,
-                  cursor: "pointer",
+                  cursor: 'pointer',
                 }}
               >
                 <Image
                   src={
                     showPassword
-                      ? "/images/not-view-password.svg"
-                      : "/images/not-view-password-bloqued.svg"
+                      ? '/images/not-view-password.svg'
+                      : '/images/not-view-password-bloqued.svg'
                   }
                   alt=""
                   width={20}
@@ -182,7 +194,7 @@ export default function Login() {
               aria-busy={isSubmitting}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Entrando..." : "Log in"}
+              {isSubmitting ? 'Entrando...' : 'Log in'}
             </Button>
           </form>
 
@@ -197,15 +209,15 @@ export default function Login() {
             disabled={isSubmitting}
             aria-label="Entrar com Google"
             style={{
-              borderRadius: "50%",
+              borderRadius: '50%',
               width: 44,
               height: 44,
               minWidth: 44,
               minHeight: 44,
               padding: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <Image

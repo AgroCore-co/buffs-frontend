@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import api from '@/lib/api';
 
 class UsuarioService {
   /**
@@ -6,7 +6,7 @@ class UsuarioService {
    */
   async getProfile() {
     try {
-      const profile = await api.get("/usuarios/me");
+      const profile = await api.get('/usuarios/me');
       return profile;
     } catch (error) {
       if (error.response && error.response.status === 404) {

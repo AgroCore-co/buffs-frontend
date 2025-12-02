@@ -1,6 +1,6 @@
 /**
  * Performance Monitor - Monitoramento de Performance
- * 
+ *
  * Rastreia métricas de performance e tempos de carregamento
  */
 
@@ -78,8 +78,13 @@ class PerformanceMonitor {
     if (!navigation) return;
 
     logger.info('Navigation Metrics', {
-      domContentLoaded: Math.round(navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart),
-      loadComplete: Math.round(navigation.loadEventEnd - navigation.loadEventStart),
+      domContentLoaded: Math.round(
+        navigation.domContentLoadedEventEnd -
+          navigation.domContentLoadedEventStart
+      ),
+      loadComplete: Math.round(
+        navigation.loadEventEnd - navigation.loadEventStart
+      ),
       domInteractive: Math.round(navigation.domInteractive),
       totalTime: Math.round(navigation.loadEventEnd),
     });
@@ -94,10 +99,15 @@ class PerformanceMonitor {
     const resources = performance.getEntriesByType('resource');
     const summary = {
       total: resources.length,
-      scripts: resources.filter(r => r.initiatorType === 'script').length,
-      stylesheets: resources.filter(r => r.initiatorType === 'link' || r.initiatorType === 'css').length,
-      images: resources.filter(r => r.initiatorType === 'img').length,
-      fetch: resources.filter(r => r.initiatorType === 'fetch' || r.initiatorType === 'xmlhttprequest').length,
+      scripts: resources.filter((r) => r.initiatorType === 'script').length,
+      stylesheets: resources.filter(
+        (r) => r.initiatorType === 'link' || r.initiatorType === 'css'
+      ).length,
+      images: resources.filter((r) => r.initiatorType === 'img').length,
+      fetch: resources.filter(
+        (r) =>
+          r.initiatorType === 'fetch' || r.initiatorType === 'xmlhttprequest'
+      ).length,
     };
 
     logger.debug('Resource Metrics', summary);

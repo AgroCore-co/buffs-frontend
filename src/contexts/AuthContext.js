@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation"; // App Router uses next/navigation
-import { authService } from "@/services/auth.service"; // Ajuste o path conforme sua estrutura
-import usuarioService from "@/services/usuario.service"; // Ajuste o path conforme sua estrutura
-import { registerLogoutCallback, getAuthToken } from "@/lib/api"; // Ajuste o path conforme sua estrutura
-import { getRedirectRoute, ROUTES } from "@/constants/routes";
-import Cookies from "js-cookie"; // Recomendo: npm install js-cookie
+import { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation'; // App Router uses next/navigation
+import { authService } from '@/services/auth.service'; // Ajuste o path conforme sua estrutura
+import usuarioService from '@/services/usuario.service'; // Ajuste o path conforme sua estrutura
+import { registerLogoutCallback, getAuthToken } from '@/lib/api'; // Ajuste o path conforme sua estrutura
+import { getRedirectRoute, ROUTES } from '@/constants/routes';
+import Cookies from 'js-cookie'; // Recomendo: npm install js-cookie
 
 const AuthContext = createContext({});
 
@@ -21,9 +21,9 @@ export function AuthProvider({ children }) {
     const token = getAuthToken();
     if (token) {
       // Seta o cookie para o Middleware ler (validade de 1 dia, por exemplo)
-      Cookies.set("access_token", token, { expires: 1, path: "/" });
+      Cookies.set('access_token', token, { expires: 1, path: '/' });
     } else {
-      Cookies.remove("access_token");
+      Cookies.remove('access_token');
     }
   };
 
@@ -43,12 +43,12 @@ export function AuthProvider({ children }) {
         syncTokenToCookie(); // Garante que o cookie existe se o user existe
       } else {
         setUser(null);
-        Cookies.remove("access_token");
+        Cookies.remove('access_token');
       }
     } catch (error) {
-      console.error("Erro ao carregar usuário:", error);
+      console.error('Erro ao carregar usuário:', error);
       setUser(null);
-      Cookies.remove("access_token");
+      Cookies.remove('access_token');
       // Só redireciona se não estiver já na página de login
       if (pathname !== ROUTES.LOGIN) {
         router.push(ROUTES.LOGIN);
@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
     registerLogoutCallback(() => {
       authService.logout();
       setUser(null);
-      Cookies.remove("access_token");
+      Cookies.remove('access_token');
       router.push(ROUTES.LOGIN);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,7 +103,7 @@ export function AuthProvider({ children }) {
       await authService.logout();
     } finally {
       setUser(null);
-      Cookies.remove("access_token");
+      Cookies.remove('access_token');
       router.push(ROUTES.LOGIN);
     }
   };
@@ -128,7 +128,7 @@ export function AuthProvider({ children }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };

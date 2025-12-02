@@ -122,7 +122,13 @@ export const WithoutOwner = {
 
 export const MultipleCards = {
   render: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+        gap: '1rem',
+      }}
+    >
       <PropriedadeCard
         propriedade={{
           ...samplePropriedade,

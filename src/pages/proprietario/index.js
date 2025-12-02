@@ -1,7 +1,7 @@
-import React from "react";
-import Head from "next/head";
-import { useProtectedRoute } from "@/hooks/useProtectedRoute";
-import Loading from "@/components/loading/Loading";
+import React from 'react';
+import Head from 'next/head';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import Loading from '@/components/loading/Loading';
 import {
   LineChart,
   Line,
@@ -14,16 +14,16 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
-} from "recharts";
-import DashboardContainer from "@/components/ui/DashboardContainer";
-import MetricCard from "@/components/ui/MetricCard";
-import { FiLayers, FiActivity, FiUsers, FiUser } from "react-icons/fi";
+} from 'recharts';
+import DashboardContainer from '@/components/ui/DashboardContainer';
+import MetricCard from '@/components/ui/MetricCard';
+import { FiLayers, FiActivity, FiUsers, FiUser } from 'react-icons/fi';
 
 export default function ProprietarioPage() {
-  const { loading } = useProtectedRoute(["PROPRIETARIO"]);
+  const { loading } = useProtectedRoute(['PROPRIETARIO']);
 
   // --- DADOS MOCKADOS (ESTÁTICOS) PARA DESIGN ---
-  const userName = "Paulo Candiani";
+  const userName = 'Paulo Candiani';
   const dashboardStats = {
     qtd_macho_ativos: 15,
     qtd_femeas_ativas: 85,
@@ -31,21 +31,21 @@ export default function ProprietarioPage() {
     qtd_usuarios: 4,
   };
   const lactationData = [
-    { name: "01/24", producao: 1200 },
-    { name: "02/24", producao: 1350 },
-    { name: "03/24", producao: 1400 },
-    { name: "04/24", producao: 1100 },
-    { name: "05/24", producao: 1600 },
-    { name: "06/24", producao: 1800 },
+    { name: '01/24', producao: 1200 },
+    { name: '02/24', producao: 1350 },
+    { name: '03/24', producao: 1400 },
+    { name: '04/24', producao: 1100 },
+    { name: '05/24', producao: 1600 },
+    { name: '06/24', producao: 1800 },
   ];
   const topBuffalosData = [
-    { name: "Estrela (001)", leite: 12.5 },
-    { name: "Luna (042)", leite: 11.2 },
-    { name: "Mimosa (103)", leite: 10.8 },
-    { name: "Preta (055)", leite: 9.5 },
-    { name: "Malhada (020)", leite: 9.0 },
+    { name: 'Estrela (001)', leite: 12.5 },
+    { name: 'Luna (042)', leite: 11.2 },
+    { name: 'Mimosa (103)', leite: 10.8 },
+    { name: 'Preta (055)', leite: 9.5 },
+    { name: 'Malhada (020)', leite: 9.0 },
   ];
-  const barColors = ["#FFCF78", "#CE7D0A", "#F2B84D", "#FCA90F", "#E6A23C"];
+  const barColors = ['#FFCF78', '#CE7D0A', '#F2B84D', '#FCA90F', '#E6A23C'];
 
   if (loading) {
     return <Loading text="Carregando painel..." />;
@@ -74,7 +74,10 @@ export default function ProprietarioPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               title="Total de Búfalos"
-              value={dashboardStats.qtd_macho_ativos + dashboardStats.qtd_femeas_ativas}
+              value={
+                dashboardStats.qtd_macho_ativos +
+                dashboardStats.qtd_femeas_ativas
+              }
               subtitle="Rebanho ativo registrado"
               icon={<FiLayers className="text-[#ce7d0a]" />}
             />
@@ -113,31 +116,31 @@ export default function ProprietarioPage() {
                     <XAxis
                       dataKey="name"
                       interval={0}
-                      tick={{ fill: "#404040", fontSize: 12 }}
-                      axisLine={{ stroke: "#ce7d0a", strokeOpacity: 0.2 }}
+                      tick={{ fill: '#404040', fontSize: 12 }}
+                      axisLine={{ stroke: '#ce7d0a', strokeOpacity: 0.2 }}
                       tickLine={false}
                     />
                     <YAxis
-                      tick={{ fill: "#404040", fontSize: 12 }}
-                      axisLine={{ stroke: "#ce7d0a", strokeOpacity: 0.2 }}
+                      tick={{ fill: '#404040', fontSize: 12 }}
+                      axisLine={{ stroke: '#ce7d0a', strokeOpacity: 0.2 }}
                       tickLine={false}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#fff",
-                        borderColor: "#ffcf78",
-                        borderRadius: "8px",
+                        backgroundColor: '#fff',
+                        borderColor: '#ffcf78',
+                        borderRadius: '8px',
                       }}
-                      itemStyle={{ color: "#ce7d0a" }}
-                      formatter={(value) => [`${value} L`, "Produção"]}
+                      itemStyle={{ color: '#ce7d0a' }}
+                      formatter={(value) => [`${value} L`, 'Produção']}
                     />
-                    <Legend wrapperStyle={{ paddingTop: "10px" }} />
+                    <Legend wrapperStyle={{ paddingTop: '10px' }} />
                     <Line
                       type="monotone"
                       dataKey="producao"
                       stroke="#ce7d0a"
                       strokeWidth={3}
-                      activeDot={{ r: 6, fill: "#ffcf78", stroke: "#ce7d0a" }}
+                      activeDot={{ r: 6, fill: '#ffcf78', stroke: '#ce7d0a' }}
                       name="Produção (L)"
                     />
                   </LineChart>
@@ -167,18 +170,18 @@ export default function ProprietarioPage() {
                       dataKey="name"
                       type="category"
                       width={100}
-                      tick={{ fill: "#404040", fontSize: 11, fontWeight: 500 }}
+                      tick={{ fill: '#404040', fontSize: 11, fontWeight: 500 }}
                       axisLine={false}
                       tickLine={false}
                     />
                     <Tooltip
-                      cursor={{ fill: "transparent" }}
+                      cursor={{ fill: 'transparent' }}
                       contentStyle={{
-                        backgroundColor: "#fff",
-                        borderColor: "#ffcf78",
-                        borderRadius: "8px",
+                        backgroundColor: '#fff',
+                        borderColor: '#ffcf78',
+                        borderRadius: '8px',
                       }}
-                      formatter={(value) => [`${value} L/dia`, "Média"]}
+                      formatter={(value) => [`${value} L/dia`, 'Média']}
                     />
                     <Bar
                       dataKey="leite"

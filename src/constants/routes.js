@@ -4,27 +4,27 @@
  */
 
 export const ROUTES = {
-  LOGIN: "/auth/login",
-  REGISTER: "/auth/register",
-  DENIED: "/auth/acesso-negado",
-  HOME: "/auth/",
+  LOGIN: '/auth/login',
+  REGISTER: '/auth/register',
+  DENIED: '/auth/acesso-negado',
+  HOME: '/auth/',
 };
 
 export const CARGOS = {
-  PROPRIETARIO: "PROPRIETARIO",
-  ADMIN: "ADMIN",
-  FUNCIONARIO: "FUNCIONARIO",
+  PROPRIETARIO: 'PROPRIETARIO',
+  ADMIN: 'ADMIN',
+  FUNCIONARIO: 'FUNCIONARIO',
 };
 
 // Mapeamento Cargo -> Rota Inicial (Dashboard)
 export const ROUTES_BY_CARGO = {
-  [CARGOS.PROPRIETARIO]: "/proprietario/",
-  [CARGOS.ADMIN]: "/admin/",
-  [CARGOS.FUNCIONARIO]: "/funcionario/",
+  [CARGOS.PROPRIETARIO]: '/proprietario/',
+  [CARGOS.ADMIN]: '/admin/',
+  [CARGOS.FUNCIONARIO]: '/funcionario/',
 };
 
 // Rota de fallback caso o cargo não venha ou seja desconhecido
-export const DEFAULT_ROUTE = "/auth/login";
+export const DEFAULT_ROUTE = '/auth/login';
 
 /**
  * Helper para resolver redirecionamento

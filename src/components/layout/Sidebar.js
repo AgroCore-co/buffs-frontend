@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import Link from "next/link";
-import { usePathname } from "next/navigation"; // CORREÇÃO: Usar next/navigation no App Router
+import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation'; // CORREÇÃO: Usar next/navigation no App Router
 import {
   Home,
   Building2,
@@ -12,30 +12,35 @@ import {
   CalendarCheck2,
   Factory,
   Columns,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Função utilitária para normalizar strings (remove acentos e deixa minúsculo)
 const normalize = (str) =>
-  str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+  str
+    ? str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+    : '';
 
 // Função para gerar rotas dinâmicas conforme cargo
 function getRoute(cargo, path) {
   const cargoLimpo = normalize(cargo);
-  
+
   // Se não tiver cargo (ainda carregando), retorna apenas o path base ou um link neutro
-  if (!cargoLimpo) return "#"; 
+  if (!cargoLimpo) return '#';
 
   // Mapeamento de prefixos por cargo
-  if (cargoLimpo === "proprietario") {
+  if (cargoLimpo === 'proprietario') {
     return `/proprietario${path}`;
   }
-  
-  if (cargoLimpo === "admin") {
+
+  if (cargoLimpo === 'admin') {
     return `/admin${path}`;
   }
 
   // Se for funcionário ou outro cargo que usa a rota base, retorna o path original
-  return path || "/";
+  return path || '/';
 }
 
 export default function Sidebar() {
@@ -44,56 +49,68 @@ export default function Sidebar() {
   const { user, loading } = useAuth(); // Pegue o loading do contexto
 
   // Garante que o cargo só é lido se o user existir, senão fica vazio para evitar rotas erradas
-  const cargo = user?.cargo || ""; 
+  const cargo = user?.cargo || '';
 
   const menuItems = [
     {
-      section: "main",
+      section: 'main',
       items: [
-        { icon: Home, label: "Dashboard", href: getRoute(cargo, "") }, // Rota vazia vira /proprietario
+        { icon: Home, label: 'Dashboard', href: getRoute(cargo, '') }, // Rota vazia vira /proprietario
       ],
     },
     {
-      section: "propriedades",
+      section: 'propriedades',
       items: [
-        { icon: Building2, label: "Propriedades", href: getRoute(cargo, "/propriedades") },
+        {
+          icon: Building2,
+          label: 'Propriedades',
+          href: getRoute(cargo, '/propriedades'),
+        },
       ],
     },
     {
-      section: "rebanho",
+      section: 'rebanho',
       items: [
-        { icon: PawPrint, label: "Rebanho", href: getRoute(cargo, "/rebanho") },
+        { icon: PawPrint, label: 'Rebanho', href: getRoute(cargo, '/rebanho') },
       ],
     },
     {
-      section: "lactacao",
+      section: 'lactacao',
       items: [
-        { icon: Milk, label: "Lactação", href: getRoute(cargo, "/lactacao") },
+        { icon: Milk, label: 'Lactação', href: getRoute(cargo, '/lactacao') },
       ],
     },
     {
-      section: "controle",
+      section: 'controle',
       items: [
-        { icon: CalendarCheck2, label: "Controle Reprodução", href: getRoute(cargo, "/controle-reproducao") },
+        {
+          icon: CalendarCheck2,
+          label: 'Controle Reprodução',
+          href: getRoute(cargo, '/controle-reproducao'),
+        },
       ],
     },
     {
-      section: "industria",
+      section: 'industria',
       items: [
-        { icon: Factory, label: "Indústria", href: getRoute(cargo, "/industria") },
+        {
+          icon: Factory,
+          label: 'Indústria',
+          href: getRoute(cargo, '/industria'),
+        },
       ],
     },
   ];
 
   // Se estiver carregando o usuário, você pode optar por renderizar um esqueleto ou nada
   // Aqui deixei renderizar, mas os links ficarão como "#" até carregar
-  
+
   return (
     <aside
       className={`
         relative flex flex-col border-r border-[#ce7d0a]/10 bg-white 
         transition-all duration-300 ease-in-out z-20 text-[#404040] shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)]
-        ${isExpanded ? "w-64" : "w-16"}
+        ${isExpanded ? 'w-64' : 'w-16'}
       `}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
@@ -101,12 +118,12 @@ export default function Sidebar() {
       {/* Logo / Brand Area */}
       <div className="flex h-16 items-center justify-center border-b border-[#ce7d0a]/10 shrink-0 bg-[#f8fcfa]">
         <div className="h-7 w-7 rounded-lg bg-[#ffcf78] shrink-0 shadow-sm flex items-center justify-center text-[#404040]">
-           <span className="font-bold text-xs">B</span>
+          <span className="font-bold text-xs">B</span>
         </div>
         <span
           className={`
              ml-3 font-bold text-sm text-[#404040] transition-all duration-200 tracking-tight
-             ${isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 hidden"}
+             ${isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 hidden'}
            `}
         >
           BUFFS System
@@ -120,16 +137,16 @@ export default function Sidebar() {
               <div className="mx-4 my-2 border-t border-[#ce7d0a]/10" />
             )}
             {isExpanded && (
-               <div className="px-4 py-1 text-[10px] uppercase tracking-wider font-semibold text-[#ce7d0a]/70">
-                 {group.section}
-               </div>
+              <div className="px-4 py-1 text-[10px] uppercase tracking-wider font-semibold text-[#ce7d0a]/70">
+                {group.section}
+              </div>
             )}
             <ul className="flex flex-col gap-1 px-2">
               {group.items.map((item, itemIndex) => {
                 // Verificação de rota ativa atualizada para usar pathname
                 // Verifica se item.href não é "#" e se o pathname começa com ele
-                const isActive = item.href !== "#" && pathname === item.href;
-                
+                const isActive = item.href !== '#' && pathname === item.href;
+
                 return (
                   <li key={itemIndex}>
                     <Link
@@ -138,8 +155,8 @@ export default function Sidebar() {
                         group flex h-10 items-center rounded-md px-2 text-sm font-medium transition-all duration-200
                         ${
                           isActive
-                            ? "bg-[#ffcf78] text-[#404040] shadow-sm font-semibold" 
-                            : "text-[#404040]/80 hover:bg-[#f8fcfa] hover:text-[#ce7d0a]"
+                            ? 'bg-[#ffcf78] text-[#404040] shadow-sm font-semibold'
+                            : 'text-[#404040]/80 hover:bg-[#f8fcfa] hover:text-[#ce7d0a]'
                         }
                       `}
                     >
@@ -148,8 +165,8 @@ export default function Sidebar() {
                           size={18}
                           className={`transition-colors duration-200 ${
                             isActive
-                              ? "text-[#404040]"
-                              : "text-[#404040]/60 group-hover:text-[#ce7d0a]"
+                              ? 'text-[#404040]'
+                              : 'text-[#404040]/60 group-hover:text-[#ce7d0a]'
                           }`}
                         />
                       </div>
@@ -158,8 +175,8 @@ export default function Sidebar() {
                           ml-3 whitespace-nowrap transition-all duration-300
                           ${
                             isExpanded
-                              ? "opacity-100 translate-x-0"
-                              : "opacity-0 -translate-x-2 hidden"
+                              ? 'opacity-100 translate-x-0'
+                              : 'opacity-0 -translate-x-2 hidden'
                           }
                         `}
                       >
@@ -188,8 +205,8 @@ export default function Sidebar() {
                 ml-3 whitespace-nowrap text-sm font-medium transition-all duration-300
                 ${
                   isExpanded
-                    ? "opacity-100 translate-x-0"
-                    : "opacity-0 -translate-x-2 hidden"
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 -translate-x-2 hidden'
                 }
               `}
           >

@@ -50,7 +50,7 @@ const config = {
       '@': path.resolve(__dirname, '../src'),
       'next/link': path.resolve(__dirname, './nextLinkMock.js'),
     };
-    
+
     // Adiciona suporte para arquivos .js com JSX
     config.module.rules.push({
       test: /\.(js|jsx)$/,
@@ -59,23 +59,26 @@ const config = {
           loader: require.resolve('babel-loader'),
           options: {
             presets: [
-              [require.resolve('@babel/preset-react'), { runtime: 'automatic' }],
+              [
+                require.resolve('@babel/preset-react'),
+                { runtime: 'automatic' },
+              ],
             ],
           },
         },
       ],
       exclude: /node_modules/,
     });
-    
+
     // Adiciona ProvidePlugin para disponibilizar React globalmente
     config.plugins.push(
       new webpack.ProvidePlugin({
         React: 'react',
       })
     );
-    
+
     config.resolve.extensions.push('.js', '.jsx');
-    
+
     return config;
   },
 };

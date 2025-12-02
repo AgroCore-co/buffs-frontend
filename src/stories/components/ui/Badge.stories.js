@@ -56,7 +56,14 @@ export const AllTypes = {
 
 export const StatusExamples = {
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem',
+        alignItems: 'flex-start',
+      }}
+    >
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
         <span>Propriedade:</span>
         <Badge type="active">Disponível</Badge>

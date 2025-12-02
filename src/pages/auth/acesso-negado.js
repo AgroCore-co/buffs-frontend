@@ -1,10 +1,10 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { getRedirectRoute } from "@/constants/routes";
-import { useRouter } from "next/navigation"; // ou "next/router" dependendo da sua versão do Next.js
-import { FiShield, FiLock, FiArrowLeft, FiAlertTriangle } from "react-icons/fi";
-import Head from "next/head";
+'use client';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getRedirectRoute } from '@/constants/routes';
+import { useRouter } from 'next/navigation'; // ou "next/router" dependendo da sua versão do Next.js
+import { FiShield, FiLock, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
+import Head from 'next/head';
 
 export default function AcessoNegadoPage() {
   const { user } = useAuth();
@@ -34,7 +34,7 @@ export default function AcessoNegadoPage() {
       const destination = getRedirectRoute(user.cargo);
       router.push(destination);
     } else {
-      router.push("/auth/login");
+      router.push('/auth/login');
     }
   };
 
@@ -43,10 +43,9 @@ export default function AcessoNegadoPage() {
       <Head>
         <title>Acesso Negado | Buffs</title>
       </Head>
-      
+
       <div className="min-h-screen bg-[#F8FCFA] flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
         <div className="max-w-md w-full bg-white shadow-sm rounded-xl overflow-hidden border border-[#CE7D0A]/10">
-          
           {/* Header Colorido - Usando tons de alerta mas mantendo suavidade */}
           <div className="bg-red-50 p-8 flex justify-center border-b border-red-100">
             <div className="bg-white p-4 rounded-full shadow-sm border border-red-100">
@@ -61,8 +60,9 @@ export default function AcessoNegadoPage() {
             </h1>
 
             <p className="text-[#404040]/70 mb-8 leading-relaxed text-sm">
-              Você não possui as permissões necessárias para acessar esta página.
-              Caso acredite que isso seja um erro, contate o administrador.
+              Você não possui as permissões necessárias para acessar esta
+              página. Caso acredite que isso seja um erro, contate o
+              administrador.
               <span className="block mt-3 text-sm text-[#CE7D0A] font-semibold bg-[#CE7D0A]/5 py-1 px-3 rounded-full inline-block">
                 Redirecionando em {countdown}s...
               </span>
@@ -75,7 +75,7 @@ export default function AcessoNegadoPage() {
                 <span>Cargo atual identificado:</span>
               </div>
               <span className="font-bold text-[#404040] bg-white px-3 py-1 rounded border border-gray-100 shadow-sm text-sm">
-                {user?.cargo || "Visitante / Desconhecido"}
+                {user?.cargo || 'Visitante / Desconhecido'}
               </span>
             </div>
 
@@ -91,7 +91,8 @@ export default function AcessoNegadoPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-[#404040]/40">
-          &copy; {new Date().getFullYear()} Buffs Sistema de Gestão. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} Buffs Sistema de Gestão. Todos os
+          direitos reservados.
         </p>
       </div>
     </>

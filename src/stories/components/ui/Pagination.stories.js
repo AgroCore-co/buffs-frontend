@@ -80,14 +80,23 @@ const InteractiveRender = () => {
   const totalPages = 20;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-      <div style={{ 
-        padding: '2rem', 
-        backgroundColor: '#f3f4f6', 
-        borderRadius: '0.5rem',
-        minWidth: '400px',
-        textAlign: 'center'
-      }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        alignItems: 'center',
+      }}
+    >
+      <div
+        style={{
+          padding: '2rem',
+          backgroundColor: '#f3f4f6',
+          borderRadius: '0.5rem',
+          minWidth: '400px',
+          textAlign: 'center',
+        }}
+      >
         <h3 style={{ marginBottom: '1rem' }}>
           Página {currentPage} de {totalPages}
         </h3>
@@ -113,7 +122,13 @@ export const CustomVariants = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div>
-        <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
+        <p
+          style={{
+            marginBottom: '0.5rem',
+            fontSize: '0.875rem',
+            fontWeight: '600',
+          }}
+        >
           Variantes padrão (report/primary)
         </p>
         <Pagination
@@ -126,7 +141,13 @@ export const CustomVariants = {
         />
       </div>
       <div>
-        <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
+        <p
+          style={{
+            marginBottom: '0.5rem',
+            fontSize: '0.875rem',
+            fontWeight: '600',
+          }}
+        >
           Variantes secundárias
         </p>
         <Pagination
@@ -139,7 +160,13 @@ export const CustomVariants = {
         />
       </div>
       <div>
-        <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
+        <p
+          style={{
+            marginBottom: '0.5rem',
+            fontSize: '0.875rem',
+            fontWeight: '600',
+          }}
+        >
           Variantes info
         </p>
         <Pagination

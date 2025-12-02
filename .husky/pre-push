@@ -1,2 +1,2 @@
-# Pre-push hook: Executa todos os testes antes do push
+# Pre-push hook: Valida lint e formatação antes do push
 npm test

@@ -38,7 +38,14 @@ export const LoadingData = {
 
 export const InContainer = {
   render: () => (
-    <div style={{ width: '600px', height: '400px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+    <div
+      style={{
+        width: '600px',
+        height: '400px',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+      }}
+    >
       <Loading text="Carregando dashboard..." />
     </div>
   ),

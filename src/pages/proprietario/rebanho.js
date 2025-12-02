@@ -1,8 +1,8 @@
-"use client";
-import Loading from "@/components/loading/Loading";
-import { useProtectedRoute } from "@/hooks/useProtectedRoute";
-import React from "react";
-import Button from "@/components/ui/Button";
+'use client';
+import Loading from '@/components/loading/Loading';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import React from 'react';
+import Button from '@/components/ui/Button';
 import {
   ResponsiveContainer,
   PieChart,
@@ -13,9 +13,9 @@ import {
   XAxis,
   YAxis,
   Bar,
-} from "recharts";
-import DashboardContainer from "@/components/ui/DashboardContainer";
-import MetricCard from "@/components/ui/MetricCard";
+} from 'recharts';
+import DashboardContainer from '@/components/ui/DashboardContainer';
+import MetricCard from '@/components/ui/MetricCard';
 
 // Dados mockados para os gráficos
 const totalAtivos = 46;
@@ -24,126 +24,126 @@ const machosAtivos = 12;
 const lactando = 8;
 
 const maturidadeData = [
-  { name: "Bezerros", value: 10, color: "#FCA90F" },
-  { name: "Novilhas", value: 12, color: "#FFCF78" },
-  { name: "Vacas", value: 18, color: "#CE7D0A" },
-  { name: "Touros", value: 6, color: "#F2B84D" },
+  { name: 'Bezerros', value: 10, color: '#FCA90F' },
+  { name: 'Novilhas', value: 12, color: '#FFCF78' },
+  { name: 'Vacas', value: 18, color: '#CE7D0A' },
+  { name: 'Touros', value: 6, color: '#F2B84D' },
 ];
 
 const sexData = [
-  { name: "Fêmeas", value: 34, color: "#FFCF78" },
-  { name: "Machos", value: 12, color: "#CE7D0A" },
+  { name: 'Fêmeas', value: 34, color: '#FFCF78' },
+  { name: 'Machos', value: 12, color: '#CE7D0A' },
 ];
 
 const bufalosPorRaca = [
-  { raca: "Murrah", quantidade: 20 },
-  { raca: "Jafarabadi", quantidade: 10 },
-  { raca: "Mediterrâneo", quantidade: 8 },
-  { raca: "Carabao", quantidade: 8 },
+  { raca: 'Murrah', quantidade: 20 },
+  { raca: 'Jafarabadi', quantidade: 10 },
+  { raca: 'Mediterrâneo', quantidade: 8 },
+  { raca: 'Carabao', quantidade: 8 },
 ];
 
 const frequenciaDoencas = [
-  { doenca: "Brucelose", frequencia: 3 },
-  { doenca: "Febre Aftosa", frequencia: 2 },
-  { doenca: "Tuberculose", frequencia: 1 },
-  { doenca: "Raiva", frequencia: 1 },
+  { doenca: 'Brucelose', frequencia: 3 },
+  { doenca: 'Febre Aftosa', frequencia: 2 },
+  { doenca: 'Tuberculose', frequencia: 1 },
+  { doenca: 'Raiva', frequencia: 1 },
 ];
 
 // Dados mockados da tabela (100% estáticos)
 const bufalosMock = [
   {
     id: 1,
-    brinco: "BUF-001",
-    nome: "Lua Cheia",
-    sexo: "F",
-    raca: "Murrah",
-    maturidade: "V",
+    brinco: 'BUF-001',
+    nome: 'Lua Cheia',
+    sexo: 'F',
+    raca: 'Murrah',
+    maturidade: 'V',
     status: true,
   },
   {
     id: 2,
-    brinco: "BUF-002",
-    nome: "Trovão",
-    sexo: "M",
-    raca: "Jafarabadi",
-    maturidade: "T",
+    brinco: 'BUF-002',
+    nome: 'Trovão',
+    sexo: 'M',
+    raca: 'Jafarabadi',
+    maturidade: 'T',
     status: true,
   },
   {
     id: 3,
-    brinco: "BUF-003",
-    nome: "Estrela",
-    sexo: "F",
-    raca: "Murrah",
-    maturidade: "N",
+    brinco: 'BUF-003',
+    nome: 'Estrela',
+    sexo: 'F',
+    raca: 'Murrah',
+    maturidade: 'N',
     status: true,
   },
   {
     id: 4,
-    brinco: "BUF-004",
-    nome: "Raio",
-    sexo: "M",
-    raca: "Mediterrâneo",
-    maturidade: "B",
+    brinco: 'BUF-004',
+    nome: 'Raio',
+    sexo: 'M',
+    raca: 'Mediterrâneo',
+    maturidade: 'B',
     status: false,
   },
   {
     id: 5,
-    brinco: "BUF-005",
-    nome: "Sol Nascente",
-    sexo: "F",
-    raca: "Carabao",
-    maturidade: "V",
+    brinco: 'BUF-005',
+    nome: 'Sol Nascente',
+    sexo: 'F',
+    raca: 'Carabao',
+    maturidade: 'V',
     status: true,
   },
   {
     id: 6,
-    brinco: "BUF-006",
-    nome: "Neve",
-    sexo: "F",
-    raca: "Murrah",
-    maturidade: "V",
+    brinco: 'BUF-006',
+    nome: 'Neve',
+    sexo: 'F',
+    raca: 'Murrah',
+    maturidade: 'V',
     status: true,
   },
   {
     id: 7,
-    brinco: "BUF-007",
-    nome: "Vento Norte",
-    sexo: "M",
-    raca: "Jafarabadi",
-    maturidade: "A",
+    brinco: 'BUF-007',
+    nome: 'Vento Norte',
+    sexo: 'M',
+    raca: 'Jafarabadi',
+    maturidade: 'A',
     status: true,
   },
   {
     id: 8,
-    brinco: "BUF-008",
-    nome: "Aurora",
-    sexo: "F",
-    raca: "Murrah",
-    maturidade: "V",
+    brinco: 'BUF-008',
+    nome: 'Aurora',
+    sexo: 'F',
+    raca: 'Murrah',
+    maturidade: 'V',
     status: true,
   },
 ];
 
 const getMaturidadeTexto = (codigo) => {
   switch (codigo) {
-    case "B":
-      return "Bezerro(a)";
-    case "N":
-      return "Novilho(a)";
-    case "V":
-      return "Vaca";
-    case "T":
-      return "Touro";
-    case "A":
-      return "Adulto";
+    case 'B':
+      return 'Bezerro(a)';
+    case 'N':
+      return 'Novilho(a)';
+    case 'V':
+      return 'Vaca';
+    case 'T':
+      return 'Touro';
+    case 'A':
+      return 'Adulto';
     default:
-      return "N/D";
+      return 'N/D';
   }
 };
 
 export default function Rebanho() {
-  const { loading } = useProtectedRoute(["PROPRIETARIO"]);
+  const { loading } = useProtectedRoute(['PROPRIETARIO']);
   if (loading) {
     return <Loading text="Carregando painel..." />;
   }
@@ -256,7 +256,7 @@ export default function Rebanho() {
                 {bufalosPorRaca.map((_, i) => (
                   <Cell
                     key={i}
-                    fill={["#FCA90F", "#FFCF78", "#CE7D0A", "#F2B84D"][i]}
+                    fill={['#FCA90F', '#FFCF78', '#CE7D0A', '#F2B84D'][i]}
                   />
                 ))}
               </Pie>
@@ -278,7 +278,11 @@ export default function Rebanho() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="report" size="medium" className="flex items-center gap-2">
+            <Button
+              variant="report"
+              size="medium"
+              className="flex items-center gap-2"
+            >
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -326,14 +330,38 @@ export default function Rebanho() {
         {/* Tabela usando componente Table */}
         {/** Importação dinâmica do Table para evitar erro de import duplicada **/}
         {(() => {
-          const Table = require("@/components/table/Table").default;
+          const Table = require('@/components/table/Table').default;
           const columns = [
-            { key: "brinco", label: "TAG", className: "p-4 text-left font-semibold" },
-            { key: "nome", label: "Nome", className: "p-4 text-left font-semibold" },
-            { key: "sexo", label: "Sexo", className: "p-4 text-left font-semibold" },
-            { key: "raca", label: "Raça", className: "p-4 text-left font-semibold" },
-            { key: "maturidade", label: "Maturidade", className: "p-4 text-left font-semibold" },
-            { key: "status", label: "Status", className: "p-4 text-left font-semibold" },
+            {
+              key: 'brinco',
+              label: 'TAG',
+              className: 'p-4 text-left font-semibold',
+            },
+            {
+              key: 'nome',
+              label: 'Nome',
+              className: 'p-4 text-left font-semibold',
+            },
+            {
+              key: 'sexo',
+              label: 'Sexo',
+              className: 'p-4 text-left font-semibold',
+            },
+            {
+              key: 'raca',
+              label: 'Raça',
+              className: 'p-4 text-left font-semibold',
+            },
+            {
+              key: 'maturidade',
+              label: 'Maturidade',
+              className: 'p-4 text-left font-semibold',
+            },
+            {
+              key: 'status',
+              label: 'Status',
+              className: 'p-4 text-left font-semibold',
+            },
           ];
           return (
             <Table
@@ -341,17 +369,17 @@ export default function Rebanho() {
               data={bufalosMock}
               minWidth="900px"
               renderCell={(b, key) => {
-                if (key === "sexo") {
-                  return b.sexo === "F" ? "Fêmea" : "Macho";
+                if (key === 'sexo') {
+                  return b.sexo === 'F' ? 'Fêmea' : 'Macho';
                 }
-                if (key === "maturidade") {
+                if (key === 'maturidade') {
                   return getMaturidadeTexto(b.maturidade);
                 }
-                if (key === "status") {
-                  const Badge = require("@/components/ui/Badge").default;
+                if (key === 'status') {
+                  const Badge = require('@/components/ui/Badge').default;
                   return (
-                    <Badge type={b.status ? "active" : "inactive"}>
-                      {b.status ? "Ativo" : "Inativo"}
+                    <Badge type={b.status ? 'active' : 'inactive'}>
+                      {b.status ? 'Ativo' : 'Inativo'}
                     </Badge>
                   );
                 }
@@ -364,10 +392,26 @@ export default function Rebanho() {
         <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
           <p>Mostrando 8 de 46 búfalos</p>
           <div className="flex gap-2">
-            <Button variant="secondary" size="small">Anterior</Button>
-            <Button variant="secondary" size="small" className="w-10 h-10 !p-0 font-bold bg-[#ce7d0a] text-white hover:bg-[#b86c09]">1</Button>
-            <Button variant="secondary" size="small" className="w-10 h-10 !p-0 font-bold">2</Button>
-            <Button variant="primary" size="small">Próximo</Button>
+            <Button variant="secondary" size="small">
+              Anterior
+            </Button>
+            <Button
+              variant="secondary"
+              size="small"
+              className="w-10 h-10 !p-0 font-bold bg-[#ce7d0a] text-white hover:bg-[#b86c09]"
+            >
+              1
+            </Button>
+            <Button
+              variant="secondary"
+              size="small"
+              className="w-10 h-10 !p-0 font-bold"
+            >
+              2
+            </Button>
+            <Button variant="primary" size="small">
+              Próximo
+            </Button>
           </div>
         </div>
       </DashboardContainer>

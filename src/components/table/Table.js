@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 /**
  * Componente de tabela moderno e reutilizável.
@@ -14,8 +14,8 @@ export default function Table({
   columns,
   data,
   renderCell,
-  className = "",
-  minWidth = "900px",
+  className = '',
+  minWidth = '900px',
 }) {
   return (
     <div
@@ -23,7 +23,9 @@ export default function Table({
     >
       {/* Wrapper de rolagem horizontal */}
       <div className="overflow-x-auto">
-        <table className={`w-full min-w-[${minWidth}] divide-y divide-gray-200`}>
+        <table
+          className={`w-full min-w-[${minWidth}] divide-y divide-gray-200`}
+        >
           <thead className="bg-gray-50">
             <tr>
               {columns.map((col) => (
@@ -31,7 +33,7 @@ export default function Table({
                   key={col.key}
                   scope="col"
                   className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    col.className || "text-left"
+                    col.className || 'text-left'
                   }`}
                 >
                   {col.label}
@@ -50,7 +52,7 @@ export default function Table({
                     <td
                       key={`${row.id || idx}-${col.key}`}
                       className={`px-6 py-4 whitespace-nowrap text-sm text-gray-700 ${
-                        col.className || ""
+                        col.className || ''
                       }`}
                     >
                       {renderCell ? renderCell(row, col.key) : row[col.key]}

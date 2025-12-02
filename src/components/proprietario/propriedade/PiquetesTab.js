@@ -1,13 +1,26 @@
-import { useState } from "react";
-import DashboardContainer from "@/components/ui/DashboardContainer";
-import MapaRotativoLeaflet from "./piquetes/Mapa";
-
+import { useState } from 'react';
+import DashboardContainer from '@/components/ui/DashboardContainer';
+import MapaRotativoLeaflet from './piquetes/Mapa';
 
 export default function PiquetesTab({ grupos, nivelLabel }) {
   // Estado para lotes e modal (Mantido como original)
   const [lotes, setLotes] = useState([
-    { id_lote: 1, nome_lote: "Lote 1", status: "ativo", qtd_max: 10, area_m2: 1000, grupo: grupos[0] },
-    { id_lote: 2, nome_lote: "Lote 2", status: "ativo", qtd_max: 8, area_m2: 800, grupo: grupos[1] }
+    {
+      id_lote: 1,
+      nome_lote: 'Lote 1',
+      status: 'ativo',
+      qtd_max: 10,
+      area_m2: 1000,
+      grupo: grupos[0],
+    },
+    {
+      id_lote: 2,
+      nome_lote: 'Lote 2',
+      status: 'ativo',
+      qtd_max: 8,
+      area_m2: 800,
+      grupo: grupos[1],
+    },
   ]);
 
   return (
@@ -20,4 +33,3 @@ export default function PiquetesTab({ grupos, nivelLabel }) {
     </DashboardContainer>
   );
 }
-

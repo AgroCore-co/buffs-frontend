@@ -1,6 +1,6 @@
 /**
  * Sistema de Logging Centralizado
- * 
+ *
  * Fornece logs estruturados com níveis de severidade e contexto.
  * Em produção, pode ser integrado com serviços como Sentry, LogRocket, etc.
  */
@@ -22,7 +22,8 @@ const LOG_COLORS = {
 class Logger {
   constructor() {
     this.isProduction = process.env.NODE_ENV === 'production';
-    this.enableLogs = !this.isProduction || process.env.NEXT_PUBLIC_ENABLE_LOGS === 'true';
+    this.enableLogs =
+      !this.isProduction || process.env.NEXT_PUBLIC_ENABLE_LOGS === 'true';
   }
 
   /**
@@ -42,7 +43,8 @@ class Logger {
       level,
       message,
       context,
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+      userAgent:
+        typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
     };
   }
 
@@ -58,12 +60,10 @@ class Logger {
       //     extra: formattedMessage.context,
       //   });
       // }
-
       // Integração com LogRocket
       // if (window.LogRocket) {
       //   window.LogRocket.log(formattedMessage);
       // }
-
       // Integração com Analytics customizado
       // fetch('/api/logs', {
       //   method: 'POST',
