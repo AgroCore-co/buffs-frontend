@@ -1,0 +1,6 @@
+# Prepare-commit-msg hook: Não altera a mensagem
+# A mensagem deve ser inserida manualmente no formato: <tipo>: <descrição>
+# Exemplos: feat: adicionar login, fix: corrigir bug, refactor: melhorar codigo
+
+# Este hook existe apenas para manter a estrutura padrão do Husky
+# Nenhuma ação é executada aqui

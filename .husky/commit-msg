@@ -1,0 +1,3 @@
+# Commit-msg hook: Valida se a mensagem segue o padrão <tipo>: <descrição>
+# Tipos permitidos: feat, fix, refactor, docs, style, test, perf, chore
+npx --no -- commitlint --edit $1
