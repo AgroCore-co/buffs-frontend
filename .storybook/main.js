@@ -8,33 +8,6 @@ const config = {
     '@storybook/addon-links',
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
-    {
-      name: '@storybook/addon-styling-webpack',
-      options: {
-        rules: [
-          {
-            test: /\.css$/,
-            use: [
-              'style-loader',
-              {
-                loader: 'css-loader',
-                options: {
-                  importLoaders: 1,
-                },
-              },
-              {
-                loader: 'postcss-loader',
-                options: {
-                  postcssOptions: {
-                    config: path.resolve(__dirname, '../postcss.config.mjs'),
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      },
-    },
   ],
   framework: {
     name: '@storybook/react-webpack5',
@@ -50,6 +23,33 @@ const config = {
       '@': path.resolve(__dirname, '../src'),
       'next/link': path.resolve(__dirname, './nextLinkMock.js'),
     };
+
+    // Remove regras CSS padrão do Storybook
+    config.module.rules = config.module.rules.filter(
+      (rule) => rule.test && !rule.test.toString().includes('css')
+    );
+
+    // Adiciona configuração CSS com PostCSS e Tailwind
+    config.module.rules.push({
+      test: /\.css$/,
+      use: [
+        'style-loader',
+        {
+          loader: 'css-loader',
+          options: {
+            importLoaders: 1,
+          },
+        },
+        {
+          loader: 'postcss-loader',
+          options: {
+            postcssOptions: {
+              config: path.resolve(__dirname, '../postcss.config.mjs'),
+            },
+          },
+        },
+      ],
+    });
 
     // Adiciona suporte para arquivos .js com JSX
     config.module.rules.push({
