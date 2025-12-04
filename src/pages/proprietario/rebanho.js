@@ -2,20 +2,16 @@
 import Loading from '@/components/loading/Loading';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import React from 'react';
+import { useRouter } from 'next/router';
 import Button from '@/components/ui/Button';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  BarChart,
-  XAxis,
-  YAxis,
-  Bar,
-} from 'recharts';
+import Pagination from '@/components/ui/Pagination';
+import { FilterBar, FilterSelect } from '@/components/ui/FilterBar';
 import DashboardContainer from '@/components/ui/DashboardContainer';
 import MetricCard from '@/components/ui/MetricCard';
+import MaturidadeChart from '@/components/proprietario/rebanho/MaturidadeChart';
+import SexoChart from '@/components/proprietario/rebanho/SexoChart';
+import RacaChart from '@/components/proprietario/rebanho/RacaChart';
+import DoencasChart from '@/components/proprietario/rebanho/DoencasChart';
 
 // Dados mockados para os gráficos
 const totalAtivos = 46;
@@ -31,8 +27,8 @@ const maturidadeData = [
 ];
 
 const sexData = [
-  { name: 'Fêmeas', value: 34, color: '#FFCF78' },
-  { name: 'Machos', value: 12, color: '#CE7D0A' },
+  { name: 'Fêmeas', value: 34, color: '#CE7D0A' }, // Cor mais forte para destaque
+  { name: 'Machos', value: 12, color: '#FFCF78' }, // Cor mais clara
 ];
 
 const bufalosPorRaca = [
@@ -49,7 +45,7 @@ const frequenciaDoencas = [
   { doenca: 'Raiva', frequencia: 1 },
 ];
 
-// Dados mockados da tabela (100% estáticos)
+// Dados mockados da tabela
 const bufalosMock = [
   {
     id: 1,
@@ -144,11 +140,20 @@ const getMaturidadeTexto = (codigo) => {
 
 export default function Rebanho() {
   const { loading } = useProtectedRoute(['PROPRIETARIO']);
+  const router = useRouter();
+
   if (loading) {
     return <Loading text="Carregando painel..." />;
   }
+
+  const handleRowClick = (bufalo) => {
+    router.push(`/proprietario/rebanho/${bufalo.id}`);
+  };
+
+  // Cálculo da porcentagem para o gráfico central (Ex: Fêmeas)
+  const percentualFemeas = Math.round((femeasAtivas / totalAtivos) * 100);
+
   return (
-    // Ajustado para manter o padrão das outras telas (removido p-4, bg-gray-50 e min-h-screen)
     <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
       {/* Header */}
       <DashboardContainer>
@@ -161,6 +166,7 @@ export default function Rebanho() {
             sanitárias.
           </p>
         </div>
+
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
@@ -171,16 +177,12 @@ export default function Rebanho() {
           <MetricCard
             title="Fêmeas"
             value={femeasAtivas}
-            subtitle={`${Math.round(
-              (femeasAtivas / totalAtivos) * 100
-            )}% do rebanho`}
+            subtitle={`${percentualFemeas}% do rebanho`}
           />
           <MetricCard
             title="Machos"
             value={machosAtivos}
-            subtitle={`${Math.round(
-              (machosAtivos / totalAtivos) * 100
-            )}% do rebanho`}
+            subtitle={`${Math.round((machosAtivos / totalAtivos) * 100)}% do rebanho`}
           />
           <MetricCard
             title="Vacas Produtoras"
@@ -190,83 +192,18 @@ export default function Rebanho() {
         </div>
       </DashboardContainer>
 
-      {/* Gráficos */}
+      {/* Gráficos e Distribuições */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <DashboardContainer className="p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Distribuição por Maturidade
-          </h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={maturidadeData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={70}
-                label={({ name, value }) => `${name}: ${value}`}
-              >
-                {maturidadeData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </DashboardContainer>
-        <DashboardContainer className="p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Distribuição por Sexo
-          </h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={sexData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={70}
-                label={({ name, value }) => `${name}: ${value}`}
-              >
-                {sexData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </DashboardContainer>
-        <DashboardContainer className="p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Distribuição por Raça
-          </h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={bufalosPorRaca}
-                dataKey="quantidade"
-                nameKey="raca"
-                cx="50%"
-                cy="50%"
-                outerRadius={70}
-                label={({ raca, quantidade }) => `${raca}: ${quantidade}`}
-              >
-                {bufalosPorRaca.map((_, i) => (
-                  <Cell
-                    key={i}
-                    fill={['#FCA90F', '#FFCF78', '#CE7D0A', '#F2B84D'][i]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </DashboardContainer>
+        <MaturidadeChart data={maturidadeData} />
+        <SexoChart
+          data={sexData}
+          totalAtivos={totalAtivos}
+          percentualFemeas={percentualFemeas}
+        />
+        <RacaChart data={bufalosPorRaca} />
       </div>
 
-      {/* TABELA DE BÚFALOS - TOTALMENTE DENTRO DO ARQUIVO */}
+      {/* TABELA DE BÚFALOS */}
       <DashboardContainer>
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -304,31 +241,37 @@ export default function Rebanho() {
           </div>
         </div>
 
-        {/* Filtros visuais */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-6 flex flex-wrap gap-4">
-          <span className="font-semibold text-gray-700">Filtros:</span>
-          <select
-            className="px-4 py-2 border rounded-md text-sm bg-white"
-            defaultValue=""
-          >
-            <option disabled>Sexo: Todos</option>
-          </select>
-          <select
-            className="px-4 py-2 border rounded-md text-sm bg-white"
-            defaultValue=""
-          >
-            <option disabled>Raça: Todas</option>
-          </select>
-          <select
-            className="px-4 py-2 border rounded-md text-sm bg-white"
-            defaultValue=""
-          >
-            <option disabled>Maturidade: Todas</option>
-          </select>
-        </div>
+        {/* Filtros */}
+        <FilterBar>
+          <FilterSelect defaultValue="">
+            <option disabled value="">
+              Sexo: Todos
+            </option>
+            <option value="F">Fêmea</option>
+            <option value="M">Macho</option>
+          </FilterSelect>
+          <FilterSelect defaultValue="">
+            <option disabled value="">
+              Raça: Todas
+            </option>
+            <option value="Murrah">Murrah</option>
+            <option value="Jafarabadi">Jafarabadi</option>
+            <option value="Mediterrâneo">Mediterrâneo</option>
+            <option value="Carabao">Carabao</option>
+          </FilterSelect>
+          <FilterSelect defaultValue="">
+            <option disabled value="">
+              Maturidade: Todas
+            </option>
+            <option value="B">Bezerro(a)</option>
+            <option value="N">Novilho(a)</option>
+            <option value="V">Vaca</option>
+            <option value="T">Touro</option>
+            <option value="A">Adulto</option>
+          </FilterSelect>
+        </FilterBar>
 
-        {/* Tabela usando componente Table */}
-        {/** Importação dinâmica do Table para evitar erro de import duplicada **/}
+        {/* Tabela */}
         {(() => {
           const Table = require('@/components/table/Table').default;
           const columns = [
@@ -363,18 +306,16 @@ export default function Rebanho() {
               className: 'p-4 text-left font-semibold',
             },
           ];
+
           return (
             <Table
               columns={columns}
               data={bufalosMock}
               minWidth="900px"
               renderCell={(b, key) => {
-                if (key === 'sexo') {
-                  return b.sexo === 'F' ? 'Fêmea' : 'Macho';
-                }
-                if (key === 'maturidade') {
+                if (key === 'sexo') return b.sexo === 'F' ? 'Fêmea' : 'Macho';
+                if (key === 'maturidade')
                   return getMaturidadeTexto(b.maturidade);
-                }
                 if (key === 'status') {
                   const Badge = require('@/components/ui/Badge').default;
                   return (
@@ -385,51 +326,27 @@ export default function Rebanho() {
                 }
                 return b[key];
               }}
+              onRowClick={handleRowClick}
+              rowClassName="cursor-pointer hover:bg-amber-50 transition"
             />
           );
         })()}
 
         <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
           <p>Mostrando 8 de 46 búfalos</p>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="small">
-              Anterior
-            </Button>
-            <Button
-              variant="secondary"
-              size="small"
-              className="w-10 h-10 !p-0 font-bold bg-[#ce7d0a] text-white hover:bg-[#b86c09]"
-            >
-              1
-            </Button>
-            <Button
-              variant="secondary"
-              size="small"
-              className="w-10 h-10 !p-0 font-bold"
-            >
-              2
-            </Button>
-            <Button variant="primary" size="small">
-              Próximo
-            </Button>
-          </div>
+          <Pagination
+            currentPage={1}
+            totalPages={2}
+            onPageChange={() => {}}
+            navVariant="report"
+            numberVariant="secondary"
+            activeNumberVariant="primary"
+          />
         </div>
       </DashboardContainer>
 
       {/* Gráfico de Doenças */}
-      <DashboardContainer>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          Frequência de Doenças
-        </h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={frequenciaDoencas}>
-            <XAxis dataKey="doenca" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="frequencia" fill="#CE7D0A" />
-          </BarChart>
-        </ResponsiveContainer>
-      </DashboardContainer>
+      <DoencasChart data={frequenciaDoencas} />
     </div>
   );
 }

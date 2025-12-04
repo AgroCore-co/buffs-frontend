@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import Loading from '@/components/loading/Loading';
+import BackButton from '@/components/ui/BackButton';
+import TabNav from '@/components/ui/TabNav';
 import { ArrowLeft, Printer, Edit, Dna, Calendar, Tag } from 'lucide-react';
 import ResumoTab from '@/components/proprietario/rebanho/ResumoTab';
 import GenealogiaTab from '@/components/proprietario/rebanho/GenealogiaTab';
@@ -78,23 +82,26 @@ const getStatusColor = (status) =>
     : 'bg-red-100 text-red-700 border-red-200';
 
 export default function ProntuarioPage() {
+  const { loading } = useProtectedRoute(['PROPRIETARIO']);
   const [activeTab, setActiveTab] = useState('resumo');
   const bufalo = mockBufaloData;
 
+  if (loading) {
+    return <Loading text="Carregando prontuário..." />;
+  }
+
   const tabs = [
-    { id: 'resumo', label: 'Resumo Geral' },
-    { id: 'genealogia', label: 'Genealogia' },
-    { id: 'sanitario', label: 'Sanitário' },
-    { id: 'zootecnico', label: 'Zootécnico' },
+    { key: 'resumo', label: 'Resumo Geral' },
+    { key: 'genealogia', label: 'Genealogia' },
+    { key: 'sanitario', label: 'Sanitário' },
+    { key: 'zootecnico', label: 'Zootécnico' },
   ];
 
   return (
     <div className="flex flex-col gap-6 w-full pb-10">
       {/* --- HEADER --- */}
       <header>
-        <button className="flex items-center text-slate-500 hover:text-slate-800 mb-4 text-sm font-medium transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Voltar para o Rebanho
-        </button>
+        <BackButton />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-5">
@@ -154,24 +161,7 @@ export default function ProntuarioPage() {
 
       {/* --- TABS --- */}
       <div className="border-b border-slate-200 overflow-x-auto">
-        <nav className="flex space-x-8" aria-label="Tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                ${
-                  activeTab === tab.id
-                    ? 'border-amber-500 text-amber-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                }
-              `}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        <TabNav tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
       {/* --- CONTENT --- */}

@@ -1,25 +1,77 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  Search,
   HelpCircle,
   Bell,
-  TerminalSquare,
   Slash,
-  Box,
-  Hexagon,
-  Plug,
-  Command,
   LogOut,
-  ChevronDown,
   Maximize2,
   Minimize2,
+  AlertCircle,
+  Info,
+  CheckCircle,
+  FileText,
+  MessageCircle,
+  BookOpen,
+  X,
+  Clock,
 } from 'lucide-react';
 
 export default function Header() {
+  const router = useRouter();
   const { user, logout } = useAuth();
+
+  // --- ESTADOS ---
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
+
+  // Refs para fechar ao clicar fora
+  const notificationRef = useRef(null);
+  const supportRef = useRef(null);
+
+  // --- DADOS MOCKADOS (Baseados no seu index.js) ---
+  const notificationsMock = [
+    {
+      id: 1,
+      type: 'urgente',
+      title: 'Vacina de Brucelose',
+      desc: 'Vence em 3 dias - 5 búfalos pendentes.',
+      time: 'Há 2 horas',
+      read: false,
+    },
+    {
+      id: 2,
+      type: 'aviso',
+      title: 'Previsão de Parto',
+      desc: 'Búfala "Luna" (042) próxima do parto.',
+      time: 'Há 5 horas',
+      read: false,
+    },
+    {
+      id: 3,
+      type: 'info',
+      title: 'Relatório Mensal',
+      desc: 'O fechamento de produção de Outubro está pronto.',
+      time: 'Ontem',
+      read: true,
+    },
+    {
+      id: 4,
+      type: 'success',
+      title: 'Coleta Aprovada',
+      desc: 'Laticínio Buffs aprovou a coleta #8821.',
+      time: 'Ontem',
+      read: true,
+    },
+  ];
+
+  const unreadCount = notificationsMock.filter((n) => !n.read).length;
+
+  // --- FUNÇÕES ---
 
   const getInitials = (name) => {
     if (!name) return 'US';
@@ -31,10 +83,6 @@ export default function Header() {
       .slice(0, 2);
   };
 
-  // Estado para fullscreen
-  const [isFullscreen, setIsFullscreen] = React.useState(false);
-
-  // Função para alternar fullscreen
   const handleToggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
@@ -45,45 +93,210 @@ export default function Header() {
     }
   };
 
-  return (
-    <header className="flex h-16 w-full items-center justify-end border-b border-[#ce7d0a]/10 bg-white px-6 text-sm text-[#404040] shrink-0 z-10">
-      {/* Lado Esquerdo removido, conteúdo agora só à direita */}
+  // Fecha dropdowns ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
+      if (supportRef.current && !supportRef.current.contains(event.target)) {
+        setShowSupport(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
+  // Renderiza ícone baseado no tipo de notificação
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'urgente':
+        return <AlertCircle size={16} className="text-red-500" />;
+      case 'aviso':
+        return <AlertCircle size={16} className="text-amber-500" />;
+      case 'success':
+        return <CheckCircle size={16} className="text-green-500" />;
+      default:
+        return <Info size={16} className="text-blue-500" />;
+    }
+  };
+
+  return (
+    <header className="flex h-16 w-full items-center justify-end border-b border-[#ce7d0a]/10 bg-white px-6 text-sm text-[#404040] shrink-0 z-20 relative">
       {/* Lado Direito: Ações e Ferramentas */}
       <div className="flex items-center gap-4">
         <div className="h-6 w-px bg-[#ce7d0a]/10 mx-1" />
 
-        {/* Lado Esquerdo: Breadcrumbs e Info do Projeto */}
-        {/* <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#f8fcfa] border border-[#ce7d0a]/20 text-[#ce7d0a]">
-          <Hexagon size={18} />
-        </div>
-
-        <div className="flex flex-col leading-tight">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[#404040]">AgroCore</span>
-            <Slash className="h-3 w-3 text-[#ce7d0a]/30" strokeWidth={3} />
-            <span className="font-medium text-[#404040]/80">BUFFS</span>
-          </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-[#ce7d0a] bg-[#ffcf78]/20 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide">
-              Production
-            </span>
-            <span className="text-[10px] text-gray-400">v2.4.0</span>
-          </div>
-        </div>
-      </div> */}
-
         {/* Ícones de Ação */}
-        <div className="flex items-center gap-1 text-[#404040]">
-          <button className="p-2 rounded-full hover:bg-[#f8fcfa] hover:text-[#ce7d0a] transition-colors text-[#404040]/70">
-            <HelpCircle size={18} />
-          </button>
+        <div className="flex items-center gap-2 text-[#404040]">
+          {/* --- SUPORTE --- */}
+          <div className="relative" ref={supportRef}>
+            <button
+              className={`p-2 rounded-full transition-colors text-[#404040]/70 ${showSupport ? 'bg-[#f8fcfa] text-[#ce7d0a]' : 'hover:bg-[#f8fcfa] hover:text-[#ce7d0a]'}`}
+              onClick={() => {
+                setShowSupport(!showSupport);
+                setShowNotifications(false);
+              }}
+              title="Suporte e Ajuda"
+            >
+              <HelpCircle size={18} />
+            </button>
 
-          <button className="relative p-2 rounded-full hover:bg-[#f8fcfa] hover:text-[#ce7d0a] transition-colors text-[#404040]/70">
-            <Bell size={18} />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#ce7d0a] border-2 border-white" />
-          </button>
+            {/* Dropdown de Suporte */}
+            {showSupport && (
+              <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-xl shadow-xl border border-[#ce7d0a]/10 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                <div className="p-4 bg-[#f8fcfa] border-b border-[#ce7d0a]/10">
+                  <h3 className="font-bold text-[#404040]">Central de Ajuda</h3>
+                  <p className="text-xs text-gray-500">Como podemos ajudar?</p>
+                </div>
+                <div className="p-2">
+                  <button
+                    onClick={() => {
+                      router.push('/suporte/documentacao');
+                      setShowSupport(false);
+                    }}
+                    className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+                  >
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
+                      <BookOpen size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-700 text-sm">
+                        Documentação
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        Guia do sistema
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      router.push('/suporte/chat');
+                      setShowSupport(false);
+                    }}
+                    className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+                  >
+                    <div className="p-2 bg-green-50 text-green-600 rounded-lg group-hover:bg-green-100 transition-colors">
+                      <MessageCircle size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-700 text-sm">
+                        Falar com Suporte
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        Chat em tempo real
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      router.push('/suporte/chamados');
+                      setShowSupport(false);
+                    }}
+                    className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+                  >
+                    <div className="p-2 bg-amber-50 text-amber-600 rounded-lg group-hover:bg-amber-100 transition-colors">
+                      <FileText size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-700 text-sm">
+                        Abrir Chamado
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        Reportar um problema
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* --- NOTIFICAÇÕES --- */}
+          <div className="relative" ref={notificationRef}>
+            <button
+              className={`relative p-2 rounded-full transition-colors text-[#404040]/70 ${showNotifications ? 'bg-[#f8fcfa] text-[#ce7d0a]' : 'hover:bg-[#f8fcfa] hover:text-[#ce7d0a]'}`}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setShowSupport(false);
+              }}
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-[#ce7d0a] border-2 border-white" />
+              )}
+            </button>
+
+            {/* Dropdown de Notificações */}
+            {showNotifications && (
+              <div className="absolute right-0 top-full mt-3 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-[#ce7d0a]/10 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-[#f8fcfa]">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-[#404040]">Notificações</h3>
+                    {unreadCount > 0 && (
+                      <span className="px-1.5 py-0.5 bg-[#ce7d0a] text-white text-[10px] rounded-full font-bold">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <button className="text-xs text-[#ce7d0a] hover:underline font-medium">
+                    Marcar lidas
+                  </button>
+                </div>
+
+                <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+                  {notificationsMock.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer group ${!notif.read ? 'bg-amber-50/30' : ''}`}
+                    >
+                      <div className="flex gap-3">
+                        <div
+                          className={`mt-1 p-1.5 rounded-full shrink-0 h-fit ${
+                            notif.type === 'urgente'
+                              ? 'bg-red-100'
+                              : notif.type === 'aviso'
+                                ? 'bg-amber-100'
+                                : notif.type === 'success'
+                                  ? 'bg-green-100'
+                                  : 'bg-blue-100'
+                          }`}
+                        >
+                          {getNotificationIcon(notif.type)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1">
+                            <p
+                              className={`text-sm font-semibold ${!notif.read ? 'text-gray-900' : 'text-gray-600'}`}
+                            >
+                              {notif.title}
+                            </p>
+                            {!notif.read && (
+                              <span className="h-2 w-2 rounded-full bg-[#ce7d0a] mt-1.5" />
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mb-2 leading-relaxed">
+                            {notif.desc}
+                          </p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                            <Clock size={10} />
+                            <span>{notif.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button className="w-full py-3 text-center text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-[#ce7d0a] border-t border-gray-100 transition-colors">
+                  Ver todas as notificações
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Botão de modo fullscreen */}
           <button
@@ -96,7 +309,7 @@ export default function Header() {
         </div>
 
         {/* Avatar do Usuário */}
-        <div className="flex items-center gap-3 pl-2 cursor-pointer group">
+        <div className="flex items-center gap-3 pl-2 cursor-pointer group relative">
           <div className="text-right hidden md:block">
             <p className="text-xs font-bold text-[#404040] leading-none">
               {user?.nome || 'Usuário'}
@@ -112,12 +325,13 @@ export default function Header() {
                 {user ? getInitials(user.nome) : 'US'}
               </span>
             </button>
-            {/* Dropdown Menu (Simplificado para o exemplo) */}
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-[#ce7d0a]/10 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50">
+
+            {/* Dropdown Menu Usuário */}
+            <div className="absolute right-0 top-full mt-3 w-48 bg-white border border-[#ce7d0a]/10 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50">
               <div className="p-1">
                 <button
                   onClick={logout}
-                  className="flex items-center w-full px-3 py-2 text-sm text-[#404040] rounded hover:bg-[#f8fcfa] hover:text-[#ce7d0a]"
+                  className="flex items-center w-full px-3 py-2 text-sm text-[#404040] rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
                 >
                   <LogOut size={14} className="mr-2" /> Sair
                 </button>

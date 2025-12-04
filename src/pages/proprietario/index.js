@@ -2,22 +2,22 @@ import React from 'react';
 import Head from 'next/head';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Loading from '@/components/loading/Loading';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
 import DashboardContainer from '@/components/ui/DashboardContainer';
 import MetricCard from '@/components/ui/MetricCard';
-import { FiLayers, FiActivity, FiUsers, FiUser } from 'react-icons/fi';
+import ProducaoLeiteChart from '@/components/proprietario/dashboard/ProducaoLeiteChart';
+import TopBufalasChart from '@/components/proprietario/dashboard/TopBufalasChart';
+import {
+  FiLayers,
+  FiActivity,
+  FiUsers,
+  FiUser,
+  FiTruck,
+  FiAlertCircle,
+  FiInfo,
+  FiAlertTriangle,
+  FiCheckCircle,
+  FiXCircle,
+} from 'react-icons/fi';
 
 export default function ProprietarioPage() {
   const { loading } = useProtectedRoute(['PROPRIETARIO']);
@@ -45,7 +45,69 @@ export default function ProprietarioPage() {
     { name: 'Preta (055)', leite: 9.5 },
     { name: 'Malhada (020)', leite: 9.0 },
   ];
-  const barColors = ['#FFCF78', '#CE7D0A', '#F2B84D', '#FCA90F', '#E6A23C'];
+
+  const topIndustrias = [
+    { nome: 'Buffs Laticinio', volume: 2850, entregas: 12 },
+    { nome: 'Laticinio Valle', volume: 1920, entregas: 8 },
+    { nome: 'Laticinio São Jorge', volume: 1450, entregas: 6 },
+    { nome: 'Cooperativa Leite Bom', volume: 890, entregas: 4 },
+  ];
+
+  const ultimasEntregas = [
+    {
+      data: '2025-12-03',
+      industria: 'Buffs Laticinio',
+      quantidade: '245 L',
+      status: 'Aprovado',
+    },
+    {
+      data: '2025-12-02',
+      industria: 'Laticinio Valle',
+      quantidade: '180 L',
+      status: 'Aprovado',
+    },
+    {
+      data: '2025-12-01',
+      industria: 'Buffs Laticinio',
+      quantidade: '220 L',
+      status: 'Aprovado',
+    },
+    {
+      data: '2025-11-30',
+      industria: 'Laticinio Valle',
+      quantidade: '195 L',
+      status: 'Reprovado',
+    },
+    {
+      data: '2025-11-29',
+      industria: 'Buffs Laticinio',
+      quantidade: '260 L',
+      status: 'Aprovado',
+    },
+  ];
+
+  const alertas = [
+    {
+      tipo: 'urgente',
+      mensagem: 'Vacina de brucelose vence em 3 dias - 5 búfalos',
+      data: 'Hoje',
+    },
+    {
+      tipo: 'aviso',
+      mensagem: 'Búfala "Luna" próxima do parto (previsão: 5 dias)',
+      data: 'Hoje',
+    },
+    {
+      tipo: 'info',
+      mensagem: 'Relatório mensal de produção disponível',
+      data: 'Ontem',
+    },
+    {
+      tipo: 'urgente',
+      mensagem: 'Reposição de sal mineral necessária - Grupo A',
+      data: 'Ontem',
+    },
+  ];
 
   if (loading) {
     return <Loading text="Carregando painel..." />;
@@ -101,105 +163,144 @@ export default function ProprietarioPage() {
             />
           </div>
         </DashboardContainer>
-        <DashboardContainer>
-          {/* Gráficos e outros conteúdos */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Milk Production Chart */}
-            <div className="flex flex-col gap-4">
-              <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-                Produção de Leite Mensal
-              </h2>
-              <div className="w-full h-[300px] bg-[#f8fcfa] rounded-lg border border-[#ce7d0a]/5 p-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={lactationData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
-                    <XAxis
-                      dataKey="name"
-                      interval={0}
-                      tick={{ fill: '#404040', fontSize: 12 }}
-                      axisLine={{ stroke: '#ce7d0a', strokeOpacity: 0.2 }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: '#404040', fontSize: 12 }}
-                      axisLine={{ stroke: '#ce7d0a', strokeOpacity: 0.2 }}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#fff',
-                        borderColor: '#ffcf78',
-                        borderRadius: '8px',
-                      }}
-                      itemStyle={{ color: '#ce7d0a' }}
-                      formatter={(value) => [`${value} L`, 'Produção']}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                    <Line
-                      type="monotone"
-                      dataKey="producao"
-                      stroke="#ce7d0a"
-                      strokeWidth={3}
-                      activeDot={{ r: 6, fill: '#ffcf78', stroke: '#ce7d0a' }}
-                      name="Produção (L)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
 
-            {/* Top Buffaloes Chart */}
-            <div className="flex flex-col gap-4">
+        {/* Gráficos de Produção */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3">
+            <ProducaoLeiteChart data={lactationData} />
+          </div>
+          <div className="lg:col-span-2">
+            <TopBufalasChart data={topBuffalosData} />
+          </div>
+        </div>
+
+        {/* Indústrias e Entregas */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Indústrias */}
+          <DashboardContainer>
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-                Top 5 Búfalas Produtoras
+                Principais Indústrias
               </h2>
-              <div className="w-full h-[300px] bg-[#f8fcfa] rounded-lg border border-[#ce7d0a]/5 p-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={topBuffalosData}
-                    layout="vertical"
-                    margin={{ left: 20, right: 20 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="#e5e5e5"
-                      horizontal={false}
-                    />
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      width={100}
-                      tick={{ fill: '#404040', fontSize: 11, fontWeight: 500 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      cursor={{ fill: 'transparent' }}
-                      contentStyle={{
-                        backgroundColor: '#fff',
-                        borderColor: '#ffcf78',
-                        borderRadius: '8px',
-                      }}
-                      formatter={(value) => [`${value} L/dia`, 'Média']}
-                    />
-                    <Bar
-                      dataKey="leite"
-                      name="Leite (L/dia)"
-                      radius={[0, 4, 4, 0]}
-                      barSize={20}
-                    >
-                      {topBuffalosData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={barColors[index % barColors.length]}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <FiTruck className="text-[#ce7d0a] text-xl" />
             </div>
+            <div className="space-y-3">
+              {topIndustrias.map((industria, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-amber-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">
+                        {industria.nome}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {industria.entregas} entregas
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-[#ce7d0a]">
+                      {industria.volume} L
+                    </p>
+                    <p className="text-xs text-gray-500">no mês</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DashboardContainer>
+
+          {/* Últimas Entregas */}
+          <DashboardContainer>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
+                Últimas Entregas
+              </h2>
+              <FiCheckCircle className="text-[#ce7d0a] text-xl" />
+            </div>
+            <div className="space-y-2">
+              {ultimasEntregas.map((entrega, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors rounded"
+                >
+                  <div className="flex items-center gap-3">
+                    {entrega.status === 'Aprovado' ? (
+                      <FiCheckCircle className="text-green-600 text-lg" />
+                    ) : (
+                      <FiXCircle className="text-red-600 text-lg" />
+                    )}
+                    <div>
+                      <p className="font-medium text-gray-800 text-sm">
+                        {entrega.industria}
+                      </p>
+                      <p className="text-xs text-gray-500">{entrega.data}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-gray-800 text-sm">
+                      {entrega.quantidade}
+                    </p>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded ${
+                        entrega.status === 'Aprovado'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {entrega.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DashboardContainer>
+        </div>
+
+        {/* Alertas do Sistema */}
+        <DashboardContainer>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
+              Notificações
+            </h2>
+            <span className="bg-[#ce7d0a] text-white text-xs font-bold px-2.5 py-1 rounded-full">
+              {alertas.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {alertas.map((alerta, index) => {
+              const iconMap = {
+                urgente: <FiAlertCircle className="text-red-600" />,
+                aviso: <FiAlertTriangle className="text-amber-600" />,
+                info: <FiInfo className="text-blue-600" />,
+              };
+              const dotMap = {
+                urgente: 'bg-red-500',
+                aviso: 'bg-amber-500',
+                info: 'bg-blue-500',
+              };
+              return (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-amber-200 transition-all cursor-pointer"
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotMap[alerta.tipo]}`}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-800 leading-snug">
+                      {alerta.mensagem}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">{alerta.data}</p>
+                  </div>
+                  <div className="shrink-0">{iconMap[alerta.tipo]}</div>
+                </div>
+              );
+            })}
           </div>
         </DashboardContainer>
       </div>

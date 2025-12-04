@@ -3,11 +3,11 @@ import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import TabNav from '@/components/ui/TabNav';
 import DashboardContainer from '@/components/ui/DashboardContainer';
 import Loading from '@/components/loading/Loading';
 import PropriedadeTab from '@/components/proprietario/propriedade/PropriedadeTab';
 import PiquetesTab from '@/components/proprietario/propriedade/PiquetesTab';
-import GruposTab from '@/components/proprietario/propriedade/GruposTab';
 // Importa o componente externo que acabamos de criar
 import AlimentacaoTab from '@/components/proprietario/propriedade/AlimentacaoTab';
 
@@ -150,15 +150,17 @@ export default function PropriedadePage() {
       title: 'Mapa dos Piquetes',
       subtitle: 'Visualização georreferenciada dos lotes',
     },
-    grupos: {
-      title: 'Gestão de Grupos do Rebanho',
-      subtitle: `Visualize, organize e acompanhe os ${grupos.length} grupo${grupos.length !== 1 ? 's' : ''} cadastrados nesta propriedade.`,
-    },
     alimentacao: {
       title: 'Visão Geral da Alimentação',
       subtitle: 'Registros e definições de alimentação dos grupos.',
     },
   };
+
+  const tabList = [
+    { key: 'propriedade', label: 'Propriedade' },
+    { key: 'piquetes', label: 'Piquetes' },
+    { key: 'alimentacao', label: 'Alimentação' },
+  ];
 
   const { title, subtitle } = tabTitles[activeTab] || {};
 
@@ -173,40 +175,19 @@ export default function PropriedadePage() {
       </Head>
       <DashboardContainer>
         {/* Título dinâmico conforme a tab */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 border-b border-gray-200 pb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 leading-tight">
-              {title}
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">{subtitle}</p>
-          </div>
-          {/* Navegação das Tabs Compacta */}
-          <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
-            <button
-              onClick={() => setActiveTab('propriedade')}
-              className={`whitespace-nowrap py-1.5 px-3 rounded-md text-sm font-semibold transition-colors border ${activeTab === 'propriedade' ? 'bg-[#FFCF78] text-gray-900 border-[#FFCF78]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-            >
-              Propriedade
-            </button>
-            <button
-              onClick={() => setActiveTab('piquetes')}
-              className={`whitespace-nowrap py-1.5 px-3 rounded-md text-sm font-semibold transition-colors border ${activeTab === 'piquetes' ? 'bg-[#FFCF78] text-gray-900 border-[#FFCF78]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-            >
-              Piquetes
-            </button>
-            <button
-              onClick={() => setActiveTab('grupos')}
-              className={`whitespace-nowrap py-1.5 px-3 rounded-md text-sm font-semibold transition-colors border ${activeTab === 'grupos' ? 'bg-[#FFCF78] text-gray-900 border-[#FFCF78]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-            >
-              Grupos
-            </button>
-            <button
-              onClick={() => setActiveTab('alimentacao')}
-              className={`whitespace-nowrap py-1.5 px-3 rounded-md text-sm font-semibold transition-colors border ${activeTab === 'alimentacao' ? 'bg-[#FFCF78] text-gray-900 border-[#FFCF78]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-            >
-              Alimentação
-            </button>
-          </div>
+        <div className="mb-0">
+          <h1 className="text-2xl font-bold text-gray-800 leading-tight">
+            {title}
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">{subtitle}</p>
+        </div>
+        {/* Navegação das Tabs - padrão prontuário, encaixe visual igual */}
+        <div className="border-b border-slate-200 overflow-x-auto mb-4">
+          <TabNav
+            tabs={tabList}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </div>
 
         {/* Conteúdo das Tabs */}
@@ -216,9 +197,6 @@ export default function PropriedadePage() {
           )}
           {activeTab === 'piquetes' && (
             <PiquetesTab grupos={grupos} nivelLabel={nivelLabel} hideTitle />
-          )}
-          {activeTab === 'grupos' && (
-            <GruposTab grupos={grupos} nivelLabel={nivelLabel} hideTitle />
           )}
           {activeTab === 'alimentacao' && (
             <AlimentacaoTab

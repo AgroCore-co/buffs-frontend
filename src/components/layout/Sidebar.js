@@ -88,11 +88,18 @@ export default function Sidebar() {
           label: 'Controle Reprodução',
           href: getRoute(cargo, '/controle-reproducao'),
         },
+        {
+          icon: PawPrint,
+          label: 'Simulação',
+          href: getRoute(cargo, '/simulacao'),
+        },
       ],
     },
     {
       section: 'industria',
       items: [
+        { icon: Milk, label: 'Coletas', href: getRoute(cargo, '/coleta') },
+        ,
         {
           icon: Factory,
           label: 'Indústria',

@@ -8,6 +8,9 @@ export const ROUTES = {
   REGISTER: '/auth/register',
   DENIED: '/auth/acesso-negado',
   HOME: '/auth/',
+  SUPORTE_DOCUMENTACAO: '/suporte/documentacao',
+  SUPORTE_CHAT: '/suporte/chat',
+  SUPORTE_CHAMADOS: '/suporte/chamados',
 };
 
 export const CARGOS = {

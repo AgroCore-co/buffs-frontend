@@ -12,7 +12,7 @@ export default function Layout({ children }) {
         <Header />
 
         <main className="flex-1 p-0 scrollbar-thin scrollbar-track-transparent overflow-auto">
-          <div className="mx-auto min-h-full flex flex-col mt-6 ml-6 mr-6">
+          <div className="mx-auto min-h-full flex flex-col mt-6 mb-6 ml-6 mr-6">
             {children || (
               /* Conteúdo Placeholder Ajustado para Contraste */
               <div className="flex-1 rounded-2xl border-2 border-dashed border-[#ce7d0a]/10 bg-white/50 p-12 text-center flex flex-col items-center justify-center hover:bg-white/80 hover:border-[#ce7d0a]/20 transition-all">

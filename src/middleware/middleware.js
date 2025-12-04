@@ -9,6 +9,7 @@ const roleProtectedPaths = {
   '/admin': ['ADMIN'],
   '/proprietario': ['PROPRIETARIO'],
   '/funcionario': ['FUNCIONARIO', 'ADMIN', 'PROPRIETARIO'], // Exemplo: Admin/Prop também acessam área de func? Ajuste conforme regra.
+  '/suporte': ['PROPRIETARIO', 'FUNCIONARIO', 'ADMIN'], // Suporte acessível para todos os usuários autenticados
 };
 
 export function middleware(request) {

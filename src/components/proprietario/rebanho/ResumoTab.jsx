@@ -186,93 +186,95 @@ export default function ResumoTab({ bufalo, onTabChange }) {
       </DashboardContainer>
 
       {/* COLUNA DIREITA - SIDEBAR */}
-      {/* CARD DEDICADO AO SELO */}
-      <Card className="flex flex-col items-center justify-center text-center py-10 relative overflow-hidden border-amber-200">
-        <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-amber-50 to-transparent opacity-50"></div>
+      <DashboardContainer className="space-y-6 p-0 shadow-none border-none bg-transparent">
+        {/* CARD DEDICADO AO SELO */}
+        <Card className="flex flex-col items-center justify-center text-center py-10 relative overflow-hidden border-amber-200">
+          <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-amber-50 to-transparent opacity-50"></div>
 
-        <div className="relative z-10 w-full flex flex-col items-center">
-          <h4 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-6">
-            Classificação Racial
-          </h4>
+          <div className="relative z-10 w-full flex flex-col items-center">
+            <h4 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-6">
+              Classificação Racial
+            </h4>
 
-          <div className="relative mb-6 group">
-            <div className="absolute inset-0 bg-amber-200 blur-[40px] opacity-30 rounded-full group-hover:opacity-50 transition-opacity duration-500"></div>
-            <Image
-              src={getSeloImage(bufalo.categoria)}
-              alt={`Selo ${bufalo.categoria}`}
-              width={160}
-              height={160}
-              className="h-40 w-auto object-contain relative z-10 drop-shadow-lg transition-transform duration-500 group-hover:scale-110"
-            />
+            <div className="relative mb-6 group">
+              <div className="absolute inset-0 bg-amber-200 blur-[40px] opacity-30 rounded-full group-hover:opacity-50 transition-opacity duration-500"></div>
+              <Image
+                src={getSeloImage(bufalo.categoria)}
+                alt={`Selo ${bufalo.categoria}`}
+                width={160}
+                height={160}
+                className="h-40 w-auto object-contain relative z-10 drop-shadow-lg transition-transform duration-500 group-hover:scale-110"
+              />
+            </div>
+
+            <h3 className="text-3xl font-extrabold text-slate-800 mb-2">
+              {bufalo.categoria || 'SRD'}
+            </h3>
+            <div className="px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200">
+              <p className="text-sm font-medium text-slate-600">
+                {getCategoriaLabel(bufalo.categoria)}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Genealogia Simplificada */}
+        <Card>
+          <SectionTitle>Genealogia Rápida</SectionTitle>
+          <div className="relative border-l-2 border-slate-200 ml-4 pl-8 space-y-6 py-2">
+            {/* Item Pai */}
+            <div className="relative">
+              <div className="absolute -left-[45px] top-0.5 bg-blue-100 text-blue-600 rounded-full p-1 border-2 border-white z-10">
+                <User className="w-3 h-3" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase leading-none mb-1">
+                  Pai
+                </p>
+                <p className="font-medium text-slate-800">
+                  {bufalo.id_pai_semen
+                    ? 'Inseminação'
+                    : bufalo.id_pai
+                      ? 'Touro Local'
+                      : 'Não informado'}
+                </p>
+              </div>
+            </div>
+
+            {/* Item Mãe */}
+            <div className="relative">
+              <div className="absolute -left-[45px] top-0.5 bg-pink-100 text-pink-600 rounded-full p-1 border-2 border-white z-10">
+                <User className="w-3 h-3" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase leading-none mb-1">
+                  Mãe
+                </p>
+                <p className="font-medium text-slate-800">
+                  {bufalo.id_mae ? 'Matriz Local' : 'Não informado'}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <h3 className="text-3xl font-extrabold text-slate-800 mb-2">
-            {bufalo.categoria || 'SRD'}
-          </h3>
-          <div className="px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200">
-            <p className="text-sm font-medium text-slate-600">
-              {getCategoriaLabel(bufalo.categoria)}
-            </p>
-          </div>
+          <button
+            onClick={() => onTabChange('genealogia')}
+            className="w-full mt-4 text-center text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors"
+          >
+            Ver árvore completa
+          </button>
+        </Card>
+
+        {/* Meta Info */}
+        <div className="text-xs text-slate-400 space-y-1 px-2">
+          <p className="flex items-center gap-1">
+            <Clock className="w-3 h-3" /> Criado em: {bufalo.created_at}
+          </p>
+          <p className="flex items-center gap-1">
+            <Edit className="w-3 h-3" /> Atualizado: {bufalo.updated_at}
+          </p>
         </div>
-      </Card>
-
-      {/* Genealogia Simplificada */}
-      <Card>
-        <SectionTitle>Genealogia Rápida</SectionTitle>
-        <div className="relative border-l-2 border-slate-200 ml-4 pl-8 space-y-6 py-2">
-          {/* Item Pai */}
-          <div className="relative">
-            <div className="absolute -left-[45px] top-0.5 bg-blue-100 text-blue-600 rounded-full p-1 border-2 border-white z-10">
-              <User className="w-3 h-3" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 uppercase leading-none mb-1">
-                Pai
-              </p>
-              <p className="font-medium text-slate-800">
-                {bufalo.id_pai_semen
-                  ? 'Inseminação'
-                  : bufalo.id_pai
-                    ? 'Touro Local'
-                    : 'Não informado'}
-              </p>
-            </div>
-          </div>
-
-          {/* Item Mãe */}
-          <div className="relative">
-            <div className="absolute -left-[45px] top-0.5 bg-pink-100 text-pink-600 rounded-full p-1 border-2 border-white z-10">
-              <User className="w-3 h-3" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 uppercase leading-none mb-1">
-                Mãe
-              </p>
-              <p className="font-medium text-slate-800">
-                {bufalo.id_mae ? 'Matriz Local' : 'Não informado'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={() => onTabChange('genealogia')}
-          className="w-full mt-4 text-center text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors"
-        >
-          Ver árvore completa
-        </button>
-      </Card>
-
-      {/* Meta Info */}
-      <div className="text-xs text-slate-400 space-y-1 px-2">
-        <p className="flex items-center gap-1">
-          <Clock className="w-3 h-3" /> Criado em: {bufalo.created_at}
-        </p>
-        <p className="flex items-center gap-1">
-          <Edit className="w-3 h-3" /> Atualizado: {bufalo.updated_at}
-        </p>
-      </div>
+      </DashboardContainer>
     </div>
   );
 }

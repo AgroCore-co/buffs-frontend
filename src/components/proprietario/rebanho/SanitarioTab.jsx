@@ -1,3 +1,4 @@
+import Modal from '../../ui/Modal';
 import React, { useMemo, useState } from 'react';
 import {
   Syringe,
@@ -120,19 +121,9 @@ const MOCK_DATA = {
   },
 };
 
-const Card = ({ children, className = '' }) => (
-  <div
-    className={`bg-white rounded-xl border border-slate-200 shadow-sm p-6 ${className}`}
-  >
-    {children}
-  </div>
-);
+import Card from '../../ui/Card';
 
-const SectionTitle = ({ children }) => (
-  <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-    {children}
-  </h3>
-);
+import SectionTitle from '../../ui/SectionTitle';
 
 // --- HELPERS ---
 
