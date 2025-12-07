@@ -102,7 +102,7 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }) {
         <button
           onClick={(e) => {
             e.preventDefault();
-            onEditar && onEditar(propriedade);
+            onEditar && onEditar(e, propriedade);
           }}
           className="p-2 bg-white text-[#ce7d0a] border border-[#ce7d0a]/20 rounded-lg shadow-sm hover:bg-[#FFCF78] hover:text-[#404040] hover:border-[#FFCF78] transition-colors"
           title="Editar"
@@ -112,6 +112,7 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }) {
         <button
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             onDeletar && onDeletar(propriedade);
           }}
           className="p-2 bg-white text-gray-400 border border-gray-200 rounded-lg shadow-sm hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors"

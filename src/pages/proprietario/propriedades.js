@@ -18,101 +18,90 @@ import DashboardContainer from '@/components/ui/DashboardContainer';
 import MetricCard from '@/components/ui/MetricCard';
 import Badge from '@/components/ui/Badge';
 import PropriedadeCard from '@/components/proprietario/propriedades/PropriedadeCard';
+import PropriedadeDeleteModal from '@/components/proprietario/propriedades/PropriedadeDeleteModal';
 import Button from '@/components/ui/Button';
 
-// Mock data mantido para visualização
-const propriedadesMock = [
-  {
-    id_propriedade: 1,
-    nome: 'Fazenda Estrela',
-    cnpj: '12.345.678/0001-99',
-    tipo_manejo: 'P',
-    status: 'Ativa',
-    p_abcb: true,
-    created_at: '2025-01-10T10:00:00Z',
-    updated_at: '2025-06-01T10:00:00Z',
-    endereco: {
-      rua: 'Rua das Palmeiras',
-      bairro: 'Centro',
-      cidade: 'Buffalópolis',
-      estado: 'SP',
-    },
-    dono: { nome: 'Paulo Candiani' },
-  },
-  {
-    id_propriedade: 2,
-    nome: 'Sítio Luna',
-    cnpj: '98.765.432/0001-11',
-    tipo_manejo: 'E',
-    status: 'Ativa',
-    p_abcb: false,
-    created_at: '2024-12-01T10:00:00Z',
-    updated_at: '2025-01-01T10:00:00Z',
-    endereco: {
-      rua: 'Estrada do Leite',
-      bairro: 'Rural',
-      cidade: 'Buffalópolis',
-      estado: 'SP',
-    },
-    dono: { nome: 'Maria Luna' },
-  },
-  {
-    id_propriedade: 3,
-    nome: 'Chácara Mimosa',
-    cnpj: '11.222.333/0001-44',
-    tipo_manejo: 'I',
-    status: 'Inativa',
-    p_abcb: false,
-    created_at: '2025-03-15T10:00:00Z',
-    updated_at: '2025-03-15T10:00:00Z',
-    endereco: {
-      rua: 'Alameda das Flores',
-      bairro: 'Jardim',
-      cidade: 'Buffalópolis',
-      estado: 'SP',
-    },
-    dono: { nome: 'João Mimosa' },
-  },
-  {
-    id_propriedade: 4,
-    nome: 'Fazenda Preta',
-    cnpj: '22.333.444/0001-55',
-    tipo_manejo: 'P',
-    status: 'Ativa',
-    p_abcb: true,
-    created_at: '2025-05-20T10:00:00Z',
-    updated_at: '2025-06-01T10:00:00Z',
-    endereco: {
-      rua: 'Rodovia BR-101',
-      bairro: 'Zona Rural',
-      cidade: 'Buffalópolis',
-      estado: 'SP',
-    },
-    dono: { nome: 'Carlos Preta' },
-  },
-];
+import { useEffect, useState } from 'react';
+import { propriedadeService } from '@/services/propriedade.service';
+import { enderecoService } from '@/services/endereco.service';
+import NovaPropriedadeModal from '@/components/proprietario/propriedades/NovaPropriedadeModal';
+import PropriedadeEditModal from '@/components/proprietario/propriedades/PropriedadeEditModal';
+import api from '@/lib/api';
 
-// Proteção de rota igual à index
 export default function Propriedades({
-  propriedades = propriedadesMock,
-  loading = false,
-  error = null,
-  onNovoPropriedade,
   onEditarPropriedade,
   onDeletarPropriedade,
 }) {
   const router = useRouter();
+  const [propriedades, setPropriedades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [proprietarios, setProprietarios] = useState({});
+  const [enderecos, setEnderecos] = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [propriedadeSelecionada, setPropriedadeSelecionada] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  // Função para mascarar o id usando base64
-  const encodeId = (id) => {
-    try {
-      return btoa(id.toString());
-    } catch {
-      return id;
-    }
-  };
   // Proteção de rota igual à index
   const { loading: loadingAuth } = useProtectedRoute(['PROPRIETARIO']);
+
+  useEffect(() => {
+    async function fetchPropriedades() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await propriedadeService.getPropriedades();
+        if (res && res.propriedades) {
+          setPropriedades(res.propriedades);
+          // Buscar proprietários únicos
+          const ids = [
+            ...new Set(res.propriedades.map((p) => p.id_dono).filter(Boolean)),
+          ];
+          const proprietariosTemp = {};
+          await Promise.all(
+            ids.map(async (id) => {
+              try {
+                const usuario = await api.get(`/usuarios/${id}`);
+                proprietariosTemp[id] =
+                  usuario && usuario.nome ? usuario.nome : 'Sem proprietário';
+              } catch {
+                proprietariosTemp[id] = 'Sem proprietário';
+              }
+            })
+          );
+          setProprietarios(proprietariosTemp);
+
+          // Buscar endereços únicos
+          const enderecoIds = [
+            ...new Set(
+              res.propriedades.map((p) => p.id_endereco).filter(Boolean)
+            ),
+          ];
+          const enderecosTemp = {};
+          await Promise.all(
+            enderecoIds.map(async (id) => {
+              try {
+                const endereco = await enderecoService.getEnderecoById(id);
+                enderecosTemp[id] = endereco || null;
+              } catch {
+                enderecosTemp[id] = null;
+              }
+            })
+          );
+          setEnderecos(enderecosTemp);
+        } else {
+          setPropriedades([]);
+        }
+      } catch (err) {
+        setError('Erro ao buscar propriedades.');
+        setPropriedades([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPropriedades();
+  }, []);
 
   // Funções utilitárias para exibir dados
   const formatCNPJ = (cnpj) => cnpj || 'N/A';
@@ -141,6 +130,98 @@ export default function Propriedades({
   if (loadingAuth || loading) {
     return <Loading text="Carregando painel..." />;
   }
+
+  const handleNovoPropriedade = () => setModalOpen(true);
+  const handleModalClose = () => setModalOpen(false);
+  const handlePropriedadeCriada = () => {
+    // Recarrega propriedades após cadastro
+    setLoading(true);
+    setError(null);
+    async function fetchPropriedades() {
+      try {
+        const res = await propriedadeService.getPropriedades();
+        if (res && res.propriedades) {
+          setPropriedades(res.propriedades);
+          // Buscar proprietários únicos
+          const ids = [
+            ...new Set(res.propriedades.map((p) => p.id_dono).filter(Boolean)),
+          ];
+          const proprietariosTemp = {};
+          await Promise.all(
+            ids.map(async (id) => {
+              try {
+                const usuario = await api.get(`/usuarios/${id}`);
+                proprietariosTemp[id] =
+                  usuario && usuario.nome ? usuario.nome : 'Sem proprietário';
+              } catch {
+                proprietariosTemp[id] = 'Sem proprietário';
+              }
+            })
+          );
+          setProprietarios(proprietariosTemp);
+
+          // Buscar endereços únicos
+          const enderecoIds = [
+            ...new Set(
+              res.propriedades.map((p) => p.id_endereco).filter(Boolean)
+            ),
+          ];
+          const enderecosTemp = {};
+          await Promise.all(
+            enderecoIds.map(async (id) => {
+              try {
+                const endereco = await enderecoService.getEnderecoById(id);
+                enderecosTemp[id] = endereco || null;
+              } catch {
+                enderecosTemp[id] = null;
+              }
+            })
+          );
+          setEnderecos(enderecosTemp);
+        } else {
+          setPropriedades([]);
+        }
+      } catch (err) {
+        setError('Erro ao buscar propriedades.');
+        setPropriedades([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPropriedades();
+  };
+
+  // Handler para abrir modal de edição
+  const handleEditarPropriedade = (propriedade) => {
+    setPropriedadeSelecionada(propriedade);
+    setEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setPropriedadeSelecionada(null);
+  };
+
+  // Handler para abrir modal de exclusão
+  const handleDeletarPropriedade = (propriedade) => {
+    setPropriedadeSelecionada(propriedade);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteModalClose = () => {
+    setDeleteModalOpen(false);
+    setPropriedadeSelecionada(null);
+  };
+
+  const handlePropriedadeDeletada = () => {
+    handleDeleteModalClose();
+    handlePropriedadeCriada(); // Recarrega lista
+  };
+
+  const handlePropriedadeAtualizada = () => {
+    handleEditModalClose();
+    handlePropriedadeCriada(); // Reutiliza reload
+  };
 
   return (
     <>
@@ -212,7 +293,7 @@ export default function Propriedades({
               variant="primary"
               size="medium"
               className="font-bold flex items-center gap-2"
-              onClick={onNovoPropriedade}
+              onClick={handleNovoPropriedade}
             >
               <span>+</span> Nova Propriedade
             </Button>
@@ -234,11 +315,12 @@ export default function Propriedades({
                 Comece cadastrando sua primeira propriedade rural.
               </p>
               <button
-                onClick={onNovoPropriedade}
+                onClick={handleNovoPropriedade}
                 className="text-[#ce7d0a] text-sm font-bold hover:underline"
               >
                 Cadastrar agora
               </button>
+              {/* REMOVIDO DAQUI: <NovaPropriedadeModal ... /> estava aqui dentro */}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -247,15 +329,33 @@ export default function Propriedades({
                   key={propriedade.id_propriedade}
                   onClick={() =>
                     router.push(
-                      `/proprietario/propriedade/${encodeId(propriedade.id_propriedade)}`
+                      `/proprietario/propriedade/${propriedade.id_propriedade}`
                     )
                   }
                   className="cursor-pointer"
                 >
                   <PropriedadeCard
-                    propriedade={propriedade}
-                    onEditar={onEditarPropriedade}
-                    onDeletar={onDeletarPropriedade}
+                    propriedade={{
+                      ...propriedade,
+                      dono: {
+                        nome:
+                          proprietarios[propriedade.id_dono] ||
+                          'Sem proprietário',
+                      },
+                      endereco: enderecos[propriedade.id_endereco] || null,
+                    }}
+                    onEditar={(e, prop) => {
+                      if (e && e.stopPropagation) e.stopPropagation();
+                      handleEditarPropriedade({
+                        ...prop,
+                        dono: {
+                          nome:
+                            proprietarios[prop.id_dono] || 'Sem proprietário',
+                        },
+                        endereco: enderecos[prop.id_endereco] || null,
+                      });
+                    }}
+                    onDeletar={handleDeletarPropriedade}
                   />
                 </div>
               ))}
@@ -263,6 +363,25 @@ export default function Propriedades({
           )}
         </DashboardContainer>
       </div>
+
+      {/* Modais globais */}
+      <NovaPropriedadeModal
+        isOpen={modalOpen}
+        onClose={handleModalClose}
+        onCreated={handlePropriedadeCriada}
+      />
+      <PropriedadeEditModal
+        isOpen={editModalOpen}
+        onClose={handleEditModalClose}
+        propriedade={propriedadeSelecionada}
+        onUpdated={handlePropriedadeAtualizada}
+      />
+      <PropriedadeDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={handleDeleteModalClose}
+        propriedade={propriedadeSelecionada}
+        onDeleted={handlePropriedadeDeletada}
+      />
     </>
   );
 }

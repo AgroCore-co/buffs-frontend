@@ -63,7 +63,7 @@ export default function Modal({
 
   // Renderiza via Portal para garantir que o modal fique acima de tudo (z-index)
   const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop com Blur e Fade */}
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"

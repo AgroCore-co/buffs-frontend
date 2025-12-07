@@ -2,14 +2,15 @@
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TabNav from '@/components/ui/TabNav';
 import DashboardContainer from '@/components/ui/DashboardContainer';
 import Loading from '@/components/loading/Loading';
 import PropriedadeTab from '@/components/proprietario/propriedade/PropriedadeTab';
 import PiquetesTab from '@/components/proprietario/propriedade/PiquetesTab';
-// Importa o componente externo que acabamos de criar
 import AlimentacaoTab from '@/components/proprietario/propriedade/AlimentacaoTab';
+import BackButton from '@/components/ui/BackButton';
+import { propriedadeService } from '@/services/propriedade.service';
 
 // --- MOCK SERVICES ---
 // Mantenho aqui para que o código rode, mas o ideal é que estejam em arquivos separados
@@ -60,44 +61,55 @@ const alimentacaoRegistroService = {
 
 export default function PropriedadePage() {
   const router = useRouter();
-  const { loading } = useProtectedRoute(['PROPRIETARIO']);
-  const { hash } = router.query;
+  const { loading: authLoading } = useProtectedRoute(['PROPRIETARIO']);
+  const { propriedade: propriedadeId } = router.query;
   const [activeTab, setActiveTab] = useState('propriedade');
+  const [propriedade, setPropriedade] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const decodeId = (h) => {
-    try {
-      return parseInt(atob(h), 10);
-    } catch {
-      return null;
-    }
-  };
-  const id = decodeId(hash);
+  useEffect(() => {
+    const fetchPropriedade = async () => {
+      if (!propriedadeId) return;
 
-  // Mock de dados da propriedade
-  const propriedade = {
-    id_propriedade: id || 1,
-    nome: 'Fazenda Estrela',
-    cnpj: '12.345.678/0001-99',
-    tipo_manejo: 'P',
-    status: 'Ativa',
-    p_abcb: true,
-    created_at: '2025-01-10T10:00:00Z',
-    updated_at: '2025-06-01T10:00:00Z',
-    endereco: {
-      rua: 'Rua das Palmeiras',
-      bairro: 'Centro',
-      cidade: 'Buffalópolis',
-      estado: 'SP',
-    },
-    dono: { nome: 'Paulo Candiani' },
-  };
+      // Validação básica de UUID
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(propriedadeId)) {
+        setError('ID de propriedade inválido.');
+        setLoading(false);
+        return;
+      }
 
-  const dashboardStats = {
-    qtd_macho_ativos: 12,
-    qtd_femeas_ativas: 34,
-    qtd_lotes: 5,
-    qtd_usuarios: 2,
-  };
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log('Buscando propriedade com ID:', propriedadeId);
+
+        const propriedadeData =
+          await propriedadeService.getPropriedadeById(propriedadeId);
+
+        if (!propriedadeData) {
+          setError(
+            'Propriedade não encontrada ou você não tem permissão para acessá-la.'
+          );
+          return;
+        }
+
+        console.log('Propriedade carregada:', propriedadeData);
+
+        setPropriedade(propriedadeData);
+      } catch (err) {
+        console.error('Erro ao buscar propriedade:', err);
+        setError('Erro ao carregar dados da propriedade. Tente novamente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPropriedade();
+  }, [propriedadeId]);
 
   const grupos = [
     {
@@ -135,8 +147,30 @@ export default function PropriedadePage() {
     }
   }
 
-  // Loading
-  if (loading || !propriedade) {
+  // Loading e Error States
+  if (authLoading || loading) {
+    return <Loading text="Carregando propriedade..." />;
+  }
+
+  if (error) {
+    return (
+      <DashboardContainer>
+        <div className="flex items-center justify-center p-12">
+          <div className="text-center">
+            <p className="text-red-500 text-lg mb-2">{error}</p>
+            <button
+              onClick={() => router.push('/proprietario/propriedades')}
+              className="mt-4 bg-[#FFCF78] text-gray-800 py-2 px-4 rounded-lg text-sm font-bold"
+            >
+              Voltar para Propriedades
+            </button>
+          </div>
+        </div>
+      </DashboardContainer>
+    );
+  }
+
+  if (!propriedade) {
     return <Loading text="Carregando propriedade..." />;
   }
 
@@ -174,6 +208,10 @@ export default function PropriedadePage() {
         />
       </Head>
       <DashboardContainer>
+        <BackButton onClick={() => router.push('/proprietario/propriedades')}>
+          Voltar para Propriedades
+        </BackButton>
+
         {/* Título dinâmico conforme a tab */}
         <div className="mb-0">
           <h1 className="text-2xl font-bold text-gray-800 leading-tight">
@@ -193,10 +231,19 @@ export default function PropriedadePage() {
         {/* Conteúdo das Tabs */}
         <div className="h-full">
           {activeTab === 'propriedade' && (
-            <PropriedadeTab dashboardStats={dashboardStats} hideTitle />
+            <PropriedadeTab
+              propriedade={propriedade}
+              idPropriedade={propriedade.id_propriedade}
+              hideTitle
+            />
           )}
           {activeTab === 'piquetes' && (
-            <PiquetesTab grupos={grupos} nivelLabel={nivelLabel} hideTitle />
+            <PiquetesTab
+              grupos={grupos}
+              nivelLabel={nivelLabel}
+              idPropriedade={propriedade.id_propriedade}
+              hideTitle
+            />
           )}
           {activeTab === 'alimentacao' && (
             <AlimentacaoTab
