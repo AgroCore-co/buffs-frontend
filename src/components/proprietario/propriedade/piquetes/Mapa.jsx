@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Map as MapIcon, MousePointer2 } from 'lucide-react';
+import { Map as MapIcon, MousePointer2, Edit, Trash2, Maximize2 } from 'lucide-react';
 
-export default function MapaRotativoLeaflet({ lotes = [] }) {
+/**
+ * Mapa interativo de piquetes
+ * @param {Array} lotes - Lista de lotes/piquetes
+ * @param {function} onEditPiquete - Callback ao clicar em editar (recebe o piquete)
+ * @param {function} onDeletePiquete - Callback ao clicar em excluir (recebe o piquete)
+ */
+export default function MapaRotativoLeaflet({ lotes = [], onEditPiquete, onDeletePiquete }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const layersRef = useRef({});
@@ -294,14 +300,22 @@ export default function MapaRotativoLeaflet({ lotes = [] }) {
               <h2 className="text-xl font-bold text-slate-800 mb-1">
                 {loteSelecionado.nome_lote}
               </h2>
+              {loteSelecionado.descricao && (
+                <p className="text-sm text-slate-500 mb-3">
+                  {loteSelecionado.descricao}
+                </p>
+              )}
 
-              <div className="grid grid-cols-2 gap-3 mb-4 mt-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-slate-100 p-2.5 rounded-lg">
                   <p className="text-[10px] text-slate-500 uppercase font-bold">
                     Área
                   </p>
                   <p className="text-sm font-mono font-semibold text-slate-700">
-                    {(loteSelecionado.area_m2 / 10000).toFixed(2)} ha
+                    {loteSelecionado.area_m2 >= 10000
+                      ? `${(loteSelecionado.area_m2 / 10000).toFixed(2)} ha`
+                      : `${loteSelecionado.area_m2?.toLocaleString('pt-BR')} m²`
+                    }
                   </p>
                 </div>
                 <div className="bg-slate-100 p-2.5 rounded-lg">
@@ -310,11 +324,51 @@ export default function MapaRotativoLeaflet({ lotes = [] }) {
                   </p>
                   <p
                     className="text-sm font-semibold"
-                    style={{ color: loteSelecionado.grupo.color }}
+                    style={{ color: loteSelecionado.grupo?.color || '#666' }}
                   >
-                    {loteSelecionado.grupo.nome_grupo}
+                    {loteSelecionado.grupo?.nome_grupo || 'Sem grupo'}
                   </p>
                 </div>
+                <div className="bg-slate-100 p-2.5 rounded-lg">
+                  <p className="text-[10px] text-slate-500 uppercase font-bold">
+                    Capacidade
+                  </p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    {loteSelecionado.qtd_max || '-'} animais
+                  </p>
+                </div>
+                <div className="bg-slate-100 p-2.5 rounded-lg">
+                  <p className="text-[10px] text-slate-500 uppercase font-bold">
+                    Status
+                  </p>
+                  <p className={`text-sm font-semibold ${loteSelecionado.status === 'ativo' ? 'text-green-600' :
+                      loteSelecionado.status === 'inativo' ? 'text-slate-400' : 'text-amber-600'
+                    }`}>
+                    {loteSelecionado.status === 'ativo' ? 'Ativo' :
+                      loteSelecionado.status === 'inativo' ? 'Inativo' : 'Manutenção'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Botões de Ação */}
+              <div className="flex gap-2 pt-2 border-t border-slate-100">
+                {onEditPiquete && (
+                  <button
+                    onClick={() => onEditPiquete(loteSelecionado)}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#ce7d0a] text-white text-sm font-medium rounded-lg hover:bg-[#b86c09] transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Editar
+                  </button>
+                )}
+                {onDeletePiquete && (
+                  <button
+                    onClick={() => onDeletePiquete(loteSelecionado)}
+                    className="flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           ) : (

@@ -17,7 +17,7 @@ import {
 
 import { formatarCNPJ, maskCNPJ, maskCEP } from '@/utils/formatters';
 
-export default function NovaPropriedadeModal({ isOpen, onClose, onCreated }) {
+export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
   const [form, setForm] = useState({
     nome: '',
     cnpj: '',

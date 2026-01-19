@@ -13,7 +13,15 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }) {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
-      return new Date(dateString).toLocaleDateString('pt-BR', {
+      // Se a data já veio formatada do backend (ex: "17/01/2026, 01:05")
+      if (typeof dateString === 'string' && dateString.includes('/')) {
+        // Extrai apenas a parte da data (antes da vírgula)
+        return dateString.split(',')[0].trim();
+      }
+      // Caso contrário, tenta parsear como ISO
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
         year: '2-digit',

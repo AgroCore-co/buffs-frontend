@@ -24,7 +24,7 @@ import Button from '@/components/ui/Button';
 import { useEffect, useState } from 'react';
 import { propriedadeService } from '@/services/propriedade.service';
 import { enderecoService } from '@/services/endereco.service';
-import NovaPropriedadeModal from '@/components/proprietario/propriedades/NovaPropriedadeModal';
+import PropriedadeCriarModal from '@/components/proprietario/propriedades/PropriedadeCriarModal';
 import PropriedadeEditModal from '@/components/proprietario/propriedades/PropriedadeEditModal';
 import api from '@/lib/api';
 
@@ -320,7 +320,6 @@ export default function Propriedades({
               >
                 Cadastrar agora
               </button>
-              {/* REMOVIDO DAQUI: <NovaPropriedadeModal ... /> estava aqui dentro */}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -365,7 +364,7 @@ export default function Propriedades({
       </div>
 
       {/* Modais globais */}
-      <NovaPropriedadeModal
+      <PropriedadeCriarModal
         isOpen={modalOpen}
         onClose={handleModalClose}
         onCreated={handlePropriedadeCriada}

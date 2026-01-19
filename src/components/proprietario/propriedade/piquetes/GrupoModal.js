@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import TabNav from '@/components/ui/TabNav';
-import { FiMapPin, FiInfo, FiTruck, FiUsers } from 'react-icons/fi';
+import { FiMapPin, FiInfo, FiUsers } from 'react-icons/fi';
 import MapaTab from './tabsGrupoModal/MapaTab';
 import DetalhesTab from './tabsGrupoModal/DetalhesTab';
-import MovimentacaoTab from './tabsGrupoModal/MovimentacaoTab';
 import BufalosTab from './tabsGrupoModal/BufalosTab';
 import { Map as MapIcon } from 'lucide-react';
 
-export default function GrupoModal({ isOpen, onClose, grupo, lotes = [] }) {
+export default function GrupoModal({ isOpen, onClose, grupo, lotes = [], idPropriedade }) {
   const [activeTab, setActiveTab] = useState('mapa');
 
   if (!grupo) return null;
@@ -22,11 +21,6 @@ export default function GrupoModal({ isOpen, onClose, grupo, lotes = [] }) {
       key: 'detalhes',
       label: 'Detalhes',
       icon: <FiInfo className="w-4 h-4" />,
-    },
-    {
-      key: 'movimentacao',
-      label: 'Movimentação',
-      icon: <FiTruck className="w-4 h-4" />,
     },
     { key: 'bufalos', label: 'Búfalos', icon: <FiUsers className="w-4 h-4" /> },
   ];
@@ -70,10 +64,7 @@ export default function GrupoModal({ isOpen, onClose, grupo, lotes = [] }) {
           {activeTab === 'detalhes' && (
             <DetalhesTab grupo={grupo} lotes={lotesDoGrupo} />
           )}
-          {activeTab === 'movimentacao' && (
-            <MovimentacaoTab grupo={grupo} lotes={lotes} />
-          )}
-          {activeTab === 'bufalos' && <BufalosTab grupo={grupo} />}
+          {activeTab === 'bufalos' && <BufalosTab grupo={grupo} idPropriedade={idPropriedade} />}
         </div>
       </div>
     </Modal>

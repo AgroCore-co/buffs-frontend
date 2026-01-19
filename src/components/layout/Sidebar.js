@@ -124,17 +124,7 @@ export default function Sidebar() {
     >
       {/* Logo / Brand Area */}
       <div className="flex h-16 items-center justify-center border-b border-[#ce7d0a]/10 shrink-0 bg-[#f8fcfa]">
-        <div className="h-7 w-7 rounded-lg bg-[#ffcf78] shrink-0 shadow-sm flex items-center justify-center text-[#404040]">
-          <span className="font-bold text-xs">B</span>
-        </div>
-        <span
-          className={`
-             ml-3 font-bold text-sm text-[#404040] transition-all duration-200 tracking-tight
-             ${isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 hidden'}
-           `}
-        >
-          BUFFS System
-        </span>
+       
       </div>
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
