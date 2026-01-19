@@ -123,9 +123,7 @@ export default function Sidebar() {
       onMouseLeave={() => setIsExpanded(false)}
     >
       {/* Logo / Brand Area */}
-      <div className="flex h-16 items-center justify-center border-b border-[#ce7d0a]/10 shrink-0 bg-[#f8fcfa]">
-       
-      </div>
+      <div className="flex h-16 items-center justify-center border-b border-[#ce7d0a]/10 shrink-0 bg-[#f8fcfa]"></div>
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
         {menuItems.map((group, groupIndex) => (

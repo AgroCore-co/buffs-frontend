@@ -137,7 +137,8 @@ export default function PropriedadeTab({ propriedade, idPropriedade }) {
       if (!idPropriedade) return;
       setLoadingDashboard(true);
       try {
-        const statsData = await dashboardService.getDashboardStats(idPropriedade);
+        const statsData =
+          await dashboardService.getDashboardStats(idPropriedade);
         setDashboardStats(statsData);
       } catch (error) {
         console.error('Erro ao buscar dados dashboard:', error);
@@ -316,9 +317,7 @@ export default function PropriedadeTab({ propriedade, idPropriedade }) {
           ) : !dashboardStats ? (
             <div className="h-32 flex flex-col items-center justify-center bg-red-50 border border-red-100 rounded-xl text-red-500">
               <AlertCircle className="w-6 h-6 mb-2" />
-              <span className="font-semibold text-sm">
-                Dados indisponíveis
-              </span>
+              <span className="font-semibold text-sm">Dados indisponíveis</span>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">

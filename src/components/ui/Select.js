@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 import { FiChevronDown } from 'react-icons/fi';
 
 /**
@@ -12,37 +12,38 @@ import { FiChevronDown } from 'react-icons/fi';
  * @param {boolean} required - Se é obrigatório
  */
 const Select = forwardRef(
-    (
-        {
-            label,
-            error,
-            hint,
-            options = [],
-            placeholder = 'Selecione...',
-            className = '',
-            required = false,
-            ...props
-        },
-        ref
-    ) => {
-        const selectId = props.id || props.name || `select-${Math.random().toString(36).substr(2, 9)}`;
+  (
+    {
+      label,
+      error,
+      hint,
+      options = [],
+      placeholder = 'Selecione...',
+      className = '',
+      required = false,
+      ...props
+    },
+    ref
+  ) => {
+    const generatedId = useId();
+    const selectId = props.id || props.name || `select-${generatedId}`;
 
-        return (
-            <div className={`w-full ${className}`}>
-                {label && (
-                    <label
-                        htmlFor={selectId}
-                        className="block text-sm font-medium text-slate-700 mb-1"
-                    >
-                        {label}
-                        {required && <span className="text-red-500 ml-1">*</span>}
-                    </label>
-                )}
-                <div className="relative">
-                    <select
-                        ref={ref}
-                        id={selectId}
-                        className={`
+    return (
+      <div className={`w-full ${className}`}>
+        {label && (
+          <label
+            htmlFor={selectId}
+            className="block text-sm font-medium text-slate-700 mb-1"
+          >
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+        )}
+        <div className="relative">
+          <select
+            ref={ref}
+            id={selectId}
+            className={`
               w-full px-3 py-2 pr-10
               bg-white border rounded-lg
               text-slate-700 text-sm
@@ -53,30 +54,28 @@ const Select = forwardRef(
               ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/30' : 'border-slate-200 hover:border-slate-300'}
               ${!props.value ? 'text-slate-400' : ''}
             `}
-                        {...props}
-                    >
-                        {placeholder && (
-                            <option value="" disabled>
-                                {placeholder}
-                            </option>
-                        )}
-                        {options.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-                    <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-                {hint && !error && (
-                    <p className="mt-1 text-xs text-slate-400">{hint}</p>
-                )}
-                {error && (
-                    <p className="mt-1 text-xs text-red-500">{error}</p>
-                )}
-            </div>
-        );
-    }
+            {...props}
+          >
+            {placeholder && (
+              <option value="" disabled>
+                {placeholder}
+              </option>
+            )}
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        </div>
+        {hint && !error && (
+          <p className="mt-1 text-xs text-slate-400">{hint}</p>
+        )}
+        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      </div>
+    );
+  }
 );
 
 Select.displayName = 'Select';

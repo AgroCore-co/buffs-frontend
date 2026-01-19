@@ -18,7 +18,9 @@ const alimentacaoService = {
    * Lista definições de alimentação por propriedade
    */
   getDefinicoesByPropriedade: async (idPropriedade) => {
-    const response = await api.get(`/alimentacoes-def/propriedade/${idPropriedade}`);
+    const response = await api.get(
+      `/alimentacoes-def/propriedade/${idPropriedade}`
+    );
     return response.data;
   },
 
@@ -68,7 +70,9 @@ const alimentacaoService = {
    * Lista registros de alimentação por propriedade
    */
   getRegistrosByPropriedade: async (idPropriedade) => {
-    const response = await api.get(`/alimentacao/registros/propriedade/${idPropriedade}`);
+    const response = await api.get(
+      `/alimentacao/registros/propriedade/${idPropriedade}`
+    );
     return response.data;
   },
 

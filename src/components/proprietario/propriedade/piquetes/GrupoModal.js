@@ -7,7 +7,13 @@ import DetalhesTab from './tabsGrupoModal/DetalhesTab';
 import BufalosTab from './tabsGrupoModal/BufalosTab';
 import { Map as MapIcon } from 'lucide-react';
 
-export default function GrupoModal({ isOpen, onClose, grupo, lotes = [], idPropriedade }) {
+export default function GrupoModal({
+  isOpen,
+  onClose,
+  grupo,
+  lotes = [],
+  idPropriedade,
+}) {
   const [activeTab, setActiveTab] = useState('mapa');
 
   if (!grupo) return null;
@@ -64,7 +70,9 @@ export default function GrupoModal({ isOpen, onClose, grupo, lotes = [], idPropr
           {activeTab === 'detalhes' && (
             <DetalhesTab grupo={grupo} lotes={lotesDoGrupo} />
           )}
-          {activeTab === 'bufalos' && <BufalosTab grupo={grupo} idPropriedade={idPropriedade} />}
+          {activeTab === 'bufalos' && (
+            <BufalosTab grupo={grupo} idPropriedade={idPropriedade} />
+          )}
         </div>
       </div>
     </Modal>

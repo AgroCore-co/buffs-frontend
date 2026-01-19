@@ -16,44 +16,45 @@ import Button from './Button';
  * @param {boolean} props.compact - Se true, usa padding reduzido
  */
 export default function EmptyState({
-    icon: Icon = FiInbox,
-    title = 'Nenhum dado encontrado',
-    description = '',
-    buttonText = '',
-    onButtonClick,
-    buttonVariant = 'primary',
-    buttonSize = 'small',
-    className = '',
-    compact = false,
+  icon: Icon = FiInbox,
+  title = 'Nenhum dado encontrado',
+  description = '',
+  buttonText = '',
+  onButtonClick,
+  buttonVariant = 'primary',
+  buttonSize = 'small',
+  className = '',
+  compact = false,
 }) {
-    return (
-        <div
-            className={`flex flex-col items-center justify-center text-center ${compact ? 'py-8' : 'py-12'
-                } ${className}`}
+  return (
+    <div
+      className={`flex flex-col items-center justify-center text-center ${
+        compact ? 'py-8' : 'py-12'
+      } ${className}`}
+    >
+      {/* Ícone */}
+      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center border-2 border-amber-100 mb-4">
+        <Icon className="w-7 h-7 text-[#ce7d0a]" />
+      </div>
+
+      {/* Título */}
+      <h3 className="text-base font-bold text-slate-700 mb-1">{title}</h3>
+
+      {/* Descrição */}
+      {description && (
+        <p className="text-sm text-slate-400 max-w-sm mb-5">{description}</p>
+      )}
+
+      {/* Botão de ação (opcional) */}
+      {buttonText && (
+        <Button
+          variant={buttonVariant}
+          size={buttonSize}
+          onClick={onButtonClick}
         >
-            {/* Ícone */}
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center border-2 border-amber-100 mb-4">
-                <Icon className="w-7 h-7 text-[#ce7d0a]" />
-            </div>
-
-            {/* Título */}
-            <h3 className="text-base font-bold text-slate-700 mb-1">{title}</h3>
-
-            {/* Descrição */}
-            {description && (
-                <p className="text-sm text-slate-400 max-w-sm mb-5">{description}</p>
-            )}
-
-            {/* Botão de ação (opcional) */}
-            {buttonText && (
-                <Button
-                    variant={buttonVariant}
-                    size={buttonSize}
-                    onClick={onButtonClick}
-                >
-                    {buttonText}
-                </Button>
-            )}
-        </div>
-    );
+          {buttonText}
+        </Button>
+      )}
+    </div>
+  );
 }

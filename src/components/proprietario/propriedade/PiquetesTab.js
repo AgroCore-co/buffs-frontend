@@ -207,9 +207,7 @@ export default function PiquetesTab({ idPropriedade }) {
       {/* Mapa de Piquetes */}
       <DashboardContainer>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[#404040]">
-            Mapa de Piquetes
-          </h2>
+          <h2 className="text-lg font-bold text-[#404040]">Mapa de Piquetes</h2>
           <Button variant="primary" size="small" onClick={handleNovoPiquete}>
             <FiPlus className="w-4 h-4 mr-2" />
             Novo Piquete
@@ -247,9 +245,7 @@ export default function PiquetesTab({ idPropriedade }) {
       {/* Tabela de Grupos */}
       <DashboardContainer>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[#404040]">
-            Grupos de Manejo
-          </h2>
+          <h2 className="text-lg font-bold text-[#404040]">Grupos de Manejo</h2>
           <Button variant="primary" size="small" onClick={handleNovoGrupo}>
             <FiPlus className="w-4 h-4 mr-2" />
             Novo Grupo
@@ -287,7 +283,9 @@ export default function PiquetesTab({ idPropriedade }) {
               }
               if (key === 'qtd_lotes') {
                 return (
-                  <Badge type="info">{grupo.qtd_lotes} piquete{grupo.qtd_lotes !== 1 ? 's' : ''}</Badge>
+                  <Badge type="info">
+                    {grupo.qtd_lotes} piquete{grupo.qtd_lotes !== 1 ? 's' : ''}
+                  </Badge>
                 );
               }
               if (key === 'acoes') {

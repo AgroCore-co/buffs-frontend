@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Map as MapIcon, MousePointer2, Edit, Trash2, Maximize2 } from 'lucide-react';
+import {
+  Map as MapIcon,
+  MousePointer2,
+  Edit,
+  Trash2,
+  Maximize2,
+} from 'lucide-react';
 
 /**
  * Mapa interativo de piquetes
@@ -7,7 +13,11 @@ import { Map as MapIcon, MousePointer2, Edit, Trash2, Maximize2 } from 'lucide-r
  * @param {function} onEditPiquete - Callback ao clicar em editar (recebe o piquete)
  * @param {function} onDeletePiquete - Callback ao clicar em excluir (recebe o piquete)
  */
-export default function MapaRotativoLeaflet({ lotes = [], onEditPiquete, onDeletePiquete }) {
+export default function MapaRotativoLeaflet({
+  lotes = [],
+  onEditPiquete,
+  onDeletePiquete,
+}) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const layersRef = useRef({});
@@ -314,8 +324,7 @@ export default function MapaRotativoLeaflet({ lotes = [], onEditPiquete, onDelet
                   <p className="text-sm font-mono font-semibold text-slate-700">
                     {loteSelecionado.area_m2 >= 10000
                       ? `${(loteSelecionado.area_m2 / 10000).toFixed(2)} ha`
-                      : `${loteSelecionado.area_m2?.toLocaleString('pt-BR')} m²`
-                    }
+                      : `${loteSelecionado.area_m2?.toLocaleString('pt-BR')} m²`}
                   </p>
                 </div>
                 <div className="bg-slate-100 p-2.5 rounded-lg">
@@ -341,11 +350,20 @@ export default function MapaRotativoLeaflet({ lotes = [], onEditPiquete, onDelet
                   <p className="text-[10px] text-slate-500 uppercase font-bold">
                     Status
                   </p>
-                  <p className={`text-sm font-semibold ${loteSelecionado.status === 'ativo' ? 'text-green-600' :
-                      loteSelecionado.status === 'inativo' ? 'text-slate-400' : 'text-amber-600'
-                    }`}>
-                    {loteSelecionado.status === 'ativo' ? 'Ativo' :
-                      loteSelecionado.status === 'inativo' ? 'Inativo' : 'Manutenção'}
+                  <p
+                    className={`text-sm font-semibold ${
+                      loteSelecionado.status === 'ativo'
+                        ? 'text-green-600'
+                        : loteSelecionado.status === 'inativo'
+                          ? 'text-slate-400'
+                          : 'text-amber-600'
+                    }`}
+                  >
+                    {loteSelecionado.status === 'ativo'
+                      ? 'Ativo'
+                      : loteSelecionado.status === 'inativo'
+                        ? 'Inativo'
+                        : 'Manutenção'}
                   </p>
                 </div>
               </div>

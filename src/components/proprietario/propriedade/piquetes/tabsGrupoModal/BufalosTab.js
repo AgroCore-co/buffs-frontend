@@ -149,15 +149,17 @@ export default function BufalosTab({ grupo, idPropriedade }) {
             }
             if (key === 'nivel_maturidade') {
               const maturidadeMap = {
-                'B': 'Bezerra(o)',
-                'D': 'Desmamado',
-                'N': 'Novilha(o)',
-                'T': 'Touro',
-                'V': 'Vaca',
+                B: 'Bezerra(o)',
+                D: 'Desmamado',
+                N: 'Novilha(o)',
+                T: 'Touro',
+                V: 'Vaca',
               };
               return (
                 <span className="text-xs font-medium text-slate-600">
-                  {maturidadeMap[bufalo.nivel_maturidade] || bufalo.nivel_maturidade || '-'}
+                  {maturidadeMap[bufalo.nivel_maturidade] ||
+                    bufalo.nivel_maturidade ||
+                    '-'}
                 </span>
               );
             }
@@ -208,7 +210,9 @@ export default function BufalosTab({ grupo, idPropriedade }) {
           <p className="text-2xl font-bold text-red-500">
             {bufalos.filter((b) => !b.status).length}
           </p>
-          <p className="text-xs text-slate-500 uppercase font-medium">Inativos</p>
+          <p className="text-xs text-slate-500 uppercase font-medium">
+            Inativos
+          </p>
         </div>
       </div>
     </div>
