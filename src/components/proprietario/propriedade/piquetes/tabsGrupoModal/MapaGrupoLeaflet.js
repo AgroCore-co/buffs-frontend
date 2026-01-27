@@ -33,8 +33,9 @@ export default function MapaGrupoLeaflet({ todosLotes, grupo, idLoteAtual }) {
       lngSum = 0,
       count = 0;
     todosLotes.forEach((l) => {
-      if (l.geo_mapa?.coordinates?.[0]) {
-        l.geo_mapa.coordinates[0].forEach((coord) => {
+      const geo = l.geoMapa || l.geo_mapa;
+      if (geo?.coordinates?.[0]) {
+        geo.coordinates[0].forEach((coord) => {
           lngSum += coord[0];
           latSum += coord[1];
           count++;
@@ -68,8 +69,9 @@ export default function MapaGrupoLeaflet({ todosLotes, grupo, idLoteAtual }) {
     ).addTo(map);
     const allLatLngs = [];
     todosLotes.forEach((lote) => {
-      if (lote.geo_mapa?.coordinates?.[0]) {
-        lote.geo_mapa.coordinates[0].forEach((coord) => {
+      const geo = lote.geoMapa || lote.geo_mapa;
+      if (geo?.coordinates?.[0]) {
+        geo.coordinates[0].forEach((coord) => {
           allLatLngs.push([coord[1], coord[0]]);
         });
       }
@@ -117,14 +119,17 @@ export default function MapaGrupoLeaflet({ todosLotes, grupo, idLoteAtual }) {
     Object.values(layersRef.current).forEach((layer) => map.removeLayer(layer));
     layersRef.current = {};
     todosLotes.forEach((lote, idx) => {
-      if (
-        !lote.geo_mapa?.coordinates?.[0] ||
-        lote.geo_mapa.coordinates[0].length === 0
-      )
-        return;
-      const latLngs = lote.geo_mapa.coordinates[0].map((c) => [c[1], c[0]]);
-      const isLoteAtual = idLoteAtual && lote.id_lote === idLoteAtual;
-      const pertenceAoGrupo = lote.id_grupo === grupo.id_grupo;
+      const geo = lote.geoMapa || lote.geo_mapa;
+      const nomeLote = lote.nomeLote || lote.nome_lote;
+      const idLote = lote.idLote || lote.id_lote;
+      const loteIdGrupo = lote.idGrupo || lote.id_grupo;
+      const grupoIdGrupo = grupo.idGrupo || grupo.id_grupo;
+
+      if (!geo?.coordinates?.[0] || geo.coordinates[0].length === 0) return;
+
+      const latLngs = geo.coordinates[0].map((c) => [c[1], c[0]]);
+      const isLoteAtual = idLoteAtual && idLote === idLoteAtual;
+      const pertenceAoGrupo = loteIdGrupo === grupoIdGrupo;
 
       // Estilo para lote atual (destaque laranja)
       // Estilo para lotes do grupo (cor do grupo)
@@ -147,7 +152,7 @@ export default function MapaGrupoLeaflet({ todosLotes, grupo, idLoteAtual }) {
 
       // Tooltip apenas para lotes do grupo ou lote atual
       if (pertenceAoGrupo || isLoteAtual) {
-        const match = lote.nome_lote.match(/\d+/);
+        const match = nomeLote.match(/\d+/);
         const nomeAbreviado = match ? `P${parseInt(match[0])}` : `P${idx + 1}`;
         polygon.bindTooltip(
           `<div class=\"label-piquete font-sans font-bold text-xs\" style=\"text-shadow: 2px 2px 8px rgba(0,0,0,0.95); color: #fff;\">${nomeAbreviado}</div>`,
@@ -159,7 +164,7 @@ export default function MapaGrupoLeaflet({ todosLotes, grupo, idLoteAtual }) {
           }
         );
       }
-      layersRef.current[lote.id_lote] = polygon;
+      layersRef.current[idLote] = polygon;
     });
   }, [leafletLoaded, todosLotes, grupo, idLoteAtual]);
 
@@ -221,7 +226,7 @@ export default function MapaGrupoLeaflet({ todosLotes, grupo, idLoteAtual }) {
             style={{ backgroundColor: grupo.color, opacity: 0.7 }}
           ></span>
           <span className="font-semibold text-slate-800">
-            {grupo.nome_grupo}
+            {grupo.nomeGrupo || grupo.nome_grupo}
           </span>
         </div>
         <div className="flex items-center gap-2 text-slate-500">

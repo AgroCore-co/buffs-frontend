@@ -1,4 +1,6 @@
 import React from 'react';
+import useSWR from 'swr';
+import bufaloService from '@/services/bufalo.service';
 import DashboardContainer from '../../ui/DashboardContainer';
 import {
   Tag,
@@ -93,6 +95,20 @@ const getSeloImage = (categoria) => {
 };
 
 export default function ResumoTab({ bufalo, onTabChange }) {
+  // Fetch pai details
+  const { data: pai } = useSWR(
+    bufalo.id_pai ? `bufalo/${bufalo.id_pai}` : null,
+    () => bufaloService.getBufaloById(bufalo.id_pai),
+    { revalidateOnFocus: false }
+  );
+
+  // Fetch mae details
+  const { data: mae } = useSWR(
+    bufalo.id_mae ? `bufalo/${bufalo.id_mae}` : null,
+    () => bufaloService.getBufaloById(bufalo.id_mae),
+    { revalidateOnFocus: false }
+  );
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
       {/* COLUNA ESQUERDA - DADOS PRINCIPAIS */}
@@ -232,10 +248,10 @@ export default function ResumoTab({ bufalo, onTabChange }) {
                   Pai
                 </p>
                 <p className="font-medium text-slate-800">
-                  {bufalo.id_pai_semen
-                    ? 'Inseminação'
+                  {pai
+                    ? `${pai.nome} (${pai.brinco})`
                     : bufalo.id_pai
-                      ? 'Touro Local'
+                      ? 'Carregando...'
                       : 'Não informado'}
                 </p>
               </div>
@@ -251,7 +267,11 @@ export default function ResumoTab({ bufalo, onTabChange }) {
                   Mãe
                 </p>
                 <p className="font-medium text-slate-800">
-                  {bufalo.id_mae ? 'Matriz Local' : 'Não informado'}
+                  {mae
+                    ? `${mae.nome} (${mae.brinco})`
+                    : bufalo.id_mae
+                      ? 'Carregando...'
+                      : 'Não informado'}
                 </p>
               </div>
             </div>
@@ -268,10 +288,12 @@ export default function ResumoTab({ bufalo, onTabChange }) {
         {/* Meta Info */}
         <div className="text-xs text-slate-400 space-y-1 px-2">
           <p className="flex items-center gap-1">
-            <Clock className="w-3 h-3" /> Criado em: {bufalo.created_at}
+            <Clock className="w-3 h-3" /> Criado em:{' '}
+            {new Date(bufalo.created_at).toLocaleString('pt-BR')}
           </p>
           <p className="flex items-center gap-1">
-            <Edit className="w-3 h-3" /> Atualizado: {bufalo.updated_at}
+            <Edit className="w-3 h-3" /> Atualizado:{' '}
+            {new Date(bufalo.updated_at).toLocaleString('pt-BR')}
           </p>
         </div>
       </DashboardContainer>

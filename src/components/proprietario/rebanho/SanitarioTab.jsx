@@ -1,5 +1,5 @@
-import Modal from '../../ui/Modal';
 import React, { useMemo, useState } from 'react';
+import useSWR from 'swr';
 import {
   Syringe,
   Calendar,
@@ -11,119 +11,11 @@ import {
 } from 'lucide-react';
 import Table from '@/components/table/Table';
 import Pagination from '@/components/ui/Pagination';
-
-// --- DADOS MOCKADOS ---
-const MOCK_DATA = {
-  data: [
-    {
-      id_sanit: 'db5851b1-ef2c-4b5f-8f14-9e87f61361b9',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-09-05',
-      dosagem: 2.77,
-      unidade_medida: 'ml',
-      doenca: 'Parasitas',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: '7f49862f-05c2-4510-8a23-6ec293495a5c',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-09-05',
-      dosagem: 15,
-      unidade_medida: 'ml',
-      doenca: 'Suplementação',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: 'c18916d3-aea9-4f60-b5b3-c65a20ef5db9',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-09-05',
-      dosagem: 1,
-      unidade_medida: 'dose',
-      doenca: 'Parasitas',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: '5f00982d-0492-41fb-bb18-d7e484ad7cfb',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-08-06',
-      dosagem: 1,
-      unidade_medida: 'dose',
-      doenca: 'Parasitas',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: '2197f282-ba3b-4b84-99aa-5814b2e943f2',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-06-07',
-      dosagem: 1,
-      unidade_medida: 'dose',
-      doenca: 'Raiva',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: 'c03c27aa-5d4f-4e8d-9f19-006c80d2db8f',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-06-07',
-      dosagem: 1,
-      unidade_medida: 'dose',
-      doenca: 'Brucelose',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: '79eaa4ef-2e1b-4e66-a8fb-033211698fd5',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-05-08',
-      dosagem: 1,
-      unidade_medida: 'dose',
-      doenca: 'Raiva',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: '219ef469-3cc3-4959-87d9-e900ba5d28ec',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-05-08',
-      dosagem: 1,
-      unidade_medida: 'dose',
-      doenca: 'Parasitas',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: '5c89d2ad-ca42-4810-b045-f6c1620c2906',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-04-08',
-      dosagem: 1,
-      unidade_medida: 'dose',
-      doenca: 'Parasitas',
-      necessita_retorno: false,
-      observacao: null,
-    },
-    {
-      id_sanit: 'cc4f344d-3fcf-43f8-b5b6-651897bc175a',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      dt_aplicacao: '2023-03-09',
-      dosagem: 1,
-      unidade_medida: 'dose',
-      doenca: 'Parasitas',
-      necessita_retorno: false,
-      observacao: null,
-    },
-  ],
-  meta: {
-    total: 15,
-  },
-};
-
 import Card from '../../ui/Card';
-
 import SectionTitle from '../../ui/SectionTitle';
+import EmptyState from '@/components/ui/EmptyState';
+import Loading from '@/components/loading/Loading';
+import { sanitarioService } from '@/services/sanitario.service';
 
 // --- HELPERS ---
 
@@ -180,16 +72,36 @@ export default function SanitarioTab({ bufalo }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const fullData = bufalo?.sanitaryData || MOCK_DATA.data;
-  const totalRecords = bufalo?.sanitaryMeta?.total || fullData.length;
+  // 1. Busca Main Data (Paginated)
+  const { data: responseData, isLoading: loading } = useSWR(
+    bufalo?.id_bufalo ? ['sanitario', bufalo.id_bufalo, currentPage] : null,
+    () =>
+      sanitarioService.getSanitaryDataByBuffalo(
+        bufalo.id_bufalo,
+        currentPage,
+        itemsPerPage
+      ),
+    {
+      revalidateOnFocus: false,
+      keepPreviousData: true,
+    }
+  );
 
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return fullData.slice(startIndex, endIndex);
-  }, [fullData, currentPage]);
+  const sanitaryData = responseData?.data || [];
+  const meta = responseData?.meta || {};
+  const totalRecords = meta.total || 0;
+  const totalPages = meta.totalPages || 1;
 
-  const totalPages = Math.ceil(totalRecords / itemsPerPage);
+  // 2. Busca Última Aplicação (Separate Request)
+  const { data: latestData } = useSWR(
+    bufalo?.id_bufalo ? ['sanitario-latest', bufalo.id_bufalo] : null,
+    () => sanitarioService.getSanitaryDataByBuffalo(bufalo.id_bufalo, 1, 1),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  const lastAppDate = latestData?.data?.[0]?.dt_aplicacao || null;
 
   const startRecord = (currentPage - 1) * itemsPerPage + 1;
   const endRecord = Math.min(currentPage * itemsPerPage, totalRecords);
@@ -251,9 +163,16 @@ export default function SanitarioTab({ bufalo }) {
 
       case 'necessita_retorno':
         return row.necessita_retorno ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-            <History className="w-3 h-3" /> Sim
-          </span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+              <History className="w-3 h-3" /> Sim
+            </span>
+            {row.dt_retorno && (
+              <span className="text-[10px] text-slate-500 font-medium">
+                {formatDate(row.dt_retorno)}
+              </span>
+            )}
+          </div>
         ) : (
           <span className="text-slate-400">-</span>
         );
@@ -299,46 +218,63 @@ export default function SanitarioTab({ bufalo }) {
               Última Aplicação
             </p>
             <p className="text-lg font-bold text-slate-800">
-              {fullData.length > 0 ? formatDate(fullData[0].dt_aplicacao) : '-'}
+              {formatDate(lastAppDate)}
             </p>
           </div>
         </Card>
       </div>
 
-      <Card className="p-0 overflow-hidden border-0 shadow-sm">
+      <Card className="p-0 overflow-hidden border-0 shadow-sm relative">
+        {loading && (
+          <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center">
+            <Loading text="Carregando dados sanitários..." />
+          </div>
+        )}
+
         <div className="p-6 border-b border-slate-100">
           <SectionTitle>Histórico de Vacinas e Tratamentos</SectionTitle>
         </div>
 
         <div className="p-0">
-          <Table
-            columns={columns}
-            data={paginatedData}
-            renderCell={renderCell}
-            className="border-0 shadow-none rounded-none"
-            minWidth="800px"
-          />
-        </div>
-
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Mostrando <span className="font-medium">{startRecord}</span> a{' '}
-                <span className="font-medium">{endRecord}</span> de{' '}
-                <span className="font-medium">{totalRecords}</span> resultados
-              </p>
-            </div>
-            <div>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                navVariant="report"
-                activeNumberVariant="primary"
+          {!loading && totalRecords === 0 ? (
+            <EmptyState
+              title="Nenhum registro encontrado"
+              description="Não há dados sanitários registrados para este animal."
+              icon={Syringe}
+            />
+          ) : (
+            <>
+              <Table
+                columns={columns}
+                data={sanitaryData}
+                renderCell={renderCell}
+                className="border-0 shadow-none rounded-none"
+                minWidth="800px"
               />
-            </div>
-          </div>
+              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Mostrando{' '}
+                      <span className="font-medium">{startRecord}</span> a{' '}
+                      <span className="font-medium">{endRecord}</span> de{' '}
+                      <span className="font-medium">{totalRecords}</span>{' '}
+                      resultados
+                    </p>
+                  </div>
+                  <div>
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                      navVariant="report"
+                      activeNumberVariant="primary"
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </Card>
     </div>

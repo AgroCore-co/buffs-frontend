@@ -52,7 +52,7 @@ export default function PiqueteCriarModal({
     if (isOpen) {
       setFormData({
         nome_lote: '',
-        id_grupo: grupos[0]?.id_grupo || '',
+        id_grupo: grupos[0]?.idGrupo || grupos[0]?.id_grupo || '',
         descricao: '',
         qtd_max: 50,
         status: 'ativo',
@@ -133,8 +133,8 @@ export default function PiqueteCriarModal({
 
   // Opções de grupos
   const grupoOptions = grupos.map((g) => ({
-    value: g.id_grupo,
-    label: g.nome_grupo,
+    value: g.idGrupo || g.id_grupo,
+    label: g.nomeGrupo || g.nome_grupo,
   }));
 
   const footer = (
@@ -242,8 +242,9 @@ export default function PiqueteCriarModal({
               onPolygonChange={handlePolygonChange}
               existingLotes={existingLotes}
               grupoColor={
-                grupos.find((g) => g.id_grupo === formData.id_grupo)?.color ||
-                '#ce7d0a'
+                grupos.find(
+                  (g) => (g.idGrupo || g.id_grupo) === formData.id_grupo
+                )?.color || '#ce7d0a'
               }
             />
           </div>

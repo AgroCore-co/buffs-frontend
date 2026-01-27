@@ -190,7 +190,7 @@ export default function PiquetesTab({ idPropriedade }) {
 
   // Colunas da tabela de grupos
   const grupoColumns = [
-    { key: 'nome_grupo', label: 'Nome do Grupo', className: 'text-left' },
+    { key: 'nomeGrupo', label: 'Nome do Grupo', className: 'text-left' },
     { key: 'color', label: 'Cor', className: 'text-center' },
     { key: 'qtd_lotes', label: 'Piquetes', className: 'text-center' },
     { key: 'acoes', label: 'Ações', className: 'text-center w-24' },
@@ -199,7 +199,9 @@ export default function PiquetesTab({ idPropriedade }) {
   // Enriquece grupos com contagem de lotes
   const gruposEnriquecidos = grupos.map((g) => ({
     ...g,
-    qtd_lotes: lotes.filter((l) => l.id_grupo === g.id_grupo).length,
+    qtd_lotes: lotes.filter(
+      (l) => (l.idGrupo || l.id_grupo) === (g.idGrupo || g.id_grupo)
+    ).length,
   }));
 
   return (

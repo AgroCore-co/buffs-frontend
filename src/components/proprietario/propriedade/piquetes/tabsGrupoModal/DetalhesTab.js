@@ -43,7 +43,7 @@ export default function DetalhesTab({ grupo, lotes }) {
       setLoadingStatus(true);
       try {
         const status = await movimentacaoService.getStatusAtualByGrupo(
-          grupo.id_grupo
+          grupo.idGrupo || grupo.id_grupo
         );
         setStatusAtual(status);
       } catch (error) {
@@ -52,8 +52,8 @@ export default function DetalhesTab({ grupo, lotes }) {
         setLoadingStatus(false);
       }
     }
-    if (grupo?.id_grupo) fetchStatus();
-  }, [grupo?.id_grupo]);
+    if (grupo?.idGrupo || grupo?.id_grupo) fetchStatus();
+  }, [grupo?.idGrupo, grupo?.id_grupo]);
 
   const formatarData = (data) => {
     if (!data) return '-';
@@ -61,10 +61,15 @@ export default function DetalhesTab({ grupo, lotes }) {
   };
 
   const getLoteAtual = () => {
-    if (!statusAtual?.localizacao_atual?.id_lote) return null;
-    return lotes?.find(
-      (l) => l.id_lote === statusAtual.localizacao_atual.id_lote
-    );
+    if (
+      !statusAtual?.localizacao_atual?.idLote &&
+      !statusAtual?.localizacao_atual?.id_lote
+    )
+      return null;
+    const idLoteAtual =
+      statusAtual.localizacao_atual.idLote ||
+      statusAtual.localizacao_atual.id_lote;
+    return lotes?.find((l) => (l.idLote || l.id_lote) === idLoteAtual);
   };
 
   const loteAtual = getLoteAtual();
@@ -82,7 +87,11 @@ export default function DetalhesTab({ grupo, lotes }) {
         />
         <StatCard
           label="Lote Atual"
-          value={loadingStatus ? '...' : loteAtual?.nome_lote || 'Não definido'}
+          value={
+            loadingStatus
+              ? '...'
+              : loteAtual?.nomeLote || loteAtual?.nome_lote || 'Não definido'
+          }
           subtext={loteAtual ? 'Localização confirmada' : 'Sem movimentação'}
           icon={FiMapPin}
           colorClass="bg-blue-100 text-blue-600"
@@ -132,7 +141,7 @@ export default function DetalhesTab({ grupo, lotes }) {
                       Lote Atual
                     </p>
                     <p className="text-amber-900 font-bold text-lg leading-tight mt-1">
-                      {loteAtual.nome_lote}
+                      {loteAtual.nomeLote || loteAtual.nome_lote}
                     </p>
                   </div>
 
@@ -204,10 +213,13 @@ export default function DetalhesTab({ grupo, lotes }) {
               {lotes.length > 0 ? (
                 <div className="divide-y divide-slate-100">
                   {lotes.map((lote) => {
-                    const isCurrent = loteAtual?.id_lote === lote.id_lote;
+                    const idLote = lote.idLote || lote.id_lote;
+                    const idLoteAtualComp =
+                      loteAtual?.idLote || loteAtual?.id_lote;
+                    const isCurrent = idLoteAtualComp === idLote;
                     return (
                       <div
-                        key={lote.id_lote}
+                        key={idLote}
                         className={`p-4 hover:bg-slate-50 transition-colors ${isCurrent ? 'bg-amber-50/60' : ''}`}
                       >
                         <div className="flex items-center justify-between">
@@ -221,7 +233,7 @@ export default function DetalhesTab({ grupo, lotes }) {
                               <p
                                 className={`text-sm font-bold ${isCurrent ? 'text-amber-900' : 'text-slate-700'}`}
                               >
-                                {lote.nome_lote}
+                                {lote.nomeLote || lote.nome_lote}
                               </p>
                               <p className="text-xs text-slate-500">
                                 Cap: {lote.capacidade || '?'} •{' '}

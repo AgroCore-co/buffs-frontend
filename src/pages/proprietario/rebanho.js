@@ -1,8 +1,9 @@
 'use client';
 import Loading from '@/components/loading/Loading';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import useSWR, { mutate } from 'swr';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
 import { FilterBar, FilterSelect } from '@/components/ui/FilterBar';
@@ -12,181 +13,274 @@ import MaturidadeChart from '@/components/proprietario/rebanho/MaturidadeChart';
 import SexoChart from '@/components/proprietario/rebanho/SexoChart';
 import RacaChart from '@/components/proprietario/rebanho/RacaChart';
 import DoencasChart from '@/components/proprietario/rebanho/DoencasChart';
-
-// Dados mockados para os gráficos
-const totalAtivos = 46;
-const femeasAtivas = 34;
-const machosAtivos = 12;
-const lactando = 8;
-
-const maturidadeData = [
-  { name: 'Bezerros', value: 10, color: '#FCA90F' },
-  { name: 'Novilhas', value: 12, color: '#FFCF78' },
-  { name: 'Vacas', value: 18, color: '#CE7D0A' },
-  { name: 'Touros', value: 6, color: '#F2B84D' },
-];
-
-const sexData = [
-  { name: 'Fêmeas', value: 34, color: '#CE7D0A' }, // Cor mais forte para destaque
-  { name: 'Machos', value: 12, color: '#FFCF78' }, // Cor mais clara
-];
-
-const bufalosPorRaca = [
-  { raca: 'Murrah', quantidade: 20 },
-  { raca: 'Jafarabadi', quantidade: 10 },
-  { raca: 'Mediterrâneo', quantidade: 8 },
-  { raca: 'Carabao', quantidade: 8 },
-];
-
-const frequenciaDoencas = [
-  { doenca: 'Brucelose', frequencia: 3 },
-  { doenca: 'Febre Aftosa', frequencia: 2 },
-  { doenca: 'Tuberculose', frequencia: 1 },
-  { doenca: 'Raiva', frequencia: 1 },
-];
-
-// Dados mockados da tabela
-const bufalosMock = [
-  {
-    id: 1,
-    brinco: 'BUF-001',
-    nome: 'Lua Cheia',
-    sexo: 'F',
-    raca: 'Murrah',
-    maturidade: 'V',
-    status: true,
-  },
-  {
-    id: 2,
-    brinco: 'BUF-002',
-    nome: 'Trovão',
-    sexo: 'M',
-    raca: 'Jafarabadi',
-    maturidade: 'T',
-    status: true,
-  },
-  {
-    id: 3,
-    brinco: 'BUF-003',
-    nome: 'Estrela',
-    sexo: 'F',
-    raca: 'Murrah',
-    maturidade: 'N',
-    status: true,
-  },
-  {
-    id: 4,
-    brinco: 'BUF-004',
-    nome: 'Raio',
-    sexo: 'M',
-    raca: 'Mediterrâneo',
-    maturidade: 'B',
-    status: false,
-  },
-  {
-    id: 5,
-    brinco: 'BUF-005',
-    nome: 'Sol Nascente',
-    sexo: 'F',
-    raca: 'Carabao',
-    maturidade: 'V',
-    status: true,
-  },
-  {
-    id: 6,
-    brinco: 'BUF-006',
-    nome: 'Neve',
-    sexo: 'F',
-    raca: 'Murrah',
-    maturidade: 'V',
-    status: true,
-  },
-  {
-    id: 7,
-    brinco: 'BUF-007',
-    nome: 'Vento Norte',
-    sexo: 'M',
-    raca: 'Jafarabadi',
-    maturidade: 'A',
-    status: true,
-  },
-  {
-    id: 8,
-    brinco: 'BUF-008',
-    nome: 'Aurora',
-    sexo: 'F',
-    raca: 'Murrah',
-    maturidade: 'V',
-    status: true,
-  },
-];
-
-const getMaturidadeTexto = (codigo) => {
-  switch (codigo) {
-    case 'B':
-      return 'Bezerro(a)';
-    case 'N':
-      return 'Novilho(a)';
-    case 'V':
-      return 'Vaca';
-    case 'T':
-      return 'Touro';
-    case 'A':
-      return 'Adulto';
-    default:
-      return 'N/D';
-  }
-};
+import { usePropriedade } from '@/contexts/PropriedadeContext';
+import { dashboardService } from '@/services/dashboard.service';
+import { sanitarioService } from '@/services/sanitario.service';
+import bufaloService from '@/services/bufalo.service';
+import EmptyState from '@/components/ui/EmptyState';
+import BufaloCriarModal from '@/components/proprietario/rebanho/BufaloCriarModal';
 
 export default function Rebanho() {
-  const { loading } = useProtectedRoute(['PROPRIETARIO']);
+  const { loading: authLoading } = useProtectedRoute(['PROPRIETARIO']);
   const router = useRouter();
+  const { propriedadeSelecionada } = usePropriedade();
 
-  if (loading) {
+  // Modal Creation
+  const [isCriarModalOpen, setIsCriarModalOpen] = useState(false);
+
+  // --- SWR Data Fetching ---
+
+  const id =
+    propriedadeSelecionada?.idPropriedade ||
+    propriedadeSelecionada?.id_propriedade;
+
+  // Fetcher wrapper
+  const fetcher = (key) => key; // Dummy fetcher, actual logic inside useSWR fetcher fn or simple wrapper
+
+  // 1. Dashboard Stats
+  const {
+    data: statsData,
+    error: statsError,
+    isLoading: statsLoading,
+  } = useSWR(
+    id ? ['dashboard', id] : null,
+    () => dashboardService.getDashboardStats(id),
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 60000, // Cache por 1 minuto sem refetch (opcional)
+    }
+  );
+
+  // 2. Doenças Stats
+  const {
+    data: doencasResponse,
+    error: doencasError,
+    isLoading: doencasLoading,
+  } = useSWR(
+    id ? ['doencas', id] : null,
+    () => sanitarioService.getFrequenciaDoencas(id),
+    { revalidateOnFocus: false }
+  );
+
+  // 3. Lista de Búfalos
+  const [page, setPage] = useState(1);
+  const {
+    data: bufalosData,
+    error: bufalosError,
+    isLoading: bufalosLoading,
+  } = useSWR(
+    id ? ['bufalos', id, page] : null,
+    () => bufaloService.getBufalosByPropriedade(id, page, 10),
+    { keepPreviousData: true } // Mantém dados antigos enquanto carrega nova página
+  );
+
+  // Derived States
+  const stats = statsData || {
+    qtd_lotes: 0,
+    bufalosPorRaca: [],
+    qtd_bufalos_bezerro: 0,
+    qtd_bufalos_novilha: 0,
+    qtd_bufalos_vaca: 0,
+    qtd_bufalos_touro: 0,
+    qtd_femeas_ativas: 0,
+    qtd_macho_ativos: 0,
+    qtd_bufalas_lactando: 0,
+    qtd_bufalos_registradas: 0,
+  };
+
+  const doencasData = doencasResponse?.dados || [];
+
+  const bufalos = bufalosData?.data || [];
+  const totalPages = bufalosData?.meta?.totalPages || 1;
+  const totalBufalos = bufalosData?.meta?.total || 0;
+
+  // Combine loading states
+  // Se dashboard ou doenças estiver carregando E não tivermos dados em cache, consideramos loading geral.
+  // Se tiver dados em cache (revalidação), loadingData é false para não piscar a tela.
+  const loadingData = (statsLoading || doencasLoading) && !statsData;
+  const loadingBufalos = bufalosLoading && !bufalosData;
+
+  const handleSuccessCreate = () => {
+    // Revalida todos os dados desta propriedade
+    mutate(['dashboard', id]);
+    mutate(['doencas', id]);
+    mutate(['bufalos', id, page]);
+  };
+
+  if (authLoading) {
     return <Loading text="Carregando painel..." />;
   }
+
+  // --- Processamento de Dados para Gráficos ---
+
+  const totalAtivos =
+    stats.qtd_bufalos_registradas ||
+    stats.qtd_macho_ativos + stats.qtd_femeas_ativas;
+
+  // Maturidade
+  const maturidadeData = [
+    {
+      name: 'Bezerros',
+      value: stats.qtd_bufalos_bezerro || 0,
+      color: '#FCA90F',
+    },
+    {
+      name: 'Novilhas',
+      value: stats.qtd_bufalos_novilha || 0,
+      color: '#FFCF78',
+    },
+    { name: 'Vacas', value: stats.qtd_bufalos_vaca || 0, color: '#CE7D0A' },
+    { name: 'Touros', value: stats.qtd_bufalos_touro || 0, color: '#F2B84D' },
+  ];
+
+  // Sexo
+  const sexData = [
+    { name: 'Fêmeas', value: stats.qtd_femeas_ativas || 0, color: '#CE7D0A' },
+    { name: 'Machos', value: stats.qtd_macho_ativos || 0, color: '#FFCF78' },
+  ];
+
+  // Raça
+  const racaData = (stats.bufalosPorRaca || []).map((r) => ({
+    raca: r.raca,
+    quantidade: r.quantidade,
+  }));
+
+  // Doenças (Vindo da API)
+  const frequenciaDoencas = doencasData.map((d) => ({
+    doenca: d.doenca.charAt(0).toUpperCase() + d.doenca.slice(1), // Capitaliza
+    frequencia: d.frequencia,
+  }));
+
+  // Percentuais
+  const percentualFemeas =
+    totalAtivos > 0
+      ? Math.round((stats.qtd_femeas_ativas / totalAtivos) * 100)
+      : 0;
+  const percentualMachos =
+    totalAtivos > 0
+      ? Math.round((stats.qtd_macho_ativos / totalAtivos) * 100)
+      : 0;
 
   const handleRowClick = (bufalo) => {
     router.push(`/proprietario/rebanho/${bufalo.id}`);
   };
 
-  // Cálculo da porcentagem para o gráfico central (Ex: Fêmeas)
-  const percentualFemeas = Math.round((femeasAtivas / totalAtivos) * 100);
+  const getMaturidadeTexto = (codigo) => {
+    switch (codigo) {
+      case 'B':
+        return 'Bezerro(a)';
+      case 'N':
+        return 'Novilho(a)';
+      case 'V':
+        return 'Vaca';
+      case 'T':
+        return 'Touro';
+      case 'A':
+        return 'Adulto';
+      default:
+        return 'N/D';
+    }
+  };
+
+  if (!propriedadeSelecionada) {
+    return (
+      <DashboardContainer>
+        <div className="flex flex-col items-center justify-center p-12 text-center">
+          <h2 className="text-xl font-bold text-gray-400 mb-2">
+            Nenhuma Propriedade Selecionada
+          </h2>
+          <p className="text-gray-500">
+            Selecione uma propriedade no menu flutuante para visualizar o
+            rebanho.
+          </p>
+        </div>
+      </DashboardContainer>
+    );
+  }
+
+  // Se estiver carregando e não tiver dados, mostra loading
+  if (loadingData && totalAtivos === 0) {
+    return <Loading text="Carregando indicadores..." />;
+  }
+
+  // Se não estiver carregando e não tiver dados, mostra empty state
+  if (!loadingData && totalAtivos === 0) {
+    return (
+      <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
+        <DashboardContainer>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-[#404040] mb-1">
+                Gestão do Rebanho - {propriedadeSelecionada.nome}
+              </h1>
+              <p className="text-[#404040]/70 text-sm">
+                Gerencie seu rebanho de búfalos, registre informações
+                zootécnicas e sanitárias.
+              </p>
+            </div>
+          </div>
+          <EmptyState
+            title="Nenhum búfalo encontrado"
+            description="Cadastre os animais do seu rebanho para visualizar os indicadores e gráficos."
+            buttonText="Adicionar Búfalo"
+            onButtonClick={() => setIsCriarModalOpen(true)}
+          />
+        </DashboardContainer>
+
+        <BufaloCriarModal
+          isOpen={isCriarModalOpen}
+          onClose={() => setIsCriarModalOpen(false)}
+          onSuccess={handleSuccessCreate}
+          idPropriedade={
+            propriedadeSelecionada.idPropriedade ||
+            propriedadeSelecionada.id_propriedade
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
       {/* Header */}
       <DashboardContainer>
-        <div>
-          <h1 className="text-2xl font-bold text-[#404040] mb-1">
-            Gestão do Rebanho
-          </h1>
-          <p className="text-[#404040]/70 text-sm">
-            Gerencie seu rebanho de búfalos, registre informações zootécnicas e
-            sanitárias.
-          </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-[#404040] mb-1">
+              Gestão do Rebanho - {propriedadeSelecionada.nome}
+            </h1>
+            <p className="text-[#404040]/70 text-sm">
+              Gerencie seu rebanho de búfalos, registre informações zootécnicas
+              e sanitárias.
+            </p>
+          </div>
+          {loadingData && (
+            <span className="text-xs text-[#ce7d0a] font-medium px-3 py-1 bg-[#ffcf78]/20 rounded-full animate-pulse">
+              Atualizando...
+            </span>
+          )}
         </div>
 
         {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
           <MetricCard
             title="Total do Rebanho"
             value={totalAtivos}
-            subtitle="Búfalos ativos no sistema"
+            subtitle="Búfalos ativos (Machos + Fêmeas)"
           />
           <MetricCard
             title="Fêmeas"
-            value={femeasAtivas}
+            value={stats.qtd_femeas_ativas}
             subtitle={`${percentualFemeas}% do rebanho`}
           />
           <MetricCard
             title="Machos"
-            value={machosAtivos}
-            subtitle={`${Math.round((machosAtivos / totalAtivos) * 100)}% do rebanho`}
+            value={stats.qtd_macho_ativos}
+            subtitle={`${percentualMachos}% do rebanho`}
           />
           <MetricCard
             title="Vacas Produtoras"
-            value={lactando}
+            value={stats.qtd_bufalas_lactando}
             subtitle="Em lactação"
           />
         </div>
@@ -200,7 +294,7 @@ export default function Rebanho() {
           totalAtivos={totalAtivos}
           percentualFemeas={percentualFemeas}
         />
-        <RacaChart data={bufalosPorRaca} />
+        <RacaChart data={racaData} />
       </div>
 
       {/* TABELA DE BÚFALOS */}
@@ -235,7 +329,12 @@ export default function Rebanho() {
               </svg>
               Gerar Relatório
             </Button>
-            <Button variant="primary" size="medium" className="font-bold">
+            <Button
+              variant="primary"
+              size="medium"
+              className="font-bold"
+              onClick={() => setIsCriarModalOpen(true)}
+            >
               + Adicionar Búfalo
             </Button>
           </div>
@@ -272,72 +371,85 @@ export default function Rebanho() {
         </FilterBar>
 
         {/* Tabela */}
-        {(() => {
-          const Table = require('@/components/table/Table').default;
-          const columns = [
-            {
-              key: 'brinco',
-              label: 'TAG',
-              className: 'p-4 text-left font-semibold',
-            },
-            {
-              key: 'nome',
-              label: 'Nome',
-              className: 'p-4 text-left font-semibold',
-            },
-            {
-              key: 'sexo',
-              label: 'Sexo',
-              className: 'p-4 text-left font-semibold',
-            },
-            {
-              key: 'raca',
-              label: 'Raça',
-              className: 'p-4 text-left font-semibold',
-            },
-            {
-              key: 'maturidade',
-              label: 'Maturidade',
-              className: 'p-4 text-left font-semibold',
-            },
-            {
-              key: 'status',
-              label: 'Status',
-              className: 'p-4 text-left font-semibold',
-            },
-          ];
+        {loadingBufalos ? (
+          <div className="py-12 flex justify-center items-center">
+            <Loading text="Carregando lista de búfalos..." />
+          </div>
+        ) : (
+          (() => {
+            const Table = require('@/components/table/Table').default;
+            const columns = [
+              {
+                key: 'brinco',
+                label: 'TAG',
+                className: 'p-4 text-left font-semibold',
+              },
+              {
+                key: 'nome',
+                label: 'Nome',
+                className: 'p-4 text-left font-semibold',
+              },
+              {
+                key: 'sexo',
+                label: 'Sexo',
+                className: 'p-4 text-left font-semibold',
+              },
+              {
+                key: 'raca',
+                label: 'Raça',
+                className: 'p-4 text-left font-semibold',
+              },
+              {
+                key: 'maturidade',
+                label: 'Maturidade',
+                className: 'p-4 text-left font-semibold',
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                className: 'p-4 text-left font-semibold',
+              },
+            ];
 
-          return (
-            <Table
-              columns={columns}
-              data={bufalosMock}
-              minWidth="900px"
-              renderCell={(b, key) => {
-                if (key === 'sexo') return b.sexo === 'F' ? 'Fêmea' : 'Macho';
-                if (key === 'maturidade')
-                  return getMaturidadeTexto(b.maturidade);
-                if (key === 'status') {
-                  const Badge = require('@/components/ui/Badge').default;
-                  return (
-                    <Badge type={b.status ? 'active' : 'inactive'}>
-                      {b.status ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  );
+            return (
+              <Table
+                columns={columns}
+                data={bufalos}
+                minWidth="900px"
+                renderCell={(b, key) => {
+                  if (key === 'sexo') return b.sexo === 'F' ? 'Fêmea' : 'Macho';
+                  if (key === 'maturidade')
+                    return getMaturidadeTexto(
+                      b.nivel_maturidade || b.maturidade
+                    );
+                  if (key === 'raca') return b.raca?.nome || b.raca || '-';
+                  if (key === 'status') {
+                    const Badge = require('@/components/ui/Badge').default;
+                    return (
+                      <Badge type={b.status ? 'active' : 'inactive'}>
+                        {b.status ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    );
+                  }
+                  return b[key];
+                }}
+                onRowClick={(b) =>
+                  router.push(`/proprietario/rebanho/${b.id || b.id_bufalo}`)
                 }
-                return b[key];
-              }}
-              onRowClick={handleRowClick}
-              rowClassName="cursor-pointer hover:bg-amber-50 transition"
-            />
-          );
-        })()}
+                rowClassName="cursor-pointer hover:bg-amber-50 transition"
+              />
+            );
+          })()
+        )}
 
         <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
-          <p>Mostrando 8 de 46 búfalos</p>
+          <p>
+            Mostrando {bufalos.length} de {totalBufalos} búfalos
+          </p>
           <Pagination
-            currentPage={1}
-            totalPages={2}
-            onPageChange={() => {}}
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
             navVariant="report"
             numberVariant="secondary"
             activeNumberVariant="primary"
@@ -346,7 +458,34 @@ export default function Rebanho() {
       </DashboardContainer>
 
       {/* Gráfico de Doenças */}
-      <DoencasChart data={frequenciaDoencas} />
+      {frequenciaDoencas.length > 0 ? (
+        <DoencasChart data={frequenciaDoencas} />
+      ) : (
+        <DashboardContainer>
+          <div className="flex flex-col h-full">
+            <h2 className="text-2xl font-bold text-[#404040] mb-6">
+              Frequência de Doenças
+            </h2>
+            <div className="py-12">
+              <EmptyState
+                title="Nenhum dado sanitário"
+                description="Os registros de doenças mais frequentes aparecerão aqui."
+              />
+            </div>
+          </div>
+        </DashboardContainer>
+      )}
+
+      {/* Modal - Renderizado fora das condicionais para garantir que esteja sempre disponível ou condicionado a isOpen */}
+      <BufaloCriarModal
+        isOpen={isCriarModalOpen}
+        onClose={() => setIsCriarModalOpen(false)}
+        onSuccess={handleSuccessCreate}
+        idPropriedade={
+          propriedadeSelecionada.idPropriedade ||
+          propriedadeSelecionada.id_propriedade
+        }
+      />
     </div>
   );
 }

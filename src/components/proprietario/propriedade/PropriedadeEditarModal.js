@@ -5,6 +5,8 @@ import Input from '@/components/form/Input';
 import Select from '@/components/form/Select';
 import Toggle from '@/components/form/Toggle';
 import { enderecoService } from '@/services/endereco.service';
+import { propriedadeService } from '@/services/propriedade.service';
+import { formatarCNPJ, maskCNPJ, maskCEP } from '@/utils/formatters';
 import {
   FiHome,
   FiFileText,
@@ -15,9 +17,13 @@ import {
   FiActivity,
 } from 'react-icons/fi';
 
-import { formatarCNPJ, maskCNPJ, maskCEP } from '@/utils/formatters';
-
-export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
+export default function PropriedadeEditarModal({
+  isOpen,
+  onClose,
+  propriedade,
+  endereco: enderecoProp, // Recebe endereço separadamente se necessário
+  onUpdated,
+}) {
   const [form, setForm] = useState({
     nome: '',
     cnpj: '',
@@ -36,59 +42,51 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && propriedade) {
+      // O endereço pode vir dentro de propriedade.endereco ou via prop enderecoProp
+      const end = propriedade.endereco || enderecoProp || {};
+
       setForm({
-        nome: '',
-        cnpj: '',
-        p_abcb: false,
-        tipo_manejo: 'P',
-        pais: 'Brasil',
-        estado: '',
-        cidade: '',
-        bairro: '',
-        rua: '',
-        cep: '',
-        numero: '',
-        ponto_referencia: '',
+        nome: propriedade.nome || '',
+        cnpj: maskCNPJ(propriedade.cnpj || ''),
+        p_abcb: !!(propriedade.pAbcb || propriedade.p_abcb),
+        tipo_manejo: propriedade.tipoManejo || propriedade.tipo_manejo || 'P',
+        pais: end.pais || 'Brasil',
+        estado: end.estado || '',
+        cidade: end.cidade || '',
+        bairro: end.bairro || '',
+        rua: end.rua || '',
+        cep: maskCEP(end.cep || ''),
+        numero: end.numero || '',
+        ponto_referencia: end.ponto_referencia || '',
       });
       setError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, propriedade, enderecoProp]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     let finalValue = type === 'checkbox' ? checked : value;
-
-    // Aplica máscara dinâmica ao digitar no campo CNPJ
-    if (name === 'cnpj') {
-      finalValue = maskCNPJ(value);
-    }
-
-    // Aplica máscara dinâmica ao digitar no campo CEP
-    if (name === 'cep') {
-      finalValue = maskCEP(value);
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: finalValue,
-    }));
+    if (name === 'cnpj') finalValue = maskCNPJ(value);
+    if (name === 'cep') finalValue = maskCEP(value);
+    setForm((prev) => ({ ...prev, [name]: finalValue }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    // Validação extra para UF
-    if (!form.estado) {
-      setError('Selecione uma UF.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      // STEP 1: Criar o endereço
+      const end = propriedade.endereco || enderecoProp || {};
+      const idEnderecoValido = end.idEndereco || end.id_endereco;
+      const idPropriedadeValido =
+        propriedade.idPropriedade || propriedade.id_propriedade;
+
+      if (!idEnderecoValido) {
+        throw new Error('ID do endereço não encontrado para atualização.');
+      }
+
+      // Atualiza endereço
       const enderecoPayload = {
         pais: form.pais,
         estado: form.estado,
@@ -99,53 +97,27 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
         numero: form.numero,
         ponto_referencia: form.ponto_referencia || undefined,
       };
+      await enderecoService.updateEndereco(idEnderecoValido, enderecoPayload);
 
-      console.log('Payload enviado para criar endereço:', enderecoPayload);
-      const enderecoRes = await enderecoService.createEndereco(enderecoPayload);
-      console.log('Resposta do serviço de endereço:', enderecoRes);
-
-      // Tenta obter o ID independente do formato (camelCase ou snake_case)
-      const newAddressId = enderecoRes?.idEndereco || enderecoRes?.id_endereco;
-
-      if (!enderecoRes || enderecoRes.error || !newAddressId) {
-        const errorMsg =
-          enderecoRes?.message ||
-          'Falha ao criar endereço. Verifique os dados informados.';
-        setError(errorMsg);
-        throw new Error(errorMsg);
-      }
-
-      // STEP 2: Criar a propriedade
-      const cnpjFormatado = formatarCNPJ(form.cnpj);
+      // Atualiza propriedade
       const propriedadePayload = {
         nome: form.nome,
-        cnpj: cnpjFormatado,
-        idEndereco: newAddressId, // Envia com padrão camelCase se possível, ou ajusta conforme backend espera
+        cnpj: formatarCNPJ(form.cnpj),
+        id_endereco: idEnderecoValido,
         p_abcb: form.p_abcb,
         tipo_manejo: form.tipo_manejo,
       };
 
-      // Import dinâmico conforme seu código original
-      const propriedadeRes =
-        await import('@/services/propriedade.service').then((m) =>
-          m.propriedadeService.createPropriedade(propriedadePayload)
-        );
-
-      // Verifica ID da propriedade (tenta ambos os formatos também)
-      const newPropId =
-        propriedadeRes?.idPropriedade || propriedadeRes?.id_propriedade;
-
-      if (propriedadeRes && newPropId) {
-        onCreated && onCreated(propriedadeRes);
-        onClose();
-      } else {
-        throw new Error('Falha ao registrar propriedade.');
-      }
-    } catch (err) {
-      console.error('Erro durante criação:', err);
-      setError(
-        'Ocorreu um erro ao salvar. Verifique os dados e tente novamente.'
+      await propriedadeService.updatePropriedade(
+        idPropriedadeValido,
+        propriedadePayload
       );
+
+      onUpdated && onUpdated();
+      onClose();
+    } catch (err) {
+      console.error('Erro ao atualizar:', err);
+      setError('Erro ao atualizar. Verifique os dados e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -155,18 +127,16 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Nova Propriedade"
-      description="Preencha os dados abaixo para cadastrar uma nova unidade no sistema."
+      title="Editar Propriedade"
+      description="Altere os dados da propriedade e endereço conforme necessário."
       size="4xl"
       footer={null}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        {/* --- Seção: Dados Gerais --- */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
           <h3 className="text-md font-bold text-[#404040] mb-4 border-l-4 border-[#ffcf78] pl-3 flex items-center gap-2">
             Informações Gerais
           </h3>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Nome da Propriedade"
@@ -177,7 +147,6 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
               placeholder="Ex: Fazenda Santa Rita"
               icon={FiHome}
             />
-
             <Input
               label="CNPJ"
               name="cnpj"
@@ -188,7 +157,6 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
               placeholder="00.000.000/0000-00"
               icon={FiFileText}
             />
-
             <Select
               label="Sistema de Manejo"
               name="tipo_manejo"
@@ -202,7 +170,6 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
                 { value: 'I', label: 'Intensivo (Confinamento)' },
               ]}
             />
-
             <div className="flex flex-col justify-end pb-1">
               <Toggle
                 label="Certificação ABCB"
@@ -213,13 +180,10 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
             </div>
           </div>
         </div>
-
-        {/* --- Seção: Endereço --- */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h3 className="text-md font-bold text-[#404040] mb-4 border-l-4 border-[#ffcf78] pl-3 flex items-center gap-2">
             Localização
           </h3>
-
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div className="md:col-span-2">
               <Input
@@ -228,12 +192,10 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
                 value={form.cep}
                 onChange={handleChange}
                 required
-                maxLength={9}
                 placeholder="00000-000"
                 icon={FiMapPin}
               />
             </div>
-
             <div className="md:col-span-3">
               <Input
                 label="Logradouro"
@@ -245,7 +207,6 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
                 icon={FiMap}
               />
             </div>
-
             <div className="md:col-span-1">
               <Input
                 label="Número"
@@ -257,7 +218,6 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
                 icon={FiNavigation}
               />
             </div>
-
             <div className="md:col-span-2">
               <Input
                 label="Bairro"
@@ -269,7 +229,6 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
                 icon={FiMapPin}
               />
             </div>
-
             <div className="md:col-span-3">
               <Input
                 label="Cidade"
@@ -281,7 +240,6 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
                 icon={FiMap}
               />
             </div>
-
             <div className="md:col-span-1">
               <Select
                 label="UF"
@@ -321,7 +279,6 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
                 ]}
               />
             </div>
-
             <div className="md:col-span-6">
               <Input
                 label="Ponto de Referência (Opcional)"
@@ -334,15 +291,11 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
             </div>
           </div>
         </div>
-
-        {/* Mensagem de Erro */}
         {error && (
           <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm flex items-center justify-center animate-pulse">
             {error}
           </div>
         )}
-
-        {/* Footer Actions */}
         <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-gray-100">
           <Button
             type="button"
@@ -359,7 +312,7 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
             loading={loading}
             className="px-6 font-bold shadow-sm"
           >
-            Cadastrar Propriedade
+            Salvar Alterações
           </Button>
         </div>
       </form>

@@ -5,6 +5,7 @@ import Loading from '@/components/loading/Loading';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import useSWR from 'swr';
 import {
   FiEdit2,
   FiTrash2,
@@ -33,11 +34,64 @@ export default function Propriedades({
   onDeletarPropriedade,
 }) {
   const router = useRouter();
-  const [propriedades, setPropriedades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [proprietarios, setProprietarios] = useState({});
-  const [enderecos, setEnderecos] = useState({});
+
+  // SWR Fetcher consolidado
+  const fetcher = async () => {
+    const res = await propriedadeService.getPropriedades();
+    if (!res || !res.propriedades)
+      return { propriedades: [], proprietarios: {}, enderecos: {} };
+
+    const props = res.propriedades;
+
+    // Buscar proprietários únicos
+    const ids = [...new Set(props.map((p) => p.idDono).filter(Boolean))];
+    const proprietariosTemp = {};
+    await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const usuario = await api.get(`/usuarios/${id}`);
+          proprietariosTemp[id] =
+            usuario && usuario.nome ? usuario.nome : 'Sem proprietário';
+        } catch {
+          proprietariosTemp[id] = 'Sem proprietário';
+        }
+      })
+    );
+
+    // Buscar endereços únicos
+    const enderecoIds = [
+      ...new Set(
+        props.map((p) => p.idEndereco || p.id_endereco).filter(Boolean)
+      ),
+    ];
+    const enderecosTemp = {};
+    await Promise.all(
+      enderecoIds.map(async (id) => {
+        try {
+          const endereco = await enderecoService.getEnderecoById(id);
+          enderecosTemp[id] = endereco || null;
+        } catch {
+          enderecosTemp[id] = null;
+        }
+      })
+    );
+
+    return {
+      propriedades: props,
+      proprietarios: proprietariosTemp,
+      enderecos: enderecosTemp,
+    };
+  };
+
+  const { data, error, isLoading, mutate } = useSWR('propriedades', fetcher, {
+    revalidateOnFocus: true,
+    dedupingInterval: 60000, // 1 minute
+  });
+
+  const propriedades = data?.propriedades || [];
+  const proprietarios = data?.proprietarios || {};
+  const enderecos = data?.enderecos || {};
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [propriedadeSelecionada, setPropriedadeSelecionada] = useState(null);
@@ -45,63 +99,6 @@ export default function Propriedades({
 
   // Proteção de rota igual à index
   const { loading: loadingAuth } = useProtectedRoute(['PROPRIETARIO']);
-
-  useEffect(() => {
-    async function fetchPropriedades() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await propriedadeService.getPropriedades();
-        if (res && res.propriedades) {
-          setPropriedades(res.propriedades);
-          // Buscar proprietários únicos
-          const ids = [
-            ...new Set(res.propriedades.map((p) => p.id_dono).filter(Boolean)),
-          ];
-          const proprietariosTemp = {};
-          await Promise.all(
-            ids.map(async (id) => {
-              try {
-                const usuario = await api.get(`/usuarios/${id}`);
-                proprietariosTemp[id] =
-                  usuario && usuario.nome ? usuario.nome : 'Sem proprietário';
-              } catch {
-                proprietariosTemp[id] = 'Sem proprietário';
-              }
-            })
-          );
-          setProprietarios(proprietariosTemp);
-
-          // Buscar endereços únicos
-          const enderecoIds = [
-            ...new Set(
-              res.propriedades.map((p) => p.id_endereco).filter(Boolean)
-            ),
-          ];
-          const enderecosTemp = {};
-          await Promise.all(
-            enderecoIds.map(async (id) => {
-              try {
-                const endereco = await enderecoService.getEnderecoById(id);
-                enderecosTemp[id] = endereco || null;
-              } catch {
-                enderecosTemp[id] = null;
-              }
-            })
-          );
-          setEnderecos(enderecosTemp);
-        } else {
-          setPropriedades([]);
-        }
-      } catch (err) {
-        setError('Erro ao buscar propriedades.');
-        setPropriedades([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPropriedades();
-  }, []);
 
   // Funções utilitárias para exibir dados
   const formatCNPJ = (cnpj) => cnpj || 'N/A';
@@ -126,70 +123,16 @@ export default function Propriedades({
     return map[tipo] || tipo || 'Não informado';
   };
 
-  // Loading inicial igual ao dashboard
-  if (loadingAuth || loading) {
-    return <Loading text="Carregando painel..." />;
+  // Loading global se estiver autenticando ou carregando dados iniciais
+  if (loadingAuth || (isLoading && !data)) {
+    return <Loading text="Carregando propriedades..." />;
   }
 
   const handleNovoPropriedade = () => setModalOpen(true);
   const handleModalClose = () => setModalOpen(false);
-  const handlePropriedadeCriada = () => {
-    // Recarrega propriedades após cadastro
-    setLoading(true);
-    setError(null);
-    async function fetchPropriedades() {
-      try {
-        const res = await propriedadeService.getPropriedades();
-        if (res && res.propriedades) {
-          setPropriedades(res.propriedades);
-          // Buscar proprietários únicos
-          const ids = [
-            ...new Set(res.propriedades.map((p) => p.id_dono).filter(Boolean)),
-          ];
-          const proprietariosTemp = {};
-          await Promise.all(
-            ids.map(async (id) => {
-              try {
-                const usuario = await api.get(`/usuarios/${id}`);
-                proprietariosTemp[id] =
-                  usuario && usuario.nome ? usuario.nome : 'Sem proprietário';
-              } catch {
-                proprietariosTemp[id] = 'Sem proprietário';
-              }
-            })
-          );
-          setProprietarios(proprietariosTemp);
 
-          // Buscar endereços únicos
-          const enderecoIds = [
-            ...new Set(
-              res.propriedades.map((p) => p.id_endereco).filter(Boolean)
-            ),
-          ];
-          const enderecosTemp = {};
-          await Promise.all(
-            enderecoIds.map(async (id) => {
-              try {
-                const endereco = await enderecoService.getEnderecoById(id);
-                enderecosTemp[id] = endereco || null;
-              } catch {
-                enderecosTemp[id] = null;
-              }
-            })
-          );
-          setEnderecos(enderecosTemp);
-        } else {
-          setPropriedades([]);
-        }
-      } catch (err) {
-        setError('Erro ao buscar propriedades.');
-        setPropriedades([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPropriedades();
-  };
+  // Atualizações via mutação do cache
+  const handlePropriedadeCriada = () => mutate();
 
   // Handler para abrir modal de edição
   const handleEditarPropriedade = (propriedade) => {
@@ -215,12 +158,12 @@ export default function Propriedades({
 
   const handlePropriedadeDeletada = () => {
     handleDeleteModalClose();
-    handlePropriedadeCriada(); // Recarrega lista
+    mutate();
   };
 
   const handlePropriedadeAtualizada = () => {
     handleEditModalClose();
-    handlePropriedadeCriada(); // Reutiliza reload
+    mutate();
   };
 
   return (
@@ -262,13 +205,13 @@ export default function Propriedades({
             />
             <MetricCard
               title="Tipo Pecuária"
-              value={propriedades.filter((p) => p.tipo_manejo === 'P').length}
+              value={propriedades.filter((p) => p.tipoManejo === 'P').length}
               subtitle="Foco bubalino"
               icon={<span className="font-bold text-[#ce7d0a]">P</span>}
             />
             <MetricCard
               title="Registradas ABCB"
-              value={propriedades.filter((p) => p.p_abcb).length}
+              value={propriedades.filter((p) => p.pAbcb).length}
               subtitle="Certificadas"
               icon={<span className="font-bold text-blue-600">✓</span>}
             />
@@ -325,10 +268,10 @@ export default function Propriedades({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {propriedades.map((propriedade) => (
                 <div
-                  key={propriedade.id_propriedade}
+                  key={propriedade.idPropriedade}
                   onClick={() =>
                     router.push(
-                      `/proprietario/propriedade/${propriedade.id_propriedade}`
+                      `/proprietario/propriedade/${propriedade.idPropriedade}`
                     )
                   }
                   className="cursor-pointer"
@@ -338,10 +281,13 @@ export default function Propriedades({
                       ...propriedade,
                       dono: {
                         nome:
-                          proprietarios[propriedade.id_dono] ||
+                          proprietarios[propriedade.idDono] ||
                           'Sem proprietário',
                       },
-                      endereco: enderecos[propriedade.id_endereco] || null,
+                      endereco:
+                        enderecos[propriedade.idEndereco] ||
+                        enderecos[propriedade.id_endereco] ||
+                        null,
                     }}
                     onEditar={(e, prop) => {
                       if (e && e.stopPropagation) e.stopPropagation();
@@ -349,9 +295,12 @@ export default function Propriedades({
                         ...prop,
                         dono: {
                           nome:
-                            proprietarios[prop.id_dono] || 'Sem proprietário',
+                            proprietarios[prop.idDono] || 'Sem proprietário',
                         },
-                        endereco: enderecos[prop.id_endereco] || null,
+                        endereco:
+                          enderecos[prop.idEndereco] ||
+                          enderecos[prop.id_endereco] ||
+                          null,
                       });
                     }}
                     onDeletar={handleDeletarPropriedade}

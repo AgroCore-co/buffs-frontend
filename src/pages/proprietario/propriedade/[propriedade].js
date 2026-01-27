@@ -233,7 +233,9 @@ export default function PropriedadePage() {
           {activeTab === 'propriedade' && (
             <PropriedadeTab
               propriedade={propriedade}
-              idPropriedade={propriedade.id_propriedade}
+              idPropriedade={
+                propriedade.idPropriedade || propriedade.id_propriedade
+              }
               hideTitle
             />
           )}
@@ -241,15 +243,18 @@ export default function PropriedadePage() {
             <PiquetesTab
               grupos={grupos}
               nivelLabel={nivelLabel}
-              idPropriedade={propriedade.id_propriedade}
+              idPropriedade={
+                propriedade.idPropriedade || propriedade.id_propriedade
+              }
               hideTitle
             />
           )}
           {activeTab === 'alimentacao' && (
             <AlimentacaoTab
-              alimentacaoDefService={alimentacaoDefService}
-              alimentacaoRegistroService={alimentacaoRegistroService}
               grupos={grupos}
+              propriedadeId={
+                propriedade.idPropriedade || propriedade.id_propriedade
+              }
               usuarioLogado={{ id_usuario: 1, nome: 'Admin' }} // Mock de usuário
               hideTitle
             />

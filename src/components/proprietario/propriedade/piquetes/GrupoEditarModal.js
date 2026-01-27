@@ -39,7 +39,7 @@ export default function GrupoEditarModal({
   useEffect(() => {
     if (isOpen && grupo) {
       setFormData({
-        nome_grupo: grupo.nome_grupo || '',
+        nome_grupo: grupo.nomeGrupo || grupo.nome_grupo || '',
         color: grupo.color || PRESET_COLORS[0],
       });
       setError('');
@@ -66,7 +66,7 @@ export default function GrupoEditarModal({
 
     setLoading(true);
     try {
-      await grupoService.updateGrupo(grupo.id_grupo, {
+      await grupoService.updateGrupo(grupo.idGrupo || grupo.id_grupo, {
         nome_grupo: formData.nome_grupo,
         color: formData.color,
       });
@@ -99,7 +99,7 @@ export default function GrupoEditarModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Editar: ${grupo.nome_grupo}`}
+      title={`Editar: ${grupo.nomeGrupo || grupo.nome_grupo}`}
       description="Atualize as informações do grupo"
       size="md"
       footer={footer}

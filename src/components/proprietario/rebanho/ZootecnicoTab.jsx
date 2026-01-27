@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import useSWR from 'swr';
 import {
   Scale,
   TrendingUp,
@@ -9,130 +10,11 @@ import {
 } from 'lucide-react';
 import Table from '@/components/table/Table';
 import Pagination from '@/components/ui/Pagination';
-
-// --- DADOS MOCKADOS (Baseado no JSON fornecido) ---
-const MOCK_DATA = {
-  data: [
-    {
-      id_zootec: 'da88655f-4413-49d0-9912-01b22b1370b8',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 208.46,
-      condicao_corporal: 2.64,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Enrolado',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-11-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: 'cdad8710-ffff-4c27-9a97-06c8183f4bd8',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 170.24,
-      condicao_corporal: 3.92,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Enrolado',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-10-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: '360aad30-169b-4587-9150-c902b5804e12',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 152.18,
-      condicao_corporal: 4.31,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Em Cacho',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-09-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: '776dc952-aa1f-43bd-bf7f-8ab00444e857',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 315.53,
-      condicao_corporal: 4.63,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Curvado',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-08-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: '181db58e-6091-4329-b488-75aea1fa645c',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 162.8,
-      condicao_corporal: 2.59,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Curvado',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-07-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: '0c3f4fb7-3576-4f04-ad48-b58f93598796',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 199.71,
-      condicao_corporal: 2.63,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Em Cacho',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-06-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: '984ea105-88b4-41aa-8f8a-2618131b1be3',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 337.98,
-      condicao_corporal: 2.8,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Enrolado',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-05-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: '74070753-587c-4c85-88df-d9b265bbabfd',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 336.2,
-      condicao_corporal: 4.7,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Em Cacho',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-04-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: '2e8d2396-fc63-42be-8d4b-73ef3a29b2a7',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 272.3,
-      condicao_corporal: 1.42,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Em Cacho',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-03-01',
-      tipo_pesagem: 'Mensal',
-    },
-    {
-      id_zootec: '9760ea32-6d8d-438a-a781-415fd1e87685',
-      id_bufalo: 'af6a6ae3-ac00-4161-b97c-6cc4f5a86375',
-      peso: 336.55,
-      condicao_corporal: 1.02,
-      cor_pelagem: 'Preta',
-      formato_chifre: 'Enrolado',
-      porte_corporal: 'Médio',
-      dt_registro: '2025-02-01',
-      tipo_pesagem: 'Mensal',
-    },
-  ],
-  meta: {
-    total: 83,
-  },
-};
-
-// --- COMPONENTES VISUAIS ---
 import Card from '../../ui/Card';
-
 import SectionTitle from '../../ui/SectionTitle';
+import EmptyState from '@/components/ui/EmptyState';
+import Loading from '@/components/loading/Loading';
+import { zootecnicoService } from '@/services/zootecnico.service';
 
 // --- HELPERS ---
 const formatDate = (dateString) => {
@@ -154,27 +36,37 @@ const formatWeight = (val) => {
 // --- COMPONENTE PRINCIPAL ---
 export default function ZootecnicoTab({ bufalo }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
-  // Usa dados da prop ou o mock
-  const fullData = bufalo?.zootecnicoData || MOCK_DATA.data;
-  const totalRecords = bufalo?.zootecnicoMeta?.total || fullData.length;
+  const {
+    data: responseData,
+    error,
+    isLoading: loading,
+  } = useSWR(
+    bufalo?.id_bufalo ? ['zootecnico', bufalo.id_bufalo, currentPage] : null,
+    () =>
+      zootecnicoService.getZootecnicoDataByBuffalo(
+        bufalo.id_bufalo,
+        currentPage,
+        itemsPerPage
+      ),
+    {
+      revalidateOnFocus: false,
+      keepPreviousData: true,
+    }
+  );
 
-  // Lógica de Paginação Client-Side
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return fullData.slice(startIndex, endIndex);
-  }, [fullData, currentPage]);
-
-  const totalPages = Math.ceil(totalRecords / itemsPerPage);
+  const data = responseData?.data || [];
+  const meta = responseData?.meta || {};
+  const totalRecords = meta.total || 0;
+  const totalPages = meta.totalPages || 1;
 
   // Índices para display "Mostrando X a Y"
   const startRecord = (currentPage - 1) * itemsPerPage + 1;
   const endRecord = Math.min(currentPage * itemsPerPage, totalRecords);
 
   // Cálculos para os Cards de Resumo
-  const latestRecord = fullData.length > 0 ? fullData[0] : null;
+  const latestRecord = data.length > 0 ? data[0] : null;
   const currentWeight = latestRecord ? latestRecord.peso : 0;
   const currentECC = latestRecord ? latestRecord.condicao_corporal : 0;
 
@@ -315,41 +207,57 @@ export default function ZootecnicoTab({ bufalo }) {
       </div>
 
       {/* Tabela */}
-      <Card className="p-0 overflow-hidden border-0 shadow-sm">
+      <Card className="p-0 overflow-hidden border-0 shadow-sm relative">
+        {loading && (
+          <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center">
+            <Loading text="Carregando dados zootécnicos..." />
+          </div>
+        )}
+
         <div className="p-6 border-b border-slate-100">
           <SectionTitle>Histórico Zootécnico</SectionTitle>
         </div>
 
         <div className="p-0">
-          <Table
-            columns={columns}
-            data={paginatedData}
-            renderCell={renderCell}
-            className="border-0 shadow-none rounded-none"
-            minWidth="900px"
-          />
-        </div>
-
-        {/* Paginação */}
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Mostrando <span className="font-medium">{startRecord}</span> a{' '}
-                <span className="font-medium">{endRecord}</span> de{' '}
-                <span className="font-medium">{totalRecords}</span> resultados
-              </p>
-            </div>
-            <div>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                navVariant="report"
-                activeNumberVariant="primary"
+          {!loading && totalRecords === 0 ? (
+            <EmptyState
+              title="Nenhum registro encontrado"
+              description="Não há dados zootécnicos registrados para este animal."
+              icon={Scale}
+            />
+          ) : (
+            <>
+              <Table
+                columns={columns}
+                data={data}
+                renderCell={renderCell}
+                className="border-0 shadow-none rounded-none"
+                minWidth="900px"
               />
-            </div>
-          </div>
+              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Mostrando{' '}
+                      <span className="font-medium">{startRecord}</span> a{' '}
+                      <span className="font-medium">{endRecord}</span> de{' '}
+                      <span className="font-medium">{totalRecords}</span>{' '}
+                      resultados
+                    </p>
+                  </div>
+                  <div>
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                      navVariant="report"
+                      activeNumberVariant="primary"
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </Card>
     </div>

@@ -1,61 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/router';
+import useSWR from 'swr';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Loading from '@/components/loading/Loading';
 import BackButton from '@/components/ui/BackButton';
 import TabNav from '@/components/ui/TabNav';
-import { ArrowLeft, Printer, Edit, Dna, Calendar, Tag } from 'lucide-react';
+import { Printer, Edit, Dna, Calendar, Tag } from 'lucide-react';
 import ResumoTab from '@/components/proprietario/rebanho/ResumoTab';
 import GenealogiaTab from '@/components/proprietario/rebanho/GenealogiaTab';
 import SanitarioTab from '@/components/proprietario/rebanho/SanitarioTab';
 import ZootecnicoTab from '@/components/proprietario/rebanho/ZootecnicoTab';
-
-// --- MOCK DATA (Baseado no seu JSON) ---
-const mockBufaloData = {
-  id_bufalo: '0d567ee2-2579-48dc-9870-2c242a0a55e9',
-  nome: 'Pérola',
-  brinco: 'BUFF-001',
-  microchip: null,
-  dt_nascimento: '2013-03-05',
-  nivel_maturidade: 'V',
-  sexo: 'F',
-  data_baixa: null,
-  status: true,
-  motivo_inativo: null,
-  id_raca: 'f7cf3428-5309-4117-abff-5b7f498c63d6',
-  id_propriedade: 'e7625c27-da8d-4ffa-a514-0c191b1fb1e3',
-  id_grupo: 'acb95814-3119-4b2f-8f03-5902e5094c9b',
-  origem: 'Externo',
-  brinco_original: null,
-  registro_prov: 'RP-9988',
-  registro_def: null,
-  categoria: 'SRD', // Tente mudar para 'PC', 'PA', 'CCG' ou 'SRD' para testar
-  id_pai: null,
-  id_mae: null,
-  id_pai_semen: null,
-  id_mae_ovulo: null,
-  created_at: '18/11/2025, 11:09',
-  updated_at: '21/11/2025, 20:09',
-  deleted_at: null,
-  raca: {
-    nome: 'Murrah',
-  },
-  grupo: {
-    nome_grupo: 'Recria',
-  },
-  propriedade: {
-    nome: 'Fazenda Buffs',
-  },
-};
+import bufaloService from '@/services/bufalo.service';
 
 // --- UTILS ---
-const formatDate = (dateString) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR');
-};
-
 const calculateAge = (dateString) => {
   if (!dateString) return '-';
   const birthDate = new Date(dateString);
@@ -82,12 +41,41 @@ const getStatusColor = (status) =>
     : 'bg-red-100 text-red-700 border-red-200';
 
 export default function ProntuarioPage() {
-  const { loading } = useProtectedRoute(['PROPRIETARIO']);
+  const router = useRouter();
+  const { prontuario: idBufalo } = router.query;
+  const { loading: loadingAuth } = useProtectedRoute(['PROPRIETARIO']);
   const [activeTab, setActiveTab] = useState('resumo');
-  const bufalo = mockBufaloData;
 
-  if (loading) {
+  // SWR Fetcher
+  const {
+    data: bufalo,
+    error,
+    isLoading,
+  } = useSWR(
+    idBufalo ? `bufalo/${idBufalo}` : null,
+    () => bufaloService.getBufaloById(idBufalo),
+    {
+      revalidateOnFocus: false, // Evita requests desnecessários ao trocar de aba
+      dedupingInterval: 60000,
+    }
+  );
+
+  if (loadingAuth || isLoading) {
     return <Loading text="Carregando prontuário..." />;
+  }
+
+  if (error || !bufalo) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <h2 className="text-xl font-bold text-gray-700 mb-2">
+          Búfalo não encontrado
+        </h2>
+        <p className="text-gray-500 mb-6">
+          Não foi possível carregar os dados deste animal.
+        </p>
+        <BackButton />
+      </div>
+    );
   }
 
   const tabs = [
@@ -103,11 +91,11 @@ export default function ProntuarioPage() {
       <header>
         <BackButton />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex items-center gap-5">
             <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center border-4 border-white shadow-sm shrink-0">
               <span className="text-2xl font-bold text-amber-700">
-                {bufalo.nome.substring(0, 2).toUpperCase()}
+                {bufalo.nome ? bufalo.nome.substring(0, 2).toUpperCase() : '??'}
               </span>
             </div>
             <div>
@@ -121,7 +109,6 @@ export default function ProntuarioPage() {
                   {bufalo.status ? 'ATIVO' : 'INATIVO'}
                 </span>
 
-                {/* Mantendo o selo pequeno no header para identificação rápida, mas o destaque maior estará na sidebar */}
                 {bufalo.categoria && (
                   <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                     <span className="text-xs font-bold text-slate-600">
@@ -137,7 +124,7 @@ export default function ProntuarioPage() {
                 </span>
                 <span className="hidden md:inline text-slate-300">|</span>
                 <span className="flex items-center gap-1">
-                  <Dna className="w-3 h-3" /> Raça: {bufalo.raca?.nome}
+                  <Dna className="w-3 h-3" /> Raça: {bufalo.raca?.nome || 'N/A'}
                 </span>
                 <span className="hidden md:inline text-slate-300">|</span>
                 <span className="flex items-center gap-1">
@@ -165,15 +152,17 @@ export default function ProntuarioPage() {
       </div>
 
       {/* --- CONTENT --- */}
-      {activeTab === 'resumo' && (
-        <ResumoTab bufalo={bufalo} onTabChange={setActiveTab} />
-      )}
+      <div className="animate-in fade-in duration-300">
+        {activeTab === 'resumo' && (
+          <ResumoTab bufalo={bufalo} onTabChange={setActiveTab} />
+        )}
 
-      {activeTab === 'genealogia' && <GenealogiaTab bufalo={bufalo} />}
+        {activeTab === 'genealogia' && <GenealogiaTab bufalo={bufalo} />}
 
-      {activeTab === 'sanitario' && <SanitarioTab bufalo={bufalo} />}
+        {activeTab === 'sanitario' && <SanitarioTab bufalo={bufalo} />}
 
-      {activeTab === 'zootecnico' && <ZootecnicoTab bufalo={bufalo} />}
+        {activeTab === 'zootecnico' && <ZootecnicoTab bufalo={bufalo} />}
+      </div>
     </div>
   );
 }

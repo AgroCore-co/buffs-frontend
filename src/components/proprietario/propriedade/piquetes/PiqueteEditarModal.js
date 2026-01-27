@@ -51,14 +51,14 @@ export default function PiqueteEditarModal({
   useEffect(() => {
     if (isOpen && piquete) {
       setFormData({
-        nome_lote: piquete.nome_lote || '',
-        id_grupo: piquete.id_grupo || '',
+        nome_lote: piquete.nomeLote || piquete.nome_lote || '',
+        id_grupo: piquete.idGrupo || piquete.id_grupo || '',
         descricao: piquete.descricao || '',
-        qtd_max: piquete.qtd_max || 50,
+        qtd_max: piquete.qtdMax || piquete.qtd_max || 50,
         status: piquete.status || 'ativo',
       });
-      setGeoMapa(piquete.geo_mapa || null);
-      setAreaM2(piquete.area_m2 || 0);
+      setGeoMapa(piquete.geoMapa || piquete.geo_mapa || null);
+      setAreaM2(parseFloat(piquete.areaM2 || piquete.area_m2) || 0);
       setError('');
     }
   }, [isOpen, piquete]);
@@ -104,7 +104,7 @@ export default function PiqueteEditarModal({
         area_m2: areaM2,
       };
 
-      await loteService.updateLote(piquete.id_lote, payload);
+      await loteService.updateLote(piquete.idLote || piquete.id_lote, payload);
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -132,8 +132,8 @@ export default function PiqueteEditarModal({
 
   // Opções de grupos
   const grupoOptions = grupos.map((g) => ({
-    value: g.id_grupo,
-    label: g.nome_grupo,
+    value: g.idGrupo || g.id_grupo,
+    label: g.nomeGrupo || g.nome_grupo,
   }));
 
   const footer = (
@@ -155,7 +155,7 @@ export default function PiqueteEditarModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Editar: ${piquete.nome_lote}`}
+      title={`Editar: ${piquete.nomeLote || piquete.nome_lote}`}
       description="Atualize as informações do piquete"
       size="xl"
       footer={footer}
@@ -240,13 +240,14 @@ export default function PiqueteEditarModal({
           </label>
           <div className="h-[400px] rounded-lg overflow-hidden border border-slate-200">
             <MapaDesenhoLeaflet
-              initialPolygon={piquete.geo_mapa}
+              initialPolygon={piquete.geoMapa || piquete.geo_mapa}
               onPolygonChange={handlePolygonChange}
               existingLotes={existingLotes}
-              currentLoteId={piquete.id_lote}
+              currentLoteId={piquete.idLote || piquete.id_lote}
               grupoColor={
-                grupos.find((g) => g.id_grupo === formData.id_grupo)?.color ||
-                '#ce7d0a'
+                grupos.find(
+                  (g) => (g.idGrupo || g.id_grupo) === formData.id_grupo
+                )?.color || '#ce7d0a'
               }
             />
           </div>

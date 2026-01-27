@@ -13,17 +13,21 @@ export default function MapaTab({ grupo, lotes, todosLotes }) {
       setLoadingStatus(true);
       try {
         const status = await movimentacaoService.getStatusAtualByGrupo(
-          grupo.id_grupo
+          grupo.idGrupo || grupo.id_grupo
         );
-        setIdLoteAtual(status?.localizacao_atual?.id_lote || null);
+        setIdLoteAtual(
+          status?.localizacao_atual?.idLote ||
+            status?.localizacao_atual?.id_lote ||
+            null
+        );
       } catch (e) {
         setIdLoteAtual(null);
       } finally {
         setLoadingStatus(false);
       }
     }
-    if (grupo?.id_grupo) fetchStatus();
-  }, [grupo?.id_grupo]);
+    if (grupo?.idGrupo || grupo?.id_grupo) fetchStatus();
+  }, [grupo?.idGrupo, grupo?.id_grupo]);
 
   if (lotes.length === 0 || loadingStatus) {
     return (
@@ -74,7 +78,11 @@ export default function MapaTab({ grupo, lotes, todosLotes }) {
           </div>
           <p className="text-2xl font-bold text-amber-800">
             {(
-              lotes.reduce((sum, lote) => sum + (lote.area_m2 || 0), 0) / 10000
+              lotes.reduce(
+                (sum, lote) =>
+                  sum + (parseFloat(lote.areaM2 || lote.area_m2) || 0),
+                0
+              ) / 10000
             ).toFixed(2)}{' '}
             ha
           </p>

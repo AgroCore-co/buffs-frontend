@@ -67,6 +67,13 @@ class PropriedadeService {
   }
 
   /**
+   * Alias para buscar todas as propriedades (compatibilidade com Context)
+   */
+  async getAllPropriedades() {
+    return this.getPropriedades();
+  }
+
+  /**
    * Busca uma propriedade específica pelo ID (GET /propriedades/{id})
    * @param {string} id - UUID da propriedade
    */

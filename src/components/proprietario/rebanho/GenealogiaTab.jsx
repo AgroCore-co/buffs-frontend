@@ -6,83 +6,25 @@ import React, {
   useCallback,
 } from 'react';
 import DashboardContainer from '../../ui/DashboardContainer';
-import {
-  Dna,
-  User,
-  Crown,
-  Info,
-  ZoomIn,
-  ZoomOut,
-  Move,
-  Maximize,
-} from 'lucide-react';
+import { Dna, User, Crown, Info } from 'lucide-react';
+import useSWR from 'swr';
+import bufaloService from '@/services/bufalo.service';
+import Loading from '@/components/loading/Loading';
 
-// --- DADOS MOCKADOS (4 GERAÇÕES) ---
-const createAncestor = (id, nome, sexo, reg) => ({
-  id,
-  nome,
-  registro: reg,
-  sexo,
-});
-
-const MOCK_TREE_FULL = {
-  self: {
-    id: 'af6a6ae3',
-    nome: 'Búfalo Principal',
-    registro: 'B-12345',
-    sexo: 'M',
-    pai: {
-      id: 'pai-001',
-      nome: 'Touro Campeão',
-      registro: 'T-99887',
-      sexo: 'M',
-      pai: {
-        id: 'avo-p-001',
-        nome: 'Avô Paterno',
-        registro: 'AP-1122',
-        sexo: 'M',
-        pai: createAncestor('bisa-pp-01', 'Bisavô Paterno', 'M', 'BP-10'),
-        mae: createAncestor('bisa-pm-01', 'Bisavó Paterna', 'F', 'BP-11'),
-      },
-      mae: {
-        id: 'avo-p-002',
-        nome: 'Avó Paterna',
-        registro: 'AP-3344',
-        sexo: 'F',
-        pai: createAncestor('bisa-mp-01', 'Bisavô Materno', 'M', 'BM-20'),
-        mae: createAncestor('bisa-mm-01', 'Bisavó Materna', 'F', 'BM-21'),
-      },
-    },
-    mae: {
-      id: 'mae-001',
-      nome: 'Matriz Leiteira',
-      registro: 'M-55443',
-      sexo: 'F',
-      pai: {
-        id: 'avo-m-001',
-        nome: 'Avô Materno',
-        registro: 'AM-5566',
-        sexo: 'M',
-        pai: createAncestor('bisa-mp-02', 'Bisavô Paterno', 'M', 'BP-30'),
-        mae: createAncestor('bisa-mm-02', 'Bisavó Paterna', 'F', 'BP-31'),
-      },
-      mae: {
-        id: 'avo-m-002',
-        nome: 'Avó Materna',
-        registro: 'AM-7788',
-        sexo: 'F',
-        pai: createAncestor('bisa-mm-03', 'Bisavô Materno', 'M', 'BM-40'),
-        mae: createAncestor('bisa-mm-04', 'Bisavó Materna', 'F', 'BM-41'),
-      },
-    },
-  },
+// --- DADOS MOCKADOS ESTRUTURA BASE ---
+const BASE_STRUCT = {
+  id: null,
+  nome: 'Carregando...',
+  registro: '',
+  sexo: '',
 };
 
 // --- CONSTANTES DE LAYOUT ---
-const CARD_WIDTH = 200;
+const CARD_WIDTH = 180;
 const CARD_HEIGHT = 90;
-const LEVEL_HEIGHT = 180; // Distância vertical entre gerações
-const LEAF_WIDTH = 260; // Largura horizontal reservada para nós folha
+const LEVEL_HEIGHT = 120; // Distância vertical entre gerações
+const LEAF_WIDTH = 130; // Largura horizontal reservada para nós folha
+const MAX_GENERATIONS = 4; // Limite de recursão
 
 // --- FUNÇÕES AUXILIARES ---
 const getRoleLabel = (sexo, generation) => {
@@ -161,6 +103,15 @@ import SectionTitle from '../../ui/SectionTitle';
 const NodeCard = ({ node }) => {
   const isMale = node.sexo === 'M';
   const generation = node.generation;
+  const isPlaceholder = node.id === 'loading' || !node.id;
+
+  if (isPlaceholder) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full rounded-xl border-2 border-slate-100 border-dashed bg-slate-50">
+        <p className="text-[10px] text-slate-400 font-medium">Não informado</p>
+      </div>
+    );
+  }
 
   const borderColor = isMale
     ? 'border-blue-200 hover:border-blue-400'
@@ -204,31 +155,119 @@ const NodeCard = ({ node }) => {
 export default function GenealogiaTab({ bufalo }) {
   const containerRef = useRef(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // 1. Prepara dados
-  const rawTreeData = useMemo(
-    () => ({
-      ...MOCK_TREE_FULL.self,
-      id: bufalo?.id_bufalo || MOCK_TREE_FULL.self.id,
-      registro: bufalo?.brinco || MOCK_TREE_FULL.self.registro,
-      sexo: bufalo?.sexo || MOCK_TREE_FULL.self.sexo,
-    }),
-    [bufalo]
+  // --- FETCHERS ---
+  const fetchGenealogy = async (rootId) => {
+    const cache = new Map();
+
+    // Função recursiva interna
+    const fetchAncestor = async (id, depth) => {
+      if (!id || depth >= MAX_GENERATIONS) return null;
+      if (cache.has(id)) return cache.get(id);
+
+      try {
+        const data = (await bufaloService.getBufaloById(id)) || {};
+
+        const [pai, mae] = await Promise.all([
+          fetchAncestor(data.id_pai, depth + 1),
+          fetchAncestor(data.id_mae, depth + 1),
+        ]);
+
+        const node = {
+          id: data.id_bufalo,
+          nome: data.nome,
+          registro: data.registro_def || data.registro_prov || data.brinco,
+          sexo: data.sexo,
+          pai,
+          mae,
+        };
+
+        cache.set(id, node);
+        return node;
+      } catch (error) {
+        console.error(`Erro ao buscar ancestral ${id}:`, error);
+        return null;
+      }
+    };
+
+    // Constroi a partir dos pais do root
+    // Precisamos buscar os dados do rootId novamente?
+    // O componente recebe 'bufalo' prop, mas o fetcher precisa ser autônomo ou receber o objeto inicial.
+    // Para simplificar e garantir consistência (e cache key simples), vamos buscar o root novamente ou aceitar que o fetcher busca tudo.
+
+    // Na implementação anterior, ele usava 'bufalo' prop para criar o rootNode e buscava só os pais (linha 212).
+    // Para o SWR ficar limpo, o fetcher pode receber o objecto bufalo ou ID.
+    // Se receber ID, ele busca o root. Se receber objeto, usa.
+    // Mas a key do SWR é melhor ser o ID. Entao vamos buscar o root também para garantir (ou passar os dados iniciais).
+
+    // Vamos replicar a logica original: recebe ID, busca pais. O root node é montado fora?
+    // Melhor: O fetcher retorna a arvore completa.
+    // Vamos passar o objeto bufalo inteiro para o fetcher? Não, o fetcher key deve ser serializavel.
+
+    // Vamos fazer o fetcher buscar tudo baseado no ID do bufalo principal.
+
+    const rootData = await bufaloService.getBufaloById(rootId);
+    if (!rootData) throw new Error('Bufalo não encontrado');
+
+    const [pai, mae] = await Promise.all([
+      fetchAncestor(rootData.id_pai, 1),
+      fetchAncestor(rootData.id_mae, 1),
+    ]);
+
+    return {
+      id: rootData.id_bufalo,
+      nome: rootData.nome,
+      registro:
+        rootData.registro_def || rootData.registro_prov || rootData.brinco,
+      sexo: rootData.sexo,
+      pai,
+      mae,
+    };
+  };
+
+  const { data: treeData, isLoading: loading } = useSWR(
+    bufalo?.id_bufalo ? ['genealogia', bufalo.id_bufalo] : null,
+    ([, id]) => fetchGenealogy(id),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 600000, // Cache longo (10 min) pois genealogia muda pouco
+    }
   );
 
   // 2. Gera Layout da Árvore
   const { nodes, links, bounds } = useMemo(() => {
-    const maxGen = 3;
-    const totalWidth = Math.pow(2, maxGen) * LEAF_WIDTH;
-    const layout = calculatePedigreeLayout(rawTreeData, 0, 0, totalWidth);
+    if (!treeData)
+      return {
+        nodes: [],
+        links: [],
+        bounds: { minX: 0, maxX: 0, minY: 0, maxY: 0, width: 100, height: 100 },
+      };
+
+    // Correção: Usar MAX_GENERATIONS - 1, pois só temos 3 gerações de ancestrais (pais, avós, bisavós)
+    const totalWidth = Math.pow(2, MAX_GENERATIONS - 1) * LEAF_WIDTH;
+    const layout = calculatePedigreeLayout(treeData, 0, 0, totalWidth);
 
     // Calcula Bounding Box para centralização
     let minX = Infinity,
       maxX = -Infinity,
       minY = Infinity,
       maxY = -Infinity;
+
+    if (layout.nodes.length === 0) {
+      return {
+        nodes: [],
+        links: [],
+        bounds: {
+          minX: 0,
+          maxX: 100,
+          minY: 0,
+          maxY: 100,
+          width: 100,
+          height: 100,
+        },
+      };
+    }
+
     layout.nodes.forEach((n) => {
       if (n.x < minX) minX = n.x;
       if (n.x > maxX) maxX = n.x;
@@ -251,19 +290,24 @@ export default function GenealogiaTab({ bufalo }) {
         height: maxY - minY + paddingY * 2,
       },
     };
-  }, [rawTreeData]);
+  }, [treeData]);
 
   // 3. Função de Auto-Fit (Centralizar)
   const centerTree = useCallback(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !bounds) return;
 
     const { width: containerW, height: containerH } =
       containerRef.current.getBoundingClientRect();
 
     // Calcula escala para caber
-    const scaleX = containerW / bounds.width;
-    const scaleY = containerH / bounds.height;
-    const scale = Math.min(scaleX, scaleY, 1) * 0.9; // 90% do tamanho para margem de respiro
+    // Previne divisão por zero
+    const bWidth = bounds.width || 100;
+    const bHeight = bounds.height || 100;
+
+    const scaleX = containerW / bWidth;
+    const scaleY = containerH / bHeight;
+    // Permitir zoom maior que 1.0 (até 1.5x) se a árvore for pequena
+    const scale = Math.min(scaleX, scaleY, 1.5) * 0.95;
 
     // Calcula posição para centralizar
     // O centro da árvore (bounds center) deve ir para o centro do container
@@ -276,40 +320,16 @@ export default function GenealogiaTab({ bufalo }) {
     setTransform({ x, y, k: scale });
   }, [bounds]);
 
-  // Centraliza ao montar ou redimensionar
+  // Centraliza ao montar ou redimensionar e quando mudar dados
   useEffect(() => {
-    centerTree();
+    // Delay pequeno para garantir que o DOM renderizou
+    const timer = setTimeout(centerTree, 100);
     window.addEventListener('resize', centerTree);
-    return () => window.removeEventListener('resize', centerTree);
-  }, [centerTree]);
-
-  // Controles de Mouse
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const scaleFactor = 1.1;
-    const newScale =
-      e.deltaY < 0 ? transform.k * scaleFactor : transform.k / scaleFactor;
-    setTransform((prev) => ({
-      ...prev,
-      k: Math.max(0.1, Math.min(newScale, 3)),
-    }));
-  };
-
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    setTransform((prev) => ({
-      ...prev,
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    }));
-  };
-
-  const handleMouseUp = () => setIsDragging(false);
+    return () => {
+      window.removeEventListener('resize', centerTree);
+      clearTimeout(timer);
+    };
+  }, [centerTree, loading]);
 
   // Renderiza Linhas
   const renderLink = (link, idx) => {
@@ -328,6 +348,8 @@ export default function GenealogiaTab({ bufalo }) {
       <path key={idx} d={d} fill="none" stroke="#cbd5e1" strokeWidth="2" />
     );
   };
+
+  if (!bufalo) return null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -355,7 +377,8 @@ export default function GenealogiaTab({ bufalo }) {
               Pai
             </p>
             <p className="text-sm font-bold text-slate-800 truncate max-w-[150px]">
-              {MOCK_TREE_FULL.self.pai.nome}
+              {treeData?.pai?.nome ||
+                (loading ? 'Carregando...' : 'Não informado')}
             </p>
           </div>
         </Card>
@@ -368,46 +391,22 @@ export default function GenealogiaTab({ bufalo }) {
               Mãe
             </p>
             <p className="text-sm font-bold text-slate-800 truncate max-w-[150px]">
-              {MOCK_TREE_FULL.self.mae.nome}
+              {treeData?.mae?.nome ||
+                (loading ? 'Carregando...' : 'Não informado')}
             </p>
           </div>
         </Card>
       </div>
 
       {/* Árvore Genealógica com container padrão */}
-      <DashboardContainer className="relative overflow-hidden h-[600px] p-0">
-        <div className="absolute top-4 right-4 z-10 flex gap-2">
-          <div className="bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
-            <button
-              onClick={() => setTransform((p) => ({ ...p, k: p.k * 0.8 }))}
-              className="p-1.5 hover:bg-slate-100 rounded text-slate-600"
-            >
-              <ZoomOut className="w-4 h-4" />
-            </button>
-            <button
-              onClick={centerTree}
-              className="p-1.5 hover:bg-slate-100 rounded text-slate-600"
-            >
-              <Maximize className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setTransform((p) => ({ ...p, k: p.k * 1.2 }))}
-              className="p-1.5 hover:bg-slate-100 rounded text-slate-600"
-            >
-              <ZoomIn className="w-4 h-4" />
-            </button>
+      <DashboardContainer className="relative overflow-hidden h-[600px] p-0 flex items-center justify-center">
+        {loading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 rounded-xl">
+            <Loading text="Construindo árvore genealógica..." />
           </div>
-        </div>
+        )}
 
-        <div
-          ref={containerRef}
-          className="w-full h-full cursor-grab active:cursor-grabbing overflow-hidden"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
-        >
+        <div ref={containerRef} className="w-full h-full overflow-hidden">
           <svg width="100%" height="100%">
             <g
               transform={`translate(${transform.x},${transform.y}) scale(${transform.k})`}
@@ -415,7 +414,7 @@ export default function GenealogiaTab({ bufalo }) {
               {links.map((link, idx) => renderLink(link, idx))}
               {nodes.map((node) => (
                 <foreignObject
-                  key={node.id}
+                  key={node.id || `placeholder-${node.x}-${node.y}`}
                   x={node.x - CARD_WIDTH / 2}
                   y={node.y - CARD_HEIGHT / 2}
                   width={CARD_WIDTH}
@@ -429,23 +428,6 @@ export default function GenealogiaTab({ bufalo }) {
           </svg>
         </div>
       </DashboardContainer>
-
-      <Card>
-        <SectionTitle>Análise de Linhagem</SectionTitle>
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-600 mt-0.5" />
-          <div>
-            <h4 className="font-semibold text-blue-800 text-sm">
-              Estrutura Genealógica
-            </h4>
-            <p className="text-sm text-blue-700 mt-1">
-              Visualização vertical ascendente completa. A árvore foi ajustada
-              para centralizar automaticamente e exibir até a 4ª geração de
-              ancestrais.
-            </p>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }

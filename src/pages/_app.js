@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/contexts/AuthContext';
+import { PropriedadeProvider } from '@/contexts/PropriedadeContext';
 import '@/styles/globals.css';
 import Layout from '@/layout/Layout';
 
@@ -14,13 +15,15 @@ export default function App({ Component, pageProps, router }) {
   const isPublic = publicRoutes.includes(router?.pathname);
   return (
     <AuthProvider>
-      {isPublic ? (
-        <Component {...pageProps} />
-      ) : (
-        <Layout>
+      <PropriedadeProvider>
+        {isPublic ? (
           <Component {...pageProps} />
-        </Layout>
-      )}
+        ) : (
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        )}
+      </PropriedadeProvider>
     </AuthProvider>
   );
 }

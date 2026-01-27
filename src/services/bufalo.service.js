@@ -59,6 +59,38 @@ const bufaloService = {
       throw error;
     }
   },
+
+  /**
+   * Registra um novo búfalo
+   * @param {Object} bufaloData
+   */
+  async createBufalo(bufaloData) {
+    try {
+      const response = await api.post('/bufalos', bufaloData);
+      return response;
+    } catch (error) {
+      if (error.response?.status === 400) {
+        throw new Error(error.response.data?.message || 'Dados inválidos');
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Busca um búfalo pelo ID
+   * @param {string} id - ID do búfalo
+   */
+  async getBufaloById(id) {
+    try {
+      const response = await api.get(`/bufalos/${id}`);
+      return response;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  },
 };
 
 export default bufaloService;

@@ -2,6 +2,7 @@
 
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
+import PropriedadeSelector from '@/components/proprietario/PropriedadeSelector';
 
 export default function Layout({ children }) {
   return (
@@ -49,6 +50,9 @@ export default function Layout({ children }) {
           background: #ce7d0a; /* Cor da marca no hover */
         }
       `}</style>
+
+      {/* Seletor Flutuante Global */}
+      <PropriedadeSelector />
     </div>
   );
 }

@@ -51,8 +51,9 @@ export default function MapaRotativoLeaflet({
       lngSum = 0,
       count = 0;
     lotes.forEach((l) => {
-      if (l.geo_mapa?.coordinates?.[0]) {
-        l.geo_mapa.coordinates[0].forEach((coord) => {
+      const geo = l.geoMapa || l.geo_mapa;
+      if (geo?.coordinates?.[0]) {
+        geo.coordinates[0].forEach((coord) => {
           lngSum += coord[0];
           latSum += coord[1];
           count++;
@@ -93,8 +94,9 @@ export default function MapaRotativoLeaflet({
     // Calcular bounds de todos os piquetes
     const allLatLngs = [];
     lotes.forEach((lote) => {
-      if (lote.geo_mapa?.coordinates?.[0]) {
-        lote.geo_mapa.coordinates[0].forEach((coord) => {
+      const geo = lote.geoMapa || lote.geo_mapa;
+      if (geo?.coordinates?.[0]) {
+        geo.coordinates[0].forEach((coord) => {
           allLatLngs.push([coord[1], coord[0]]);
         });
       }
@@ -154,12 +156,14 @@ export default function MapaRotativoLeaflet({
     layersRef.current = {};
 
     lotes.forEach((lote, idx) => {
+      // Normalizar propriedades
+      const geo = lote.geoMapa || lote.geo_mapa;
+      const nomeLote = lote.nomeLote || lote.nome_lote;
+      const idLote = lote.idLote || lote.id_lote;
+
       // Validar se o lote tem dados geográficos válidos
-      if (
-        !lote.geo_mapa?.coordinates?.[0] ||
-        lote.geo_mapa.coordinates[0].length === 0
-      ) {
-        console.warn(`Lote ${lote.nome_lote} não possui coordenadas válidas`);
+      if (!geo?.coordinates?.[0] || geo.coordinates[0].length === 0) {
+        console.warn(`Lote ${nomeLote} não possui coordenadas válidas`);
         return;
       }
 
@@ -169,10 +173,12 @@ export default function MapaRotativoLeaflet({
       const borderColor = cor;
       const borderWidth = 2;
 
-      const isSelected = loteSelecionado?.id_lote === lote.id_lote;
+      const isSelected =
+        loteSelecionado?.idLote === idLote ||
+        loteSelecionado?.id_lote === idLote;
 
       // Converter GeoJSON [Lng, Lat] -> Leaflet [Lat, Lng]
-      const latLngs = lote.geo_mapa.coordinates[0].map((c) => [c[1], c[0]]);
+      const latLngs = geo.coordinates[0].map((c) => [c[1], c[0]]);
 
       const polygon = L.polygon(latLngs, {
         color: isSelected ? '#ffffff' : borderColor,
@@ -182,7 +188,7 @@ export default function MapaRotativoLeaflet({
       }).addTo(map);
 
       // Extrair número do nome do piquete (ex: "Piquete 01" -> "P1")
-      const match = lote.nome_lote.match(/\d+/);
+      const match = nomeLote.match(/\d+/);
       const nomeAbreviado = match ? `P${parseInt(match[0])}` : `P${idx + 1}`;
 
       // Bind Tooltip
@@ -205,7 +211,7 @@ export default function MapaRotativoLeaflet({
         setLoteSelecionado(lote);
       });
 
-      layersRef.current[lote.id_lote] = polygon;
+      layersRef.current[idLote] = polygon;
     });
   }, [leafletLoaded, loteSelecionado, lotes]);
 
@@ -308,7 +314,7 @@ export default function MapaRotativoLeaflet({
           {loteSelecionado ? (
             <div className="p-5 animate-in fade-in slide-in-from-right-4">
               <h2 className="text-xl font-bold text-slate-800 mb-1">
-                {loteSelecionado.nome_lote}
+                {loteSelecionado.nomeLote || loteSelecionado.nome_lote}
               </h2>
               {loteSelecionado.descricao && (
                 <p className="text-sm text-slate-500 mb-3">
@@ -322,9 +328,13 @@ export default function MapaRotativoLeaflet({
                     Área
                   </p>
                   <p className="text-sm font-mono font-semibold text-slate-700">
-                    {loteSelecionado.area_m2 >= 10000
-                      ? `${(loteSelecionado.area_m2 / 10000).toFixed(2)} ha`
-                      : `${loteSelecionado.area_m2?.toLocaleString('pt-BR')} m²`}
+                    {(() => {
+                      const area =
+                        loteSelecionado.areaM2 || loteSelecionado.area_m2;
+                      return area >= 10000
+                        ? `${(area / 10000).toFixed(2)} ha`
+                        : `${area?.toLocaleString('pt-BR')} m²`;
+                    })()}
                   </p>
                 </div>
                 <div className="bg-slate-100 p-2.5 rounded-lg">
@@ -335,7 +345,9 @@ export default function MapaRotativoLeaflet({
                     className="text-sm font-semibold"
                     style={{ color: loteSelecionado.grupo?.color || '#666' }}
                   >
-                    {loteSelecionado.grupo?.nome_grupo || 'Sem grupo'}
+                    {loteSelecionado.grupo?.nomeGrupo ||
+                      loteSelecionado.grupo?.nome_grupo ||
+                      'Sem grupo'}
                   </p>
                 </div>
                 <div className="bg-slate-100 p-2.5 rounded-lg">
@@ -343,7 +355,8 @@ export default function MapaRotativoLeaflet({
                     Capacidade
                   </p>
                   <p className="text-sm font-semibold text-slate-700">
-                    {loteSelecionado.qtd_max || '-'} animais
+                    {loteSelecionado.qtdMax || loteSelecionado.qtd_max || '-'}{' '}
+                    animais
                   </p>
                 </div>
                 <div className="bg-slate-100 p-2.5 rounded-lg">
@@ -406,10 +419,14 @@ export default function MapaRotativoLeaflet({
         {lotes && lotes.length > 0 && (
           <div className="bg-white/90 backdrop-blur px-4 py-2.5 rounded-full shadow-lg border border-slate-200 flex gap-3 text-xs font-medium text-slate-700">
             {Array.from(
-              new Set(lotes.map((l) => l.grupo?.nome_grupo).filter(Boolean))
+              new Set(
+                lotes
+                  .map((l) => l.grupo?.nomeGrupo || l.grupo?.nome_grupo)
+                  .filter(Boolean)
+              )
             ).map((nomeGrupo) => {
               const grupo = lotes.find(
-                (l) => l.grupo?.nome_grupo === nomeGrupo
+                (l) => (l.grupo?.nomeGrupo || l.grupo?.nome_grupo) === nomeGrupo
               )?.grupo;
               return (
                 <div key={nomeGrupo} className="flex items-center gap-1.5">
