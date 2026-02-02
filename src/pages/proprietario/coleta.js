@@ -1,134 +1,139 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Loading from '@/components/loading/Loading';
 import DashboardContainer from '@/components/ui/DashboardContainer';
 import MetricCard from '@/components/ui/MetricCard';
-import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
-import {
-  FilterBar,
-  FilterInput,
-  FilterSelect,
-} from '@/components/ui/FilterBar';
-import {
-  FiTruck,
-  FiCheckCircle,
-  FiXCircle,
-  FiActivity,
-  FiPlus,
-  FiFileText,
-} from 'react-icons/fi';
-
-// --- DADOS MOCKADOS (Baseado nas informações fornecidas) ---
-
-const metrics = {
-  volumeTotal: '0 L',
-  totalColetas: 403,
-  taxaAprovacao: '0.0%',
-  volumeRejeitado: '0 L',
-};
-
-const coletasMock = [
-  {
-    id: 1,
-    data: '2025-11-24',
-    empresa: 'Buffs Laticinio',
-    quantidade: '105',
-    obs: 'Coleta reprovada',
-    status: 'Reprovado',
-  },
-  {
-    id: 2,
-    data: '2025-11-24',
-    empresa: 'Laticinio Valle',
-    quantidade: '105',
-    obs: 'Coleta reprovada por ambas',
-    status: 'Reprovado',
-  },
-  {
-    id: 3,
-    data: '2025-11-23',
-    empresa: 'Buffs Laticinio',
-    quantidade: '200',
-    obs: '-',
-    status: 'Aprovado',
-  },
-  {
-    id: 4,
-    data: '2025-11-23',
-    empresa: 'Buffs Laticinio',
-    quantidade: '800',
-    obs: '-',
-    status: 'Aprovado',
-  },
-  {
-    id: 5,
-    data: '2025-11-22',
-    empresa: 'Buffs Laticinio',
-    quantidade: '141,88',
-    obs: 'Coleta aprovada',
-    status: 'Aprovado',
-  },
-  {
-    id: 6,
-    data: '2025-11-20',
-    empresa: 'Buffs Laticinio',
-    quantidade: '108,5',
-    obs: 'Coleta aprovada',
-    status: 'Aprovado',
-  },
-  {
-    id: 7,
-    data: '2025-11-18',
-    empresa: 'Buffs Laticinio',
-    quantidade: '9,78',
-    obs: 'Coleta aprovada',
-    status: 'Aprovado',
-  },
-  {
-    id: 8,
-    data: '2025-11-16',
-    empresa: 'Buffs Laticinio',
-    quantidade: '43,42',
-    obs: 'Coleta aprovada',
-    status: 'Aprovado',
-  },
-  {
-    id: 9,
-    data: '2025-11-14',
-    empresa: 'Buffs Laticinio',
-    quantidade: '77,06',
-    obs: 'Coleta aprovada',
-    status: 'Aprovado',
-  },
-  {
-    id: 10,
-    data: '2025-11-12',
-    empresa: 'Buffs Laticinio',
-    quantidade: '110,7',
-    obs: 'Coleta aprovada',
-    status: 'Aprovado',
-  },
-];
+import { FiTruck, FiCheckCircle, FiXCircle, FiActivity } from 'react-icons/fi';
+import { usePropriedade } from '@/contexts/PropriedadeContext';
+import { useCachedFetch } from '@/hooks/useCachedFetch';
+import ColetaModal from '@/components/proprietario/coleta/ColetaModal';
 
 export default function ColetasPage() {
-  const { loading } = useProtectedRoute(['PROPRIETARIO']);
+  const { loading: authLoading } = useProtectedRoute(['PROPRIETARIO']);
+  const { propriedadeSelecionada } = usePropriedade();
 
   // --- ESTADOS ---
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 403,
-    totalPages: 41,
-  });
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [selectedColeta, setSelectedColeta] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handlePageChange = (newPage) => {
-    setPagination((prev) => ({ ...prev, page: newPage }));
+  const handleOpenModal = (coleta) => {
+    setSelectedColeta(coleta);
+    setIsModalOpen(true);
   };
 
-  if (loading) return <Loading text="Carregando coletas..." />;
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedColeta(null);
+  };
+
+  // 1. Identificar Propriedade
+  const idProp =
+    propriedadeSelecionada?.id ||
+    propriedadeSelecionada?.idPropriedade ||
+    propriedadeSelecionada?.id_propriedade;
+
+  // 2. Hook de Busca com Cache
+  const {
+    data: coletasData,
+    loading: loadingColetas,
+    error: errorColetas,
+  } = useCachedFetch(
+    idProp ? `/retiradas/propriedade/${idProp}` : null,
+    { page, limit },
+    { enabled: !!idProp, ttl: 60000 }
+  );
+
+  // 3. Dados Derivados
+  const coletas = coletasData?.data || [];
+  const meta = coletasData?.meta || {};
+  const totalPages = meta.totalPages || 1;
+  const totalItems = meta.total || 0;
+
+  const metrics = {
+    volumeTotal: `${parseFloat(meta.totalVolumeColetado || 0).toLocaleString('pt-BR')} L`,
+    totalColetas: meta.total || 0,
+    taxaAprovacao: `${meta.taxaAprovacao || '0.0'}%`,
+    volumeRejeitado: `${parseFloat(meta.totalVolumeRejeitado || 0).toLocaleString('pt-BR')} L`,
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  if (authLoading || (loadingColetas && !coletasData))
+    return <Loading text="Carregando coletas..." />;
+
+  const columns = [
+    {
+      key: 'dt_coleta',
+      label: 'Data da Coleta',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'nome_empresa',
+      label: 'Empresa',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'quantidade',
+      label: 'Quantidade',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'observacao',
+      label: 'Observação',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'resultado_teste',
+      label: 'Status',
+      className: 'p-4 text-left font-semibold',
+    },
+  ];
+
+  const renderCell = (row, key) => {
+    if (key === 'dt_coleta') {
+      const datePart = row.dt_coleta.split(' ')[0].split('T')[0];
+      const [y, m, d] = datePart.split('-');
+      return (
+        <span className="font-medium text-gray-700">{`${d}/${m}/${y}`}</span>
+      );
+    }
+    if (key === 'quantidade') {
+      return (
+        <span className="font-bold text-gray-800">
+          {parseFloat(row.quantidade).toLocaleString('pt-BR')} L
+        </span>
+      );
+    }
+    if (key === 'observacao') {
+      return !row.observacao ? (
+        <span className="text-gray-400">-</span>
+      ) : (
+        <span
+          className="text-sm text-gray-600 max-w-[200px] block truncate"
+          title={row.observacao}
+        >
+          {row.observacao}
+        </span>
+      );
+    }
+    if (key === 'resultado_teste') {
+      const isApproved = row.resultado_teste;
+      const Badge = require('@/components/ui/Badge').default;
+      return (
+        <Badge type={isApproved ? 'active' : 'inactive'}>
+          {isApproved ? 'Aprovado' : 'Reprovado'}
+        </Badge>
+      );
+    }
+    return row[key];
+  };
 
   return (
     <>
@@ -152,25 +157,25 @@ export default function ColetasPage() {
             <MetricCard
               title="Volume Total Coletado"
               value={metrics.volumeTotal}
-              subtitle="Mês atual"
+              subtitle="Volume total na propriedade"
               icon={<FiTruck className="text-[#ce7d0a]" />}
             />
             <MetricCard
               title="Total de Coletas"
               value={metrics.totalColetas}
-              subtitle="Registros"
+              subtitle="Registros totais"
               icon={<FiActivity className="text-[#ce7d0a]" />}
             />
             <MetricCard
               title="Taxa de Aprovação"
               value={metrics.taxaAprovacao}
-              subtitle="Mês atual"
+              subtitle="Geral"
               icon={<FiCheckCircle className="text-green-600" />}
             />
             <MetricCard
               title="Volume Rejeitado"
               value={metrics.volumeRejeitado}
-              subtitle="Mês atual"
+              subtitle="Volume total rejeitado"
               icon={<FiXCircle className="text-red-500" />}
             />
           </div>
@@ -185,123 +190,43 @@ export default function ColetasPage() {
               </h1>
               <p className="text-[#404040]/70 text-sm">
                 Monitoramento da Produção de leite de Búfalas -{' '}
-                <strong>{metrics.totalColetas} coletas registradas</strong>
+                <strong>{totalItems} coletas registradas</strong>
               </p>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="report"
-                size="medium"
-                className="flex items-center gap-2"
-              >
-                <FiFileText /> Relatório
-              </Button>
-              <Button
-                variant="primary"
-                size="medium"
-                className="flex items-center gap-2 font-bold"
-              >
-                <FiPlus /> Nova Coleta
-              </Button>
             </div>
           </div>
 
-          {/* Filtros */}
-          <FilterBar>
-            <FilterInput type="date" placeholder="Data" />
-            <FilterInput type="text" placeholder="Buscar Empresa" />
-            <FilterSelect>
-              <option value="">Status: Todos</option>
-              <option value="aprovado">Aprovado</option>
-              <option value="reprovado">Reprovado</option>
-            </FilterSelect>
-          </FilterBar>
-
           {/* Tabela */}
-          {(() => {
-            const Table = require('@/components/table/Table').default;
-            const Badge = require('@/components/ui/Badge').default;
+          <div className="relative min-h-[400px]">
+            {loadingColetas && (
+              <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-lg">
+                <Loading />
+              </div>
+            )}
 
-            const columns = [
-              {
-                key: 'data',
-                label: 'Data da Coleta',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'empresa',
-                label: 'Empresa',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'quantidade',
-                label: 'Quantidade',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'obs',
-                label: 'Observação',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'status',
-                label: 'Status',
-                className: 'p-4 text-left font-semibold',
-              },
-            ];
-
-            return (
-              <Table
-                columns={columns}
-                data={coletasMock}
-                minWidth="1000px"
-                renderCell={(row, key) => {
-                  if (key === 'data') {
-                    const [y, m, d] = row.data.split('-');
-                    return (
-                      <span className="font-medium text-gray-700">{`${d}/${m}/${y}`}</span>
-                    );
-                  }
-                  if (key === 'quantidade') {
-                    return (
-                      <span className="font-bold text-gray-800">
-                        {row.quantidade} L
-                      </span>
-                    );
-                  }
-                  if (key === 'obs') {
-                    return row.obs === '-' ? (
-                      <span className="text-gray-400">-</span>
-                    ) : (
-                      <span
-                        className="text-sm text-gray-600 max-w-[200px] block truncate"
-                        title={row.obs}
-                      >
-                        {row.obs}
-                      </span>
-                    );
-                  }
-                  if (key === 'status') {
-                    const isApproved = row.status === 'Aprovado';
-                    return (
-                      <Badge type={isApproved ? 'active' : 'inactive'}>
-                        {row.status}
-                      </Badge>
-                    );
-                  }
-                  return row[key];
-                }}
-              />
-            );
-          })()}
+            {(() => {
+              const Table = require('@/components/table/Table').default;
+              return (
+                <div className="overflow-x-auto">
+                  <Table
+                    columns={columns}
+                    data={coletas}
+                    minWidth="1000px"
+                    renderCell={renderCell}
+                    onRowClick={handleOpenModal}
+                  />
+                </div>
+              );
+            })()}
+          </div>
 
           {/* Paginação */}
           <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
-            <p>Mostrando 10 de {metrics.totalColetas} registros</p>
+            <p>
+              Mostrando {Math.min(limit, totalItems)} de {totalItems} registros
+            </p>
             <Pagination
-              currentPage={pagination.page}
-              totalPages={pagination.totalPages}
+              currentPage={page}
+              totalPages={totalPages}
               onPageChange={handlePageChange}
               navVariant="report"
               numberVariant="secondary"
@@ -310,6 +235,12 @@ export default function ColetasPage() {
           </div>
         </DashboardContainer>
       </div>
+
+      <ColetaModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        data={selectedColeta}
+      />
     </>
   );
 }

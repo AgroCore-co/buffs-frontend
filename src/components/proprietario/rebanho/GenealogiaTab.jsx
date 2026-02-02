@@ -160,23 +160,28 @@ export default function GenealogiaTab({ bufalo }) {
   const fetchGenealogy = async (rootId) => {
     const cache = new Map();
 
-    // Função recursiva interna
+    // Helper para delay entre requisições
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    // Função recursiva interna - busca sequencialmente para evitar rate limiting
     const fetchAncestor = async (id, depth) => {
       if (!id || depth >= MAX_GENERATIONS) return null;
       if (cache.has(id)) return cache.get(id);
 
       try {
+        // Pequeno delay para evitar rate limiting (100ms entre requisições)
+        await delay(100);
+
         const data = (await bufaloService.getBufaloById(id)) || {};
 
-        const [pai, mae] = await Promise.all([
-          fetchAncestor(data.id_pai, depth + 1),
-          fetchAncestor(data.id_mae, depth + 1),
-        ]);
+        // Busca pai e mãe sequencialmente (não em paralelo) para evitar 429
+        const pai = await fetchAncestor(data.idPai, depth + 1);
+        const mae = await fetchAncestor(data.idMae, depth + 1);
 
         const node = {
-          id: data.id_bufalo,
+          id: data.idBufalo,
           nome: data.nome,
-          registro: data.registro_def || data.registro_prov || data.brinco,
+          registro: data.registroDef || data.registroProv || data.brinco,
           sexo: data.sexo,
           pai,
           mae,
@@ -185,40 +190,29 @@ export default function GenealogiaTab({ bufalo }) {
         cache.set(id, node);
         return node;
       } catch (error) {
+        // Se for erro 429, tenta novamente após esperar mais tempo
+        if (error.response?.status === 429) {
+          console.warn(`Rate limit atingido, aguardando 2 segundos...`);
+          await delay(2000);
+          return fetchAncestor(id, depth); // Tenta novamente
+        }
         console.error(`Erro ao buscar ancestral ${id}:`, error);
         return null;
       }
     };
 
-    // Constroi a partir dos pais do root
-    // Precisamos buscar os dados do rootId novamente?
-    // O componente recebe 'bufalo' prop, mas o fetcher precisa ser autônomo ou receber o objeto inicial.
-    // Para simplificar e garantir consistência (e cache key simples), vamos buscar o root novamente ou aceitar que o fetcher busca tudo.
-
-    // Na implementação anterior, ele usava 'bufalo' prop para criar o rootNode e buscava só os pais (linha 212).
-    // Para o SWR ficar limpo, o fetcher pode receber o objecto bufalo ou ID.
-    // Se receber ID, ele busca o root. Se receber objeto, usa.
-    // Mas a key do SWR é melhor ser o ID. Entao vamos buscar o root também para garantir (ou passar os dados iniciais).
-
-    // Vamos replicar a logica original: recebe ID, busca pais. O root node é montado fora?
-    // Melhor: O fetcher retorna a arvore completa.
-    // Vamos passar o objeto bufalo inteiro para o fetcher? Não, o fetcher key deve ser serializavel.
-
-    // Vamos fazer o fetcher buscar tudo baseado no ID do bufalo principal.
-
     const rootData = await bufaloService.getBufaloById(rootId);
     if (!rootData) throw new Error('Bufalo não encontrado');
 
-    const [pai, mae] = await Promise.all([
-      fetchAncestor(rootData.id_pai, 1),
-      fetchAncestor(rootData.id_mae, 1),
-    ]);
+    // Busca pai e mãe sequencialmente
+    const pai = await fetchAncestor(rootData.idPai, 1);
+    const mae = await fetchAncestor(rootData.idMae, 1);
 
     return {
-      id: rootData.id_bufalo,
+      id: rootData.idBufalo,
       nome: rootData.nome,
       registro:
-        rootData.registro_def || rootData.registro_prov || rootData.brinco,
+        rootData.registroDef || rootData.registroProv || rootData.brinco,
       sexo: rootData.sexo,
       pai,
       mae,
@@ -226,7 +220,7 @@ export default function GenealogiaTab({ bufalo }) {
   };
 
   const { data: treeData, isLoading: loading } = useSWR(
-    bufalo?.id_bufalo ? ['genealogia', bufalo.id_bufalo] : null,
+    bufalo?.idBufalo ? ['genealogia', bufalo.idBufalo] : null,
     ([, id]) => fetchGenealogy(id),
     {
       revalidateOnFocus: false,

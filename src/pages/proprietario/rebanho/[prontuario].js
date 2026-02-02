@@ -129,7 +129,7 @@ export default function ProntuarioPage() {
                 <span className="hidden md:inline text-slate-300">|</span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />{' '}
-                  {calculateAge(bufalo.dt_nascimento)}
+                  {calculateAge(bufalo.dtNascimento)}
                 </span>
               </div>
             </div>

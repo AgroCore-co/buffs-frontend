@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { enderecoService } from '@/services/endereco.service';
 import { usuarioService } from '@/services/usuario.service';
 import { dashboardService } from '@/services/dashboard.service';
@@ -110,7 +110,7 @@ export default function PropriedadeTab({ propriedade, idPropriedade }) {
     qtd_usuarios: 0,
   };
 
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     // Suporte para camelCase e snake_case
     const idEnd = propriedade?.idEndereco || propriedade?.id_endereco;
     const idDono = propriedade?.idDono || propriedade?.id_dono;
@@ -131,11 +131,11 @@ export default function PropriedadeTab({ propriedade, idPropriedade }) {
     } finally {
       setLoadingDetails(false);
     }
-  };
+  }, [propriedade]);
 
   useEffect(() => {
     fetchDetails();
-  }, [propriedade]);
+  }, [fetchDetails]);
 
   const handleEditSuccess = () => {
     // Recarrega detalhes e se possível avisa pai para recarregar

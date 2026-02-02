@@ -43,10 +43,10 @@ export default function ZootecnicoTab({ bufalo }) {
     error,
     isLoading: loading,
   } = useSWR(
-    bufalo?.id_bufalo ? ['zootecnico', bufalo.id_bufalo, currentPage] : null,
+    bufalo?.idBufalo ? ['zootecnico', bufalo.idBufalo, currentPage] : null,
     () =>
       zootecnicoService.getZootecnicoDataByBuffalo(
-        bufalo.id_bufalo,
+        bufalo.idBufalo,
         currentPage,
         itemsPerPage
       ),
@@ -68,18 +68,18 @@ export default function ZootecnicoTab({ bufalo }) {
   // Cálculos para os Cards de Resumo
   const latestRecord = data.length > 0 ? data[0] : null;
   const currentWeight = latestRecord ? latestRecord.peso : 0;
-  const currentECC = latestRecord ? latestRecord.condicao_corporal : 0;
+  const currentECC = latestRecord ? latestRecord.condicaoCorporal : 0;
 
   // Definição das Colunas
   const columns = useMemo(
     () => [
-      { key: 'dt_registro', label: 'Data Registro', className: 'w-40' },
+      { key: 'dtRegistro', label: 'Data Registro', className: 'w-40' },
       { key: 'peso', label: 'Peso (kg)', className: 'w-32' },
-      { key: 'condicao_corporal', label: 'Escore (ECC)', className: 'w-48' },
-      { key: 'formato_chifre', label: 'Formato Chifre', className: 'w-40' },
-      { key: 'porte_corporal', label: 'Porte', className: '' },
+      { key: 'condicaoCorporal', label: 'Escore (ECC)', className: 'w-48' },
+      { key: 'formatoChifre', label: 'Formato Chifre', className: 'w-40' },
+      { key: 'porteCorporal', label: 'Porte', className: '' },
       {
-        key: 'tipo_pesagem',
+        key: 'tipoPesagem',
         label: 'Tipo',
         className: 'text-right',
         align: 'right',
@@ -91,11 +91,11 @@ export default function ZootecnicoTab({ bufalo }) {
   // Renderização Customizada das Células
   const renderCell = (row, key) => {
     switch (key) {
-      case 'dt_registro':
+      case 'dtRegistro':
         return (
           <div className="flex items-center gap-2 text-slate-600 font-medium">
             <Calendar className="w-4 h-4 text-slate-400" />
-            {formatDate(row.dt_registro)}
+            {formatDate(row.dtRegistro)}
           </div>
         );
 
@@ -109,16 +109,16 @@ export default function ZootecnicoTab({ bufalo }) {
           </div>
         );
 
-      case 'condicao_corporal':
-        const percent = Math.min((row.condicao_corporal / 5) * 100, 100);
+      case 'condicaoCorporal':
+        const percent = Math.min((row.condicaoCorporal / 5) * 100, 100);
         let colorClass = 'bg-blue-500';
-        if (row.condicao_corporal < 2.5) colorClass = 'bg-amber-500';
-        if (row.condicao_corporal > 4.5) colorClass = 'bg-red-400';
+        if (row.condicaoCorporal < 2.5) colorClass = 'bg-amber-500';
+        if (row.condicaoCorporal > 4.5) colorClass = 'bg-red-400';
 
         return (
           <div className="flex items-center gap-3">
             <span className="font-semibold text-slate-700 w-8">
-              {row.condicao_corporal}
+              {row.condicaoCorporal}
             </span>
             <div className="w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden">
               <div
@@ -129,24 +129,24 @@ export default function ZootecnicoTab({ bufalo }) {
           </div>
         );
 
-      case 'formato_chifre':
+      case 'formatoChifre':
         return (
-          <span className="text-slate-600">{row.formato_chifre || '-'}</span>
+          <span className="text-slate-600">{row.formatoChifre || '-'}</span>
         );
 
-      case 'porte_corporal':
+      case 'porteCorporal':
         return (
           <div className="flex items-center gap-1.5">
             <Ruler className="w-3 h-3 text-slate-400" />
-            <span className="text-slate-700">{row.porte_corporal}</span>
+            <span className="text-slate-700">{row.porteCorporal}</span>
           </div>
         );
 
-      case 'tipo_pesagem':
+      case 'tipoPesagem':
         return (
           <div className="flex justify-end">
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-50 text-slate-500 border border-slate-100">
-              {row.tipo_pesagem}
+              {row.tipoPesagem}
             </span>
           </div>
         );

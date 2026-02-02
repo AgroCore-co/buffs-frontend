@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Table from '@/components/table/Table';
@@ -23,131 +23,8 @@ import {
   ChevronUp,
   Archive,
 } from 'lucide-react';
-
-const MOCK_DETAIL_DATA = {
-  animal: {
-    nome: 'Atena',
-    brinco: 'IZ-014',
-    raca: 'Murrah',
-    idade: '72 meses',
-  },
-  cicloAtual: {
-    totalOrdenhas: 6,
-    mediaOrdenha: 12.99,
-    maiorOrdenha: 30.0,
-    menorOrdenha: 7.89,
-    totalAcumulado: 64.97,
-    diasLactacao: 65,
-    status: 'Em Lactação',
-    ordenhas: [
-      {
-        id: 1,
-        data: '2025-11-22',
-        periodo: 'Manhã',
-        quantidade: 30.0,
-        ocorrencia: null,
-      },
-      {
-        id: 2,
-        data: '2025-11-22',
-        periodo: 'Tarde',
-        quantidade: 8.99,
-        ocorrencia: null,
-      },
-      {
-        id: 3,
-        data: '2025-11-20',
-        periodo: 'Manhã',
-        quantidade: 7.89,
-        ocorrencia: null,
-      },
-      {
-        id: 4,
-        data: '2025-11-07',
-        periodo: 'Manhã',
-        quantidade: 9.13,
-        ocorrencia: null,
-      },
-      {
-        id: 5,
-        data: '2025-10-23',
-        periodo: 'Manhã',
-        quantidade: 8.96,
-        ocorrencia: null,
-      },
-      {
-        id: 6,
-        data: '2025-10-10',
-        periodo: 'Manhã',
-        quantidade: 10.5,
-        ocorrencia: 'Leve agitação',
-      },
-    ],
-  },
-  // NOVOS DADOS: Histórico de Ciclos Anteriores
-  ciclosAnteriores: [
-    {
-      id: 'c2024',
-      titulo: 'Lactação 2024',
-      periodo: 'Jan 2024 - Set 2024',
-      totalLitros: 2450.5,
-      dias: 248,
-      ordenhas: [
-        {
-          id: 101,
-          data: '2024-09-15',
-          periodo: 'Manhã',
-          quantidade: 12.5,
-          ocorrencia: 'Secagem',
-        },
-        {
-          id: 102,
-          data: '2024-09-14',
-          periodo: 'Tarde',
-          quantidade: 11.2,
-          ocorrencia: null,
-        },
-        {
-          id: 103,
-          data: '2024-09-14',
-          periodo: 'Manhã',
-          quantidade: 13.8,
-          ocorrencia: null,
-        },
-        {
-          id: 104,
-          data: '2024-01-10',
-          periodo: 'Manhã',
-          quantidade: 8.5,
-          ocorrencia: 'Início',
-        },
-      ],
-    },
-    {
-      id: 'c2023',
-      titulo: 'Lactação 2023',
-      periodo: 'Mar 2023 - Nov 2023',
-      totalLitros: 2100.2,
-      dias: 260,
-      ordenhas: [
-        {
-          id: 201,
-          data: '2023-11-20',
-          periodo: 'Manhã',
-          quantidade: 10.1,
-          ocorrencia: null,
-        },
-        {
-          id: 202,
-          data: '2023-03-05',
-          periodo: 'Manhã',
-          quantidade: 9.2,
-          ocorrencia: null,
-        },
-      ],
-    },
-  ],
-};
+import { lactacaoService } from '@/services/lactacao.service';
+import Loading from '@/components/loading/Loading';
 
 /* -------------------------------------------------------------------------- */
 /* COMPONENTES INTERNOS                      */
@@ -242,17 +119,184 @@ export default function LactacaoDetailModal({
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedCicloId, setExpandedCicloId] = useState(null);
 
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch Data
+  useEffect(() => {
+    async function fetchData() {
+      if (!animalId) return;
+
+      try {
+        setLoading(true);
+        const response = await lactacaoService.getResumoProducao(animalId);
+
+        let detailedOrdenhas = [];
+
+        // Se tiver ciclo atual, busca detalhes das ordenhas
+        if (response.ciclo_atual?.id_ciclo_lactacao) {
+          try {
+            const ordenhasRes = await lactacaoService.getOrdenhasPorCiclo(
+              response.ciclo_atual.id_ciclo_lactacao,
+              1, // page
+              100 // limit
+            );
+            detailedOrdenhas = ordenhasRes.data || [];
+          } catch (err) {
+            console.error('Erro ao buscar detalhes das ordenhas:', err);
+          }
+        }
+
+        // Mapper para estrutura interna
+        // API: bufala, ciclo_atual, comparativo_ciclos, grafico_producao
+        const mappedData = {
+          animal: {
+            nome: response.bufala?.nome,
+            brinco: response.bufala?.brinco,
+            raca: 'Murrah', // TODO: Backend nao devolve raca ainda
+            idade: 'N/I', // TODO: Backend nao devolve idade ainda
+          },
+          cicloAtual: {
+            totalOrdenhas:
+              response.grafico_producao?.length || detailedOrdenhas.length || 0,
+            mediaOrdenha: response.ciclo_atual?.media_diaria || 0,
+            maiorOrdenha: 0,
+            menorOrdenha: 0,
+            totalAcumulado: response.ciclo_atual?.total_produzido || 0,
+            diasLactacao: response.ciclo_atual?.dias_em_lactacao || 0,
+            status: 'Em Lactação',
+            // Usa as ordenhas detalhadas se tiver, senão fallback pro gráfico
+            ordenhas:
+              detailedOrdenhas.length > 0
+                ? detailedOrdenhas.map((item) => ({
+                    id: item.idLact,
+                    data: item.dtOrdenha,
+                    periodo:
+                      item.periodo === 'M'
+                        ? 'Manhã'
+                        : item.periodo === 'T'
+                          ? 'Tarde'
+                          : 'Secagem',
+                    quantidade: parseFloat(item.qtOrdenha),
+                    ocorrencia: item.ocorrencia,
+                  }))
+                : response.grafico_producao?.map((item, idx) => ({
+                    id: idx,
+                    data: item.data,
+                    periodo: 'Dia',
+                    quantidade: item.quantidade,
+                    ocorrencia: null,
+                  })) || [],
+          },
+          ciclosAnteriores:
+            response.comparativo_ciclos?.map((c) => ({
+              id: c.id_ciclo_lactacao,
+              titulo: `Ciclo ${c.numero_ciclo}`,
+              periodo: `${c.dt_parto?.split('-')[0] || '?'} - ${c.dt_secagem?.split('-')[0] || '?'}`,
+              totalLitros: c.total_produzido,
+              dias: c.duracao_dias,
+              ordenhas: [],
+            })) || [],
+        };
+
+        // Calcular maior/menor
+        if (mappedData.cicloAtual.ordenhas.length > 0) {
+          const quantities = mappedData.cicloAtual.ordenhas.map(
+            (o) => o.quantidade
+          );
+          mappedData.cicloAtual.maiorOrdenha = Math.max(...quantities);
+          mappedData.cicloAtual.menorOrdenha = Math.min(...quantities);
+        }
+
+        setData(mappedData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (isOpen) {
+      fetchData();
+    }
+  }, [animalId, isOpen]);
+
+  const handleExpandCiclo = async (cicloId) => {
+    if (expandedCicloId === cicloId) {
+      setExpandedCicloId(null);
+      return;
+    }
+    setExpandedCicloId(cicloId);
+
+    // 2. Verificar se já temos os dados desse ciclo
+    const cicloIndex = data.ciclosAnteriores.findIndex((c) => c.id === cicloId);
+    if (cicloIndex === -1) return;
+
+    const ciclo = data.ciclosAnteriores[cicloIndex];
+    if (ciclo.ordenhas && ciclo.ordenhas.length > 0) {
+      return; // Já carregado
+    }
+
+    // 3. Buscar dados se não tiver
+    try {
+      // Opcional: mostrar loading no accordion? Por enquanto vamos confiar na rapidez ou estado local
+      // Poderiamos ter um loading state por ciclo, mas vamos simplificar
+      const res = await lactacaoService.getOrdenhasPorCiclo(cicloId, 1, 100);
+      const novasOrdenhas = res.data || [];
+
+      // 4. Mapear e atualizar estado
+      const ordenhasMapeadas = novasOrdenhas.map((item) => ({
+        id: item.idLact,
+        data: item.dtOrdenha,
+        periodo:
+          item.periodo === 'M'
+            ? 'Manhã'
+            : item.periodo === 'T'
+              ? 'Tarde'
+              : 'Secagem',
+        quantidade: parseFloat(item.qtOrdenha),
+        ocorrencia: item.ocorrencia,
+      }));
+
+      setData((prev) => {
+        const novosCiclos = [...prev.ciclosAnteriores];
+        novosCiclos[cicloIndex] = {
+          ...novosCiclos[cicloIndex],
+          ordenhas: ordenhasMapeadas,
+        };
+        return {
+          ...prev,
+          ciclosAnteriores: novosCiclos,
+        };
+      });
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do ciclo antigo:', error);
+    }
+  };
+
   // AUMENTADO DE 5 PARA 7: Isso preenche melhor o espaço vertical disponível e evita paginação desnecessária com poucos itens.
   const itemsPerPage = 7;
 
-  const data = MOCK_DETAIL_DATA;
+  // Loading State
+  if (loading || !data) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} size="4xl" title="Carregando...">
+        <div className="p-12 flex justify-center">
+          <Loading />
+        </div>
+      </Modal>
+    );
+  }
 
   // Paginação para o Ciclo Atual
-  const paginatedOrdenhas = data.cicloAtual.ordenhas.slice(
+  /* const paginatedOrdenhas = data.cicloAtual.ordenhas.slice( */
+  // Ordenar reverso (mais recente primeiro) para tabela
+  const sortedOrdenhas = [...data.cicloAtual.ordenhas].reverse();
+  const paginatedOrdenhas = sortedOrdenhas.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  const totalPages = Math.ceil(data.cicloAtual.ordenhas.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedOrdenhas.length / itemsPerPage);
 
   const columns = [
     { key: 'data', label: 'Data', className: 'text-left pl-4' },
@@ -267,7 +311,12 @@ export default function LactacaoDetailModal({
 
   const renderCell = (row, key) => {
     if (key === 'data') {
-      const [ano, mes, dia] = row.data.split('-');
+      if (!row.data) return '-';
+      // Tentar converter para Date object para segurança ou split simples em 'T' ou ' '
+      // Formato esperado da API: "YYYY-MM-DD HH:mm:ss+00" ou "YYYY-MM-DD"
+
+      const datePart = row.data.split(' ')[0].split('T')[0]; // Pega so a parte da data
+      const [ano, mes, dia] = datePart.split('-');
       return `${dia}/${mes}/${ano}`;
     }
     if (key === 'ocorrencia') {
@@ -410,11 +459,7 @@ export default function LactacaoDetailModal({
                 columns={columns}
                 renderCell={renderCell}
                 isOpen={expandedCicloId === ciclo.id}
-                onToggle={() =>
-                  setExpandedCicloId(
-                    expandedCicloId === ciclo.id ? null : ciclo.id
-                  )
-                }
+                onToggle={() => handleExpandCiclo(ciclo.id)}
               />
             ))}
 
@@ -430,12 +475,14 @@ export default function LactacaoDetailModal({
         {activeTab === 'grafico' && (
           <div className="h-[300px] w-full animate-in fade-in duration-300 bg-slate-50 rounded-xl border border-slate-200 p-4">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={[...data.cicloAtual.ordenhas].reverse()}>
+              <LineChart data={data.cicloAtual.ordenhas}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
                   dataKey="data"
                   tickFormatter={(val) => {
-                    const [_, mes, dia] = val.split('-');
+                    if (!val) return '';
+                    const datePart = val.split(' ')[0].split('T')[0];
+                    const [ano, mes, dia] = datePart.split('-');
                     return `${dia}/${mes}`;
                   }}
                   tick={{ fontSize: 12, fill: '#64748b' }}

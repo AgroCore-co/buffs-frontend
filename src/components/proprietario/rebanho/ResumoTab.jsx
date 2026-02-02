@@ -97,15 +97,15 @@ const getSeloImage = (categoria) => {
 export default function ResumoTab({ bufalo, onTabChange }) {
   // Fetch pai details
   const { data: pai } = useSWR(
-    bufalo.id_pai ? `bufalo/${bufalo.id_pai}` : null,
-    () => bufaloService.getBufaloById(bufalo.id_pai),
+    bufalo.idPai ? `bufalo/${bufalo.idPai}` : null,
+    () => bufaloService.getBufaloById(bufalo.idPai),
     { revalidateOnFocus: false }
   );
 
   // Fetch mae details
   const { data: mae } = useSWR(
-    bufalo.id_mae ? `bufalo/${bufalo.id_mae}` : null,
-    () => bufaloService.getBufaloById(bufalo.id_mae),
+    bufalo.idMae ? `bufalo/${bufalo.idMae}` : null,
+    () => bufaloService.getBufaloById(bufalo.idMae),
     { revalidateOnFocus: false }
   );
 
@@ -117,7 +117,7 @@ export default function ResumoTab({ bufalo, onTabChange }) {
           <div className="flex justify-between items-center mb-6">
             <SectionTitle>Dados de Identificação</SectionTitle>
             <div className="text-xs text-slate-400">
-              ID: {bufalo.id_bufalo.split('-')[0]}...
+              ID: {bufalo.idBufalo?.split('-')[0]}...
             </div>
           </div>
 
@@ -131,8 +131,8 @@ export default function ResumoTab({ bufalo, onTabChange }) {
             <InfoItem
               icon={Baby}
               label="Data Nascimento"
-              value={formatDate(bufalo.dt_nascimento)}
-              subValue={`${calculateAge(bufalo.dt_nascimento)} de idade`}
+              value={formatDate(bufalo.dtNascimento)}
+              subValue={`${calculateAge(bufalo.dtNascimento)} de idade`}
             />
             <InfoItem
               icon={Dna}
@@ -142,18 +142,18 @@ export default function ResumoTab({ bufalo, onTabChange }) {
             <InfoItem
               icon={Tag}
               label="Registro Provisório"
-              value={bufalo.registro_prov}
+              value={bufalo.registroProv}
             />
             <InfoItem
               icon={Tag}
               label="Registro Definitivo"
-              value={bufalo.registro_def}
+              value={bufalo.registroDef}
             />
             <InfoItem icon={MapPin} label="Origem" value={bufalo.origem} />
             <InfoItem
               icon={Tag}
               label="Brinco Original"
-              value={bufalo.brinco_original}
+              value={bufalo.brincoOriginal}
             />
           </div>
         </Card>
@@ -174,7 +174,7 @@ export default function ResumoTab({ bufalo, onTabChange }) {
                 Grupo / Lote
               </p>
               <p className="text-lg font-medium text-slate-800">
-                {bufalo.grupo?.nome_grupo || 'Sem grupo definido'}
+                {bufalo.grupo?.nomeGrupo || 'Sem grupo definido'}
               </p>
             </div>
 
@@ -192,9 +192,9 @@ export default function ResumoTab({ bufalo, onTabChange }) {
                 Nível Maturidade
               </p>
               <p className="text-lg font-medium text-slate-800">
-                {bufalo.nivel_maturidade === 'V'
+                {bufalo.nivelMaturidade === 'V'
                   ? 'Vaca / Adulto'
-                  : bufalo.nivel_maturidade}
+                  : bufalo.nivelMaturidade}
               </p>
             </div>
           </div>
@@ -250,7 +250,7 @@ export default function ResumoTab({ bufalo, onTabChange }) {
                 <p className="font-medium text-slate-800">
                   {pai
                     ? `${pai.nome} (${pai.brinco})`
-                    : bufalo.id_pai
+                    : bufalo.idPai
                       ? 'Carregando...'
                       : 'Não informado'}
                 </p>
@@ -269,7 +269,7 @@ export default function ResumoTab({ bufalo, onTabChange }) {
                 <p className="font-medium text-slate-800">
                   {mae
                     ? `${mae.nome} (${mae.brinco})`
-                    : bufalo.id_mae
+                    : bufalo.idMae
                       ? 'Carregando...'
                       : 'Não informado'}
                 </p>
@@ -289,11 +289,11 @@ export default function ResumoTab({ bufalo, onTabChange }) {
         <div className="text-xs text-slate-400 space-y-1 px-2">
           <p className="flex items-center gap-1">
             <Clock className="w-3 h-3" /> Criado em:{' '}
-            {new Date(bufalo.created_at).toLocaleString('pt-BR')}
+            {new Date(bufalo.createdAt).toLocaleString('pt-BR')}
           </p>
           <p className="flex items-center gap-1">
             <Edit className="w-3 h-3" /> Atualizado:{' '}
-            {new Date(bufalo.updated_at).toLocaleString('pt-BR')}
+            {new Date(bufalo.updatedAt).toLocaleString('pt-BR')}
           </p>
         </div>
       </DashboardContainer>

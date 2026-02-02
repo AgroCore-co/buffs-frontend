@@ -19,7 +19,7 @@ export default function BufalosTab({ grupo, idPropriedade }) {
 
   // Buscar búfalos do grupo
   useEffect(() => {
-    if (!idPropriedade || !grupo?.id_grupo) {
+    if (!idPropriedade || !grupo?.idGrupo) {
       setLoading(false);
       return;
     }
@@ -30,7 +30,7 @@ export default function BufalosTab({ grupo, idPropriedade }) {
       try {
         const response = await bufaloService.getBufalosByGrupo(
           idPropriedade,
-          grupo.id_grupo
+          grupo.idGrupo
         );
         setBufalos(response?.data || []);
         setCurrentPage(1); // Reset para primeira página
@@ -43,7 +43,7 @@ export default function BufalosTab({ grupo, idPropriedade }) {
     };
 
     fetchBufalos();
-  }, [idPropriedade, grupo?.id_grupo]);
+  }, [idPropriedade, grupo?.idGrupo]);
 
   // Paginação local
   const totalPages = Math.ceil(bufalos.length / ITEMS_PER_PAGE);
@@ -75,7 +75,7 @@ export default function BufalosTab({ grupo, idPropriedade }) {
     { key: 'sexo', label: 'Sexo', className: 'text-center' },
     { key: 'raca', label: 'Raça', className: 'text-left' },
     { key: 'idade', label: 'Idade', className: 'text-center' },
-    { key: 'nivel_maturidade', label: 'Maturidade', className: 'text-center' },
+    { key: 'nivelMaturidade', label: 'Maturidade', className: 'text-center' },
     { key: 'status', label: 'Status', className: 'text-center' },
   ];
 
@@ -145,9 +145,9 @@ export default function BufalosTab({ grupo, idPropriedade }) {
               return bufalo.raca?.nome || '-';
             }
             if (key === 'idade') {
-              return calcularIdade(bufalo.dt_nascimento);
+              return calcularIdade(bufalo.dtNascimento);
             }
-            if (key === 'nivel_maturidade') {
+            if (key === 'nivelMaturidade') {
               const maturidadeMap = {
                 B: 'Bezerra(o)',
                 D: 'Desmamado',
@@ -157,8 +157,8 @@ export default function BufalosTab({ grupo, idPropriedade }) {
               };
               return (
                 <span className="text-xs font-medium text-slate-600">
-                  {maturidadeMap[bufalo.nivel_maturidade] ||
-                    bufalo.nivel_maturidade ||
+                  {maturidadeMap[bufalo.nivelMaturidade] ||
+                    bufalo.nivelMaturidade ||
                     '-'}
                 </span>
               );

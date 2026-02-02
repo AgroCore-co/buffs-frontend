@@ -74,10 +74,10 @@ export default function SanitarioTab({ bufalo }) {
 
   // 1. Busca Main Data (Paginated)
   const { data: responseData, isLoading: loading } = useSWR(
-    bufalo?.id_bufalo ? ['sanitario', bufalo.id_bufalo, currentPage] : null,
+    bufalo?.idBufalo ? ['sanitario', bufalo.idBufalo, currentPage] : null,
     () =>
       sanitarioService.getSanitaryDataByBuffalo(
-        bufalo.id_bufalo,
+        bufalo.idBufalo,
         currentPage,
         itemsPerPage
       ),
@@ -94,21 +94,21 @@ export default function SanitarioTab({ bufalo }) {
 
   // 2. Busca Última Aplicação (Separate Request)
   const { data: latestData } = useSWR(
-    bufalo?.id_bufalo ? ['sanitario-latest', bufalo.id_bufalo] : null,
-    () => sanitarioService.getSanitaryDataByBuffalo(bufalo.id_bufalo, 1, 1),
+    bufalo?.idBufalo ? ['sanitario-latest', bufalo.idBufalo] : null,
+    () => sanitarioService.getSanitaryDataByBuffalo(bufalo.idBufalo, 1, 1),
     {
       revalidateOnFocus: false,
     }
   );
 
-  const lastAppDate = latestData?.data?.[0]?.dt_aplicacao || null;
+  const lastAppDate = latestData?.data?.[0]?.dtAplicacao || null;
 
   const startRecord = (currentPage - 1) * itemsPerPage + 1;
   const endRecord = Math.min(currentPage * itemsPerPage, totalRecords);
 
   const columns = useMemo(
     () => [
-      { key: 'dt_aplicacao', label: 'Data Aplicação', className: 'w-40' },
+      { key: 'dtAplicacao', label: 'Data Aplicação', className: 'w-40' },
       {
         key: 'doenca',
         label: 'Tratamento / Vacina',
@@ -116,7 +116,7 @@ export default function SanitarioTab({ bufalo }) {
       },
       { key: 'dosagem', label: 'Dosagem', className: 'w-32' },
       {
-        key: 'necessita_retorno',
+        key: 'necessitaRetorno',
         label: 'Retorno',
         className: 'text-center w-32',
         align: 'center',
@@ -127,11 +127,11 @@ export default function SanitarioTab({ bufalo }) {
 
   const renderCell = (row, key) => {
     switch (key) {
-      case 'dt_aplicacao':
+      case 'dtAplicacao':
         return (
           <div className="flex items-center gap-2 text-slate-600 font-medium">
             <Calendar className="w-4 h-4 text-slate-400" />
-            {formatDate(row.dt_aplicacao)}
+            {formatDate(row.dtAplicacao)}
           </div>
         );
 
@@ -157,19 +157,19 @@ export default function SanitarioTab({ bufalo }) {
       case 'dosagem':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-            {row.dosagem} {row.unidade_medida}
+            {row.dosagem} {row.unidadeMedida}
           </span>
         );
 
-      case 'necessita_retorno':
-        return row.necessita_retorno ? (
+      case 'necessitaRetorno':
+        return row.necessitaRetorno ? (
           <div className="flex flex-col items-center gap-1">
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
               <History className="w-3 h-3" /> Sim
             </span>
-            {row.dt_retorno && (
+            {row.dtRetorno && (
               <span className="text-[10px] text-slate-500 font-medium">
-                {formatDate(row.dt_retorno)}
+                {formatDate(row.dtRetorno)}
               </span>
             )}
           </div>

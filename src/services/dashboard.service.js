@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { apiCache, CACHE_TTL } from '@/lib/apiCache';
 
 export const dashboardService = {
   /**
@@ -8,7 +9,11 @@ export const dashboardService = {
    */
   async getDashboardStats(idPropriedade) {
     try {
-      const response = await api.get(`/dashboard/${idPropriedade}`);
+      const response = await apiCache.get(
+        `/dashboard/${idPropriedade}`,
+        {},
+        CACHE_TTL.MEDIUM
+      );
       return response;
     } catch (error) {
       console.error('Erro ao buscar estatísticas do dashboard:', error);
@@ -27,9 +32,10 @@ export const dashboardService = {
    */
   async getProducaoMensal(idPropriedade, ano = new Date().getFullYear()) {
     try {
-      const response = await api.get(
+      const response = await apiCache.get(
         `/dashboard/producao-mensal/${idPropriedade}`,
-        { params: { ano } }
+        { params: { ano } },
+        CACHE_TTL.LONG
       );
       return response;
     } catch (error) {
@@ -48,7 +54,11 @@ export const dashboardService = {
    */
   async getReproducao(idPropriedade) {
     try {
-      const response = await api.get(`/dashboard/reproducao/${idPropriedade}`);
+      const response = await apiCache.get(
+        `/dashboard/reproducao/${idPropriedade}`,
+        {},
+        CACHE_TTL.LONG
+      );
       return response;
     } catch (error) {
       console.error('Erro ao buscar métricas de reprodução:', error);
@@ -67,9 +77,13 @@ export const dashboardService = {
    */
   async getLactacao(idPropriedade, ano = new Date().getFullYear()) {
     try {
-      const response = await api.get(`/dashboard/lactacao/${idPropriedade}`, {
-        params: { ano },
-      });
+      const response = await apiCache.get(
+        `/dashboard/lactacao/${idPropriedade}`,
+        {
+          params: { ano },
+        },
+        CACHE_TTL.LONG
+      );
       return response;
     } catch (error) {
       console.error('Erro ao buscar métricas de lactação:', error);

@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { apiCache, CACHE_TTL } from '@/lib/apiCache';
 
 export const sanitarioService = {
   /**
@@ -14,14 +15,15 @@ export const sanitarioService = {
     limiarSimilaridade = 0.8
   ) {
     try {
-      const response = await api.get(
+      const response = await apiCache.get(
         `/dados-sanitarios/propriedade/${idPropriedade}/frequencia-doencas`,
         {
           params: {
             agruparSimilares,
             limiarSimilaridade,
           },
-        }
+        },
+        CACHE_TTL.LONG
       );
       return response;
     } catch (error) {
@@ -42,12 +44,16 @@ export const sanitarioService = {
    */
   async getSanitaryDataByBuffalo(idBufalo, page = 1, limit = 10) {
     try {
-      const response = await api.get(`/dados-sanitarios/bufalo/${idBufalo}`, {
-        params: {
-          page,
-          limit,
+      const response = await apiCache.get(
+        `/dados-sanitarios/bufalo/${idBufalo}`,
+        {
+          params: {
+            page,
+            limit,
+          },
         },
-      });
+        CACHE_TTL.MEDIUM
+      );
       return response;
     } catch (error) {
       console.error('Erro ao buscar dados sanitários:', error);

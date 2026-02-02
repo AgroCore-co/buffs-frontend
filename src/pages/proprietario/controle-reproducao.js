@@ -1,12 +1,15 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import { usePropriedade } from '@/contexts/PropriedadeContext';
+import { useCachedFetch } from '@/hooks/useCachedFetch';
 import Loading from '@/components/loading/Loading';
 import DashboardContainer from '@/components/ui/DashboardContainer';
 import MetricCard from '@/components/ui/MetricCard';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import Table from '@/components/table/Table'; // Importando direto
 import {
   FilterBar,
   FilterSelect,
@@ -18,269 +21,197 @@ import {
   FiXCircle,
   FiCalendar,
   FiSearch,
-  FiTrendingUp,
-  FiGitMerge,
 } from 'react-icons/fi';
-
-// --- DADOS MOCKADOS (Baseados no seu prompt) ---
-
-const metrics = {
-  emAndamento: 0,
-  confirmadas: 84,
-  falhas: 9,
-  ultimaData: '09/08/2025',
-};
-
-const topBufalas = [
-  {
-    rank: 1,
-    nome: 'Hera',
-    brinco: 'IZ-012',
-    idade: '6a 2m',
-    raca: 'Murrah',
-    status: 'Apta (Pós-Parto)',
-    score: 100,
-  },
-  {
-    rank: 2,
-    nome: 'Buffs 01',
-    brinco: 'BFF-001',
-    idade: '2a 7m',
-    raca: 'Murrah',
-    status: 'Apta (Novilha)',
-    score: 97,
-  },
-  {
-    rank: 3,
-    nome: 'Buffs 02',
-    brinco: 'BR54321',
-    idade: '2a 7m',
-    raca: 'Murrah',
-    status: 'Apta (Novilha)',
-    score: 97,
-  },
-  {
-    rank: 4,
-    nome: 'Buffs 03',
-    brinco: 'BR54321',
-    idade: '2a 7m',
-    raca: 'Murrah',
-    status: 'Apta (Novilha)',
-    score: 97,
-  },
-  {
-    rank: 5,
-    nome: 'Liriope',
-    brinco: 'IZ-039',
-    idade: '2a 11m',
-    raca: 'Murrah',
-    status: 'Apta (Novilha)',
-    score: 97,
-  },
-];
-
-const topTouros = [
-  {
-    rank: 1,
-    nome: 'Corona da UPD',
-    brinco: 'BUFF-017',
-    idade: '9a 11m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-  {
-    rank: 2,
-    nome: 'P. Loures',
-    brinco: 'BUFF-019',
-    idade: '9a 11m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-  {
-    rank: 3,
-    nome: 'Pingo',
-    brinco: 'BUFF-032',
-    idade: '6a 11m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-  {
-    rank: 4,
-    nome: 'Zeus',
-    brinco: 'IZ-001',
-    idade: '11a 7m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-  {
-    rank: 5,
-    nome: 'Ares',
-    brinco: 'IZ-053',
-    idade: '3a 8m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-];
-
-// Listas parciais para os Selects (Simulação)
-const listaTouros = [
-  'Cronos - BUFF-007',
-  'Tífon - BUFF-009',
-  'Zeus - IZ-001',
-  'Chupisco da UPD - BUFF-012',
-  'Tufão Av. Brasil - BUFF-014',
-  'Corona da UPD - BUFF-017',
-  'P. Loures - BUFF-019',
-  'Barretos - BUFF-022',
-  'BOPE da UPD - BUFF-024',
-  'Ares - IZ-053',
-];
-
-const listaMatrizes = [
-  'Pérola - BUFF-001',
-  'Mel - BUFF-002',
-  'Gaya - BUFF-003',
-  'JADE - BUFF-004',
-  'Maya Massafera - BUFF-005',
-  'Eirene - BUFF-006',
-  'Hera II - BUFF-008',
-  'Temis - BUFF-010',
-  'Estrela - IZ-002',
-  'Lua - IZ-003',
-  'Aurora - IZ-004',
-];
-
-const historicoReproducao = [
-  {
-    id: 1,
-    data: '2025-08-09',
-    matriz: 'IZ-002',
-    touro: 'IZ-001',
-    tipo: 'Monta Natural',
-    status: 'Concluída',
-    parto: '-',
-    ocorrencia: 'Cobertura realizada. Aguardando diagnóstico.',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 2,
-    data: '2025-01-26',
-    matriz: 'IZ-003',
-    touro: 'IZ-001',
-    tipo: 'Monta Natural',
-    status: 'Concluída',
-    parto: 'Normal',
-    ocorrencia: 'Gestação confirmada. Parto previsto em ~20 dias.',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 3,
-    data: '2024-11-28',
-    matriz: 'IZ-020',
-    touro: 'IZ-053',
-    tipo: 'Monta Natural',
-    status: 'Concluída',
-    parto: '-',
-    ocorrencia: '-',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 4,
-    data: '2024-11-28',
-    matriz: 'IZ-017',
-    touro: 'IZ-053',
-    tipo: 'Monta Natural',
-    status: 'Confirmada',
-    parto: 'Normal',
-    ocorrencia: '-',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 5,
-    data: '2024-11-28',
-    matriz: 'IZ-021',
-    touro: '-',
-    tipo: 'Inseminação Artificial',
-    status: 'Concluída',
-    parto: 'Normal',
-    ocorrencia: '-',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 6,
-    data: '2024-11-28',
-    matriz: 'IZ-019',
-    touro: '-',
-    tipo: 'Inseminação Artificial',
-    status: 'Concluída',
-    parto: 'Normal',
-    ocorrencia: '-',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 7,
-    data: '2024-11-28',
-    matriz: 'IZ-014',
-    touro: 'IZ-053',
-    tipo: 'Monta Natural',
-    status: 'Confirmada',
-    parto: 'Normal',
-    ocorrencia: '-',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 8,
-    data: '2024-11-28',
-    matriz: 'IZ-012',
-    touro: '-',
-    tipo: 'Inseminação Artificial',
-    status: 'Confirmada',
-    parto: 'Normal',
-    ocorrencia: '-',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 9,
-    data: '2024-11-28',
-    matriz: 'IZ-015',
-    touro: '-',
-    tipo: 'Inseminação Artificial',
-    status: 'Confirmada',
-    parto: 'Normal',
-    ocorrencia: '-',
-    acoes: 'Detalhes',
-  },
-  {
-    id: 10,
-    data: '2024-05-12',
-    matriz: 'IZ-005',
-    touro: 'IZ-001',
-    tipo: 'Monta Natural',
-    status: 'Confirmada',
-    parto: 'Normal',
-    ocorrencia: '-',
-    acoes: 'Detalhes',
-  },
-];
+import { toast } from 'react-hot-toast';
+import ReproducaoModal from '@/components/proprietario/reproducao/ReproducaoModal';
 
 export default function ReproducaoPage() {
-  const { loading } = useProtectedRoute(['PROPRIETARIO']);
-  const [simulationState, setSimulationState] = useState('idle'); // idle, loading, done
+  const { loading: authLoading } = useProtectedRoute(['PROPRIETARIO']);
+  const { propriedadeSelecionada } = usePropriedade();
 
-  if (loading) {
-    return <Loading text="Carregando controle reprodutivo..." />;
+  // Estado de controle Local
+  const [selectedReproducao, setSelectedReproducao] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  const handleOpenModal = (reproducao) => {
+    setSelectedReproducao(reproducao);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedReproducao(null);
+  };
+
+  // 1. Identificar Propriedade
+  const idProp =
+    propriedadeSelecionada?.id ||
+    propriedadeSelecionada?.idPropriedade ||
+    propriedadeSelecionada?.id_propriedade;
+
+  // 2. Hooks de Busca com Cache
+  const {
+    data: reproducoesData,
+    loading: loadingList,
+    error: errorList,
+  } = useCachedFetch(
+    idProp ? `/cobertura/propriedade/${idProp}` : null,
+    { page, limit },
+    { enabled: !!idProp, ttl: 60000 }
+  );
+
+  const { data: metricsData, loading: loadingMetrics } = useCachedFetch(
+    idProp ? `/dashboard/reproducao/${idProp}` : null,
+    {},
+    { enabled: !!idProp, ttl: 60000 }
+  );
+
+  // 4. Dados Derivados para o Template
+  const reproducoes = reproducoesData?.data || [];
+  const totalPages = reproducoesData?.meta?.totalPages || 1;
+  const totalItems = reproducoesData?.meta?.totalItems || 0;
+  const loading = loadingList || loadingMetrics;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    // Suportar formatos ISO ou BR simples
+    const datePart = dateString.split(' ')[0].split('T')[0];
+    const parts = datePart.split('-');
+    if (parts.length === 3) {
+      const [ano, mes, dia] = parts;
+      return `${dia}/${mes}/${ano}`;
+    }
+    return dateString;
+  };
+
+  const metrics = {
+    emAndamento: metricsData?.totalEmAndamento || 0,
+    confirmadas: metricsData?.totalConfirmada || 0,
+    falhas: metricsData?.totalFalha || 0,
+    ultimaData: formatDate(metricsData?.ultimaDataReproducao),
+  };
+
+  // Efeitos colaterais (Mensagens de Erro)
+  useEffect(() => {
+    if (errorList) {
+      toast.error('Erro ao carregar registros de reprodução.');
+    }
+  }, [errorList]);
+
+  if (authLoading) {
+    return <Loading text="Verificando permissões..." />;
   }
 
-  const handleSimulation = (e) => {
-    e.preventDefault();
-    setSimulationState('loading');
-    setTimeout(() => setSimulationState('done'), 1500);
+  // Render Cell Customizado
+  const renderCell = (row, key) => {
+    if (key === 'data') {
+      if (!row.dtEvento) return '-';
+      const datePart = row.dtEvento.split(' ')[0].split('T')[0];
+      const [ano, mes, dia] = datePart.split('-');
+      return (
+        <span className="font-medium text-gray-700">{`${dia}/${mes}/${ano}`}</span>
+      );
+    }
+    if (key === 'matriz') {
+      return (
+        <div>
+          <div className="font-medium text-slate-800">
+            {row.bufalo_idBufala?.nome || '-'}
+          </div>
+          <div className="text-xs text-slate-500">
+            {row.bufalo_idBufala?.brinco || '-'}
+          </div>
+        </div>
+      );
+    }
+    if (key === 'touro') {
+      if (row.idSemen) {
+        return (
+          <div>
+            <div className="font-medium text-slate-800 italic">
+              Inseminação Artificial
+            </div>
+            <div className="text-xs text-slate-500">
+              {row.semen?.identifier || '-'}
+            </div>
+          </div>
+        );
+      }
+      const touro = row.bufalo_idBufalo || row.bufalo_idBufalo_2;
+      return (
+        <div>
+          <div className="font-medium text-slate-800">{touro?.nome || '-'}</div>
+          <div className="text-xs text-slate-500">{touro?.brinco || '-'}</div>
+        </div>
+      );
+    }
+    if (key === 'status') {
+      let badgeType = 'bg-gray-100 text-gray-800';
+      if (row.status === 'Confirmada')
+        badgeType = 'bg-green-100 text-green-800';
+      if (row.status === 'Concluída') badgeType = 'bg-blue-100 text-blue-800';
+      if (row.status === 'Falha') badgeType = 'bg-red-100 text-red-800';
+
+      return (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-bold ${badgeType}`}
+        >
+          {row.status}
+        </span>
+      );
+    }
+    if (key === 'ocorrencia') {
+      return (
+        <span
+          className="text-xs text-gray-500 max-w-[200px] block truncate"
+          title={row.ocorrencia}
+        >
+          {row.ocorrencia || '-'}
+        </span>
+      );
+    }
+    return row[key];
   };
+
+  const columns = [
+    {
+      key: 'data',
+      label: 'Data do Evento',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'matriz',
+      label: 'Matriz',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'touro',
+      label: 'Touro / Semen',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'tipoInseminacao',
+      label: 'Tipo',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'tipoParto',
+      label: 'Parto',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'ocorrencia',
+      label: 'Ocorrência',
+      className: 'p-4 text-left font-semibold',
+    },
+  ];
 
   return (
     <>
@@ -340,152 +271,50 @@ export default function ReproducaoPage() {
                 Visualização dos registros de coberturas e inseminações.
               </p>
             </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="primary"
-                size="medium"
-                className="flex items-center gap-2"
-              >
-                <span>+</span> Novo Registro
-              </Button>
-            </div>
           </div>
-
-          {/* Filtros */}
-          <FilterBar>
-            <FilterInput type="date" placeholder="Data" />
-            <FilterInput type="text" placeholder="Buscar Matriz ou Touro" />
-            <FilterSelect>
-              <option value="">Status: Todos</option>
-              <option value="concluida">Concluída</option>
-              <option value="confirmada">Confirmada</option>
-              <option value="falha">Falha</option>
-            </FilterSelect>
-          </FilterBar>
 
           {/* Tabela */}
-          {(() => {
-            // Importação condicional para manter compatibilidade com o padrão do projeto
-            const Table = require('@/components/table/Table').default;
-            const Badge = require('@/components/ui/Badge').default;
+          {loading ? (
+            <div className="flex justify-center p-8">
+              <Loading />
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table
+                  columns={columns}
+                  data={reproducoes}
+                  minWidth="1100px"
+                  renderCell={renderCell}
+                  onRowClick={handleOpenModal}
+                />
+              </div>
 
-            const columns = [
-              {
-                key: 'data',
-                label: 'Data do Evento',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'matriz',
-                label: 'Matriz',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'touro',
-                label: 'Touro',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'tipo',
-                label: 'Tipo de Inseminação',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'status',
-                label: 'Status',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'parto',
-                label: 'Tipo de Parto',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'ocorrencia',
-                label: 'Ocorrência',
-                className: 'p-4 text-left font-semibold',
-              },
-              {
-                key: 'acoes',
-                label: 'Ações',
-                className: 'p-4 text-right font-semibold',
-              },
-            ];
-
-            return (
-              <Table
-                columns={columns}
-                data={historicoReproducao}
-                minWidth="1100px"
-                renderCell={(row, key) => {
-                  if (key === 'data') {
-                    const [y, m, d] = row.data.split('-');
-                    return (
-                      <span className="font-medium text-gray-700">{`${d}/${m}/${y}`}</span>
-                    );
-                  }
-                  if (key === 'status') {
-                    let badgeType = 'default';
-                    if (row.status === 'Confirmada') badgeType = 'active'; // Verde
-                    if (row.status === 'Concluída') badgeType = 'info'; // Azul/Neutro
-                    if (row.status === 'Falha') badgeType = 'inactive'; // Vermelho
-
-                    // Fallback se o componente Badge não tiver types customizados além de active/inactive
-                    const styleClass =
-                      row.status === 'Confirmada'
-                        ? 'bg-green-100 text-green-800'
-                        : row.status === 'Concluída'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800';
-
-                    return (
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-bold ${styleClass}`}
-                      >
-                        {row.status}
-                      </span>
-                    );
-                  }
-                  if (key === 'ocorrencia') {
-                    return (
-                      <span
-                        className="text-xs text-gray-500 max-w-[200px] block truncate"
-                        title={row.ocorrencia}
-                      >
-                        {row.ocorrencia}
-                      </span>
-                    );
-                  }
-                  if (key === 'acoes') {
-                    return (
-                      <div className="text-right">
-                        <button className="text-[#ce7d0a] font-semibold text-sm hover:underline">
-                          Detalhes
-                        </button>
-                      </div>
-                    );
-                  }
-                  return row[key];
-                }}
-              />
-            );
-          })()}
-
-          {/* Paginação */}
-          <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
-            <p>Mostrando 10 de 128 registros</p>
-            <Pagination
-              currentPage={1}
-              totalPages={13}
-              onPageChange={() => {}}
-              navVariant="report"
-              numberVariant="secondary"
-              activeNumberVariant="primary"
-            />
-          </div>
+              {/* Paginação */}
+              <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
+                <p>
+                  Mostrando {(page - 1) * limit + 1} a{' '}
+                  {Math.min(page * limit, totalItems)} de {totalItems} registros
+                </p>
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  navVariant="report"
+                  numberVariant="secondary"
+                  activeNumberVariant="primary"
+                />
+              </div>
+            </>
+          )}
         </DashboardContainer>
       </div>
+
+      <ReproducaoModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        data={selectedReproducao}
+      />
     </>
   );
 }

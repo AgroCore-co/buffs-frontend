@@ -64,14 +64,42 @@ export default function Rebanho() {
 
   // 3. Lista de Búfalos
   const [page, setPage] = useState(1);
+  const [categoria, setCategoria] = useState(''); // Estado para filtro de categoria
+  const [microchipSearch, setMicrochipSearch] = useState(''); // Estado para filtro de microchip
+
   const {
     data: bufalosData,
     error: bufalosError,
     isLoading: bufalosLoading,
   } = useSWR(
-    id ? ['bufalos', id, page] : null,
-    () => bufaloService.getBufalosByPropriedade(id, page, 10),
-    { keepPreviousData: true } // Mantém dados antigos enquanto carrega nova página
+    id ? ['bufalos', id, page, categoria, microchipSearch] : null,
+    () => {
+      // Se houver pesquisa por microchip, prioridade
+      if (microchipSearch) {
+        return bufaloService.getBufaloByMicrochip(microchipSearch);
+      }
+      // Se houver categoria selecionada, usa o service de categoria
+      if (categoria) {
+        return bufaloService.getBufalosByCategoria(categoria);
+      }
+      // Caso contrário, busca normal paginado por propriedade
+      return bufaloService.getBufalosByPropriedade(id, page, 10);
+    },
+    {
+      keepPreviousData: true, // Mantém dados antigos enquanto carrega nova página
+      dedupingInterval: 0, // Desabilita deduplicação para garantir dados frescos na paginação
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // Não tenta novamente em caso de rate limiting (429)
+        if (error?.response?.status === 429) {
+          console.warn('Rate limit atingido na paginação');
+          return;
+        }
+        // Limite de 3 tentativas
+        if (retryCount >= 3) return;
+        // Retry após 5 segundos
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
   );
 
   // Derived States
@@ -104,7 +132,7 @@ export default function Rebanho() {
     // Revalida todos os dados desta propriedade
     mutate(['dashboard', id]);
     mutate(['doencas', id]);
-    mutate(['bufalos', id, page]);
+    mutate(['bufalos', id, page, categoria, microchipSearch]);
   };
 
   if (authLoading) {
@@ -342,6 +370,33 @@ export default function Rebanho() {
 
         {/* Filtros */}
         <FilterBar>
+          <div className="flex items-center bg-white border border-gray-300 rounded-md px-3 py-2 w-full max-w-xs focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500">
+            <svg
+              className="w-5 h-5 text-gray-400 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar por Microchip..."
+              className="bg-transparent border-none focus:ring-0 w-full text-sm text-gray-700 placeholder-gray-400"
+              value={microchipSearch}
+              onChange={(e) => {
+                setMicrochipSearch(e.target.value);
+                setCategoria(''); // Limpa categoria ao buscar microchip
+                setPage(1);
+              }}
+            />
+          </div>
+
           <FilterSelect defaultValue="">
             <option disabled value="">
               Sexo: Todos
@@ -357,6 +412,18 @@ export default function Rebanho() {
             <option value="Jafarabadi">Jafarabadi</option>
             <option value="Mediterrâneo">Mediterrâneo</option>
             <option value="Carabao">Carabao</option>
+          </FilterSelect>
+          <FilterSelect
+            value={categoria}
+            onChange={(e) => {
+              setCategoria(e.target.value);
+              setPage(1); // Reset page on filter change
+            }}
+          >
+            <option value="">Categoria: Todas</option>
+            <option value="PO">PO - Puro de Origem</option>
+            <option value="PA">PA - Puro por Cruza</option>
+            <option value="PC">PC - Puro Controlado</option>
           </FilterSelect>
           <FilterSelect defaultValue="">
             <option disabled value="">
@@ -420,7 +487,7 @@ export default function Rebanho() {
                   if (key === 'sexo') return b.sexo === 'F' ? 'Fêmea' : 'Macho';
                   if (key === 'maturidade')
                     return getMaturidadeTexto(
-                      b.nivel_maturidade || b.maturidade
+                      b.nivelMaturidade || b.maturidade
                     );
                   if (key === 'raca') return b.raca?.nome || b.raca || '-';
                   if (key === 'status') {
@@ -434,7 +501,7 @@ export default function Rebanho() {
                   return b[key];
                 }}
                 onRowClick={(b) =>
-                  router.push(`/proprietario/rebanho/${b.id || b.id_bufalo}`)
+                  router.push(`/proprietario/rebanho/${b.idBufalo}`)
                 }
                 rowClassName="cursor-pointer hover:bg-amber-50 transition"
               />
