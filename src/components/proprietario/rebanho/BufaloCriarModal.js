@@ -64,6 +64,15 @@ export default function BufaloCriarModal({
           ? racasRes
           : racasRes.data || [];
         setRacas(listaRacas);
+
+        // Definir a primeira raça como default se existir
+        if (listaRacas.length > 0) {
+          const primeiraRaca = listaRacas[0];
+          setForm((prev) => ({
+            ...prev,
+            id_raca: primeiraRaca.idRaca || primeiraRaca.id_raca || '',
+          }));
+        }
       }
     } catch (err) {
       console.error('Erro ao carregar dependências', err);
@@ -74,20 +83,21 @@ export default function BufaloCriarModal({
     if (isOpen && idPropriedade) {
       loadDependencies();
       setStep(1);
+      // Resetar formulário com valores vazios
       setForm({
-        nome: 'Teste Sistema 01',
-        brinco: 'TESTE-001',
-        microchip: '123456789012345',
-        dt_nascimento: '2024-01-01',
-        sexo: 'M',
-        id_raca: 'f7cf3428-5309-4117-abff-5b7f498c63d6',
+        nome: '',
+        brinco: '',
+        microchip: '',
+        dt_nascimento: '',
+        sexo: 'F',
+        id_raca: '',
         id_grupo: '',
-        nivel_maturidade: 'N',
+        nivel_maturidade: 'B',
         status: true,
-        origem: 'Externo',
+        origem: 'Nascimento na propriedade',
         categoria: 'PA',
-        brinco_original: 'ORIG-999',
-        registro_prov: 'PROV123',
+        brinco_original: '',
+        registro_prov: '',
         registro_def: '',
         id_pai: '',
         id_mae: '',
@@ -108,15 +118,16 @@ export default function BufaloCriarModal({
 
   const validateStep = (currentStep) => {
     if (currentStep === 1) {
-      if (
-        !form.nome ||
-        !form.brinco ||
-        !form.dt_nascimento ||
-        !form.id_raca ||
-        !form.nivel_maturidade ||
-        !form.sexo
-      ) {
-        setError('Preencha todos os campos obrigatórios da etapa 1.');
+      const erros = [];
+      if (!form.nome) erros.push('Nome');
+      if (!form.brinco) erros.push('Brinco');
+      if (!form.dt_nascimento) erros.push('Data de Nascimento');
+      if (!form.id_raca) erros.push('Raça');
+      if (!form.nivel_maturidade) erros.push('Maturidade');
+      if (!form.sexo) erros.push('Sexo');
+
+      if (erros.length > 0) {
+        setError(`Campos obrigatórios faltando: ${erros.join(', ')}`);
         return false;
       }
     }
@@ -149,20 +160,21 @@ export default function BufaloCriarModal({
       return;
     }
 
+    // Payload no formato que a API espera (camelCase)
     const payload = {
       nome: form.nome,
       brinco: form.brinco,
       microchip: form.microchip || null,
-      dt_nascimento: form.dt_nascimento
+      dtNascimento: form.dt_nascimento
         ? new Date(form.dt_nascimento).toISOString()
         : null,
-      nivel_maturidade: form.nivel_maturidade,
+      nivelMaturidade: form.nivel_maturidade,
       sexo: form.sexo,
-      id_raca: form.id_raca,
-      id_propriedade: idPropriedade,
-      id_grupo: form.id_grupo || null,
-      id_pai: form.id_pai || null,
-      id_mae: form.id_mae || null,
+      idRaca: form.id_raca,
+      idPropriedade: idPropriedade,
+      idGrupo: form.id_grupo || null,
+      idPai: form.id_pai || null,
+      idMae: form.id_mae || null,
       status: form.status,
       categoria: form.categoria,
       origem: form.origem,

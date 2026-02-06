@@ -1,104 +1,9 @@
 'use client';
-// Dados para Top 5 Búfalas e Touros (copiados do controle-reproducao)
-const topBufalas = [
-  {
-    rank: 1,
-    nome: 'Hera',
-    brinco: 'IZ-012',
-    idade: '6a 2m',
-    raca: 'Murrah',
-    status: 'Apta (Pós-Parto)',
-    score: 100,
-  },
-  {
-    rank: 2,
-    nome: 'Buffs 01',
-    brinco: 'BFF-001',
-    idade: '2a 7m',
-    raca: 'Murrah',
-    status: 'Apta (Novilha)',
-    score: 97,
-  },
-  {
-    rank: 3,
-    nome: 'Buffs 02',
-    brinco: 'BR54321',
-    idade: '2a 7m',
-    raca: 'Murrah',
-    status: 'Apta (Novilha)',
-    score: 97,
-  },
-  {
-    rank: 4,
-    nome: 'Buffs 03',
-    brinco: 'BR54321',
-    idade: '2a 7m',
-    raca: 'Murrah',
-    status: 'Apta (Novilha)',
-    score: 97,
-  },
-  {
-    rank: 5,
-    nome: 'Liriope',
-    brinco: 'IZ-039',
-    idade: '2a 11m',
-    raca: 'Murrah',
-    status: 'Apta (Novilha)',
-    score: 97,
-  },
-];
-
-const topTouros = [
-  {
-    rank: 1,
-    nome: 'Corona da UPD',
-    brinco: 'BUFF-017',
-    idade: '9a 11m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-  {
-    rank: 2,
-    nome: 'P. Loures',
-    brinco: 'BUFF-019',
-    idade: '9a 11m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-  {
-    rank: 3,
-    nome: 'Pingo',
-    brinco: 'BUFF-032',
-    idade: '6a 11m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-  {
-    rank: 4,
-    nome: 'Zeus',
-    brinco: 'IZ-001',
-    idade: '11a 7m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-  {
-    rank: 5,
-    nome: 'Ares',
-    brinco: 'IZ-053',
-    idade: '3a 8m',
-    raca: 'Murrah',
-    status: '-',
-    score: 100,
-  },
-];
-// (Removido 'use client' duplicado)
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import { usePropriedade } from '@/contexts/PropriedadeContext';
+import coberturaService from '@/services/cobertura.service';
 import Loading from '@/components/loading/Loading';
 import DashboardContainer from '@/components/ui/DashboardContainer';
 import Button from '@/components/ui/Button';
@@ -114,44 +19,9 @@ import {
 import MetricCard from '@/components/ui/MetricCard';
 import Badge from '@/components/ui/Badge';
 
-// --- DADOS MOCKADOS ---
-
-const listaTouros = [
-  { id: 1, nome: 'Cronos', brinco: 'BUFF-007', raca: 'Murrah', score: 98 },
-  { id: 2, nome: 'Tífon', brinco: 'BUFF-009', raca: 'Murrah', score: 95 },
-  { id: 3, nome: 'Zeus', brinco: 'IZ-001', raca: 'Murrah', score: 100 },
-  {
-    id: 4,
-    nome: 'Corona da UPD',
-    brinco: 'BUFF-017',
-    raca: 'Murrah',
-    score: 99,
-  },
-  { id: 5, nome: 'Ares', brinco: 'IZ-053', raca: 'Murrah', score: 96 },
-];
-
-const listaMatrizes = [
-  {
-    id: 1,
-    nome: 'Pérola',
-    brinco: 'BUFF-001',
-    raca: 'Murrah',
-    lactacao: 'Alta',
-  },
-  { id: 2, nome: 'Mel', brinco: 'BUFF-002', raca: 'Murrah', lactacao: 'Média' },
-  { id: 3, nome: 'Gaya', brinco: 'BUFF-003', raca: 'Murrah', lactacao: 'Alta' },
-  { id: 4, nome: 'JADE', brinco: 'BUFF-004', raca: 'Murrah', lactacao: 'Alta' },
-  {
-    id: 5,
-    nome: 'Estrela',
-    brinco: 'IZ-002',
-    raca: 'Murrah',
-    lactacao: 'Média',
-  },
-];
-
 export default function SimulacaoPage() {
   const { loading } = useProtectedRoute(['PROPRIETARIO']);
+  const { propriedadeSelecionada } = usePropriedade();
 
   // States
   const [simulationState, setSimulationState] = useState('idle'); // idle, loading, done
@@ -159,31 +29,139 @@ export default function SimulacaoPage() {
   const [matrizId, setMatrizId] = useState('');
   const [resultado, setResultado] = useState(null);
 
+  // Estados para listas de búfalos da API
+  const [listaTouros, setListaTouros] = useState([]);
+  const [listaMatrizes, setListaMatrizes] = useState([]);
+  const [loadingBufalos, setLoadingBufalos] = useState(false);
+
+  // Buscar recomendações quando a propriedade mudar
+  useEffect(() => {
+    const fetchRecomendacoes = async () => {
+      const idPropriedade =
+        propriedadeSelecionada?.idPropriedade ||
+        propriedadeSelecionada?.id_propriedade;
+
+      if (!idPropriedade) {
+        setListaTouros([]);
+        setListaMatrizes([]);
+        return;
+      }
+
+      setLoadingBufalos(true);
+      try {
+        // Buscar recomendações de machos e fêmeas em paralelo
+        const [resMachos, resFemeas] = await Promise.all([
+          coberturaService.getRecomendacoesMachos(idPropriedade),
+          coberturaService.getRecomendacoesFemeas(idPropriedade),
+        ]);
+
+        // Formatar dados dos machos (touros)
+        const touros = resMachos.map((bufalo) => ({
+          id: bufalo.idBufalo,
+          nome: bufalo.nome,
+          brinco: bufalo.brinco,
+          raca: bufalo.raca || 'N/A',
+          score: bufalo.score || 0,
+          idadeMeses: bufalo.idadeMeses,
+          dados_reprodutivos: bufalo.dados_reprodutivos,
+          motivos: bufalo.motivos,
+        }));
+
+        // Formatar dados das fêmeas (matrizes)
+        const matrizes = resFemeas.map((bufalo) => ({
+          id: bufalo.idBufalo,
+          nome: bufalo.nome,
+          brinco: bufalo.brinco,
+          raca: bufalo.raca || 'N/A',
+          score: bufalo.score || 0,
+          idadeMeses: bufalo.idadeMeses,
+          status: bufalo.dados_reprodutivos?.status || 'N/A',
+          dados_reprodutivos: bufalo.dados_reprodutivos,
+          motivos: bufalo.motivos,
+        }));
+
+        setListaTouros(touros);
+        setListaMatrizes(matrizes);
+      } catch (error) {
+        console.error('Erro ao buscar recomendações:', error);
+        setListaTouros([]);
+        setListaMatrizes([]);
+      } finally {
+        setLoadingBufalos(false);
+      }
+    };
+
+    fetchRecomendacoes();
+  }, [propriedadeSelecionada]);
+
   if (loading) {
     return <Loading text="Carregando simulador genético..." />;
   }
 
-  const handleSimulation = (e) => {
+  const handleSimulation = async (e) => {
     e.preventDefault();
     if (!touroId || !matrizId) return;
 
     setSimulationState('loading');
 
-    // Simulação de processamento e lógica randomica de resultado
-    setTimeout(() => {
-      const isRisky = Math.random() > 0.7;
+    try {
+      const response = await coberturaService.simularAcasalamento(
+        touroId,
+        matrizId
+      );
+
+      // Determinar se há risco baseado no risco de consanguinidade
+      const riscoAlto =
+        response.risco_consanguinidade === 'Alto' ||
+        response.risco_consanguinidade === 'Crítico';
+      const riscoModerado = response.risco_consanguinidade === 'Moderado';
+      const temRisco = riscoAlto || riscoModerado;
+
+      // Calcular variação de produção
+      const predicao = response.predicao_producao_femea;
+      const variacaoProducao = predicao?.percentual_vs_media
+        ? `${predicao.percentual_vs_media > 0 ? '+' : ''}${predicao.percentual_vs_media.toFixed(1)}%`
+        : 'N/A';
+
       setResultado({
-        compatibilidade: isRisky ? 'Média' : 'Alta',
-        score: isRisky ? 75 : 94,
-        producaoEstimada: isRisky ? '+2%' : '+14%',
-        inbreeding: isRisky ? '6.25%' : '0.5%',
-        risco: isRisky,
-        mensagem: isRisky
-          ? 'Atenção: Cruzamento com risco moderado de consanguinidade. Avalie a linhagem.'
-          : 'Cruzamento altamente recomendado. Potencial para melhoria de úbere e produção de leite.',
+        // Dados de consanguinidade
+        consanguinidade_prole: response.consanguinidade_prole,
+        parentesco_pais: response.parentesco_pais,
+        nivel_parentesco: response.nivel_parentesco,
+        risco_consanguinidade: response.risco_consanguinidade,
+        recomendacao: response.recomendacao,
+        detalhes: response.detalhes,
+        // Dados de predição de produção (converter de ml para L se valor muito alto)
+        predicao_litros:
+          predicao?.predicao_litros > 50
+            ? predicao?.predicao_litros / 1000
+            : predicao?.predicao_litros,
+        classificacao_potencial: predicao?.classificacao_potencial,
+        percentual_vs_media: predicao?.percentual_vs_media,
+        producao_media_propriedade:
+          predicao?.producao_media_propriedade > 50
+            ? predicao?.producao_media_propriedade / 1000
+            : predicao?.producao_media_propriedade,
+        // Dados para a UI
+        risco: temRisco,
+        riscoAlto,
+        riscoModerado,
+        inbreeding: `${response.consanguinidade_prole}%`,
+        producaoEstimada: variacaoProducao,
+        mensagem: response.recomendacao,
       });
       setSimulationState('done');
-    }, 1500);
+    } catch (error) {
+      console.error('Erro na simulação:', error);
+      setResultado({
+        risco: true,
+        riscoAlto: true,
+        mensagem: 'Erro ao realizar simulação. Tente novamente.',
+        inbreeding: 'N/A',
+        producaoEstimada: 'N/A',
+      });
+      setSimulationState('done');
+    }
   };
 
   const resetSimulation = () => {
@@ -211,16 +189,6 @@ export default function SimulacaoPage() {
                 Ferramenta preditiva para análise de compatibilidade genética e
                 estimativa de produção da progênie (F1).
               </p>
-            </div>
-            <div>
-              <Button
-                variant="secondary"
-                size="medium"
-                className="flex items-center gap-2"
-                onClick={() => window.print()}
-              >
-                <FiList /> Exportar Relatório
-              </Button>
             </div>
           </div>
         </DashboardContainer>
@@ -353,11 +321,23 @@ export default function SimulacaoPage() {
               <div className="animate-in fade-in zoom-in-95 duration-500">
                 {/* Cabeçalho do Resultado */}
                 <div
-                  className={`p-6 rounded-xl border-l-8 shadow-sm mb-6 ${resultado.risco ? 'bg-amber-50 border-amber-500' : 'bg-green-50 border-green-500'}`}
+                  className={`p-6 rounded-xl border-l-8 shadow-sm mb-6 ${
+                    resultado.riscoAlto
+                      ? 'bg-red-50 border-red-500'
+                      : resultado.riscoModerado
+                        ? 'bg-amber-50 border-amber-500'
+                        : 'bg-green-50 border-green-500'
+                  }`}
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className={`p-3 rounded-full ${resultado.risco ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}
+                      className={`p-3 rounded-full ${
+                        resultado.riscoAlto
+                          ? 'bg-red-100 text-red-600'
+                          : resultado.riscoModerado
+                            ? 'bg-amber-100 text-amber-600'
+                            : 'bg-green-100 text-green-600'
+                      }`}
                     >
                       {resultado.risco ? (
                         <FiAlertTriangle size={32} />
@@ -365,52 +345,210 @@ export default function SimulacaoPage() {
                         <FiCheckCircle size={32} />
                       )}
                     </div>
-                    <div>
-                      <h3
-                        className={`text-xl font-bold ${resultado.risco ? 'text-amber-800' : 'text-green-800'}`}
-                      >
-                        {resultado.risco
-                          ? 'Cuidado: Risco Moderado'
-                          : 'Excelente Compatibilidade'}
-                      </h3>
-                      <Badge type={resultado.risco ? 'inactive' : 'active'}>
-                        {resultado.risco
-                          ? 'Risco Moderado'
-                          : 'Compatibilidade Alta'}
-                      </Badge>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3
+                          className={`text-xl font-bold ${
+                            resultado.riscoAlto
+                              ? 'text-red-800'
+                              : resultado.riscoModerado
+                                ? 'text-amber-800'
+                                : 'text-green-800'
+                          }`}
+                        >
+                          {resultado.riscoAlto
+                            ? 'Risco Alto de Consanguinidade'
+                            : resultado.riscoModerado
+                              ? 'Risco Moderado'
+                              : 'Excelente Compatibilidade'}
+                        </h3>
+                        <Badge type={resultado.risco ? 'inactive' : 'active'}>
+                          {resultado.risco_consanguinidade || 'Baixo'}
+                        </Badge>
+                      </div>
                       <p
-                        className={`mt-1 ${resultado.risco ? 'text-amber-700' : 'text-green-700'}`}
+                        className={`mt-2 ${
+                          resultado.riscoAlto
+                            ? 'text-red-700'
+                            : resultado.riscoModerado
+                              ? 'text-amber-700'
+                              : 'text-green-700'
+                        }`}
                       >
                         {resultado.mensagem}
                       </p>
+                      {resultado.nivel_parentesco && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          <strong>Parentesco:</strong>{' '}
+                          {resultado.nivel_parentesco}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Cards de Métricas do Resultado usando MetricCard */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                  <MetricCard
-                    title="Score F1 Previsto"
-                    value={resultado.score}
-                    subtitle="Média Alta"
-                  />
-                  <MetricCard
-                    title="Prod. Leite Est."
-                    value={resultado.producaoEstimada}
-                    subtitle="Sobre a média da mãe"
-                  />
-                  <MetricCard
-                    title="Inbreeding"
-                    value={resultado.inbreeding}
-                    subtitle="Coeficiente"
-                  />
-                </div>
+                {/* Verificar se há parentesco próximo para ocultar campos de produção */}
+                {(() => {
+                  const temParentescoProximo =
+                    resultado.detalhes?.e_meio_irmao ||
+                    resultado.detalhes?.tem_parentesco_direto;
 
-                <div className="flex justify-end">
-                  <Button variant="primary" size="medium">
-                    Salvar Simulação
-                  </Button>
-                </div>
+                  return (
+                    <div
+                      className={`grid grid-cols-1 sm:grid-cols-2 ${temParentescoProximo ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-4 mb-6`}
+                    >
+                      <MetricCard
+                        title="Consanguinidade Prole"
+                        value={resultado.inbreeding}
+                        subtitle="Coeficiente de endogamia"
+                      />
+                      {!temParentescoProximo && (
+                        <>
+                          <MetricCard
+                            title="Produção Prevista"
+                            value={
+                              resultado.predicao_litros
+                                ? `${resultado.predicao_litros.toFixed(1)} L`
+                                : 'N/A'
+                            }
+                            subtitle="Litros/dia estimado"
+                          />
+                          <MetricCard
+                            title="Variação da Média"
+                            value={resultado.producaoEstimada}
+                            subtitle={
+                              resultado.producao_media_propriedade
+                                ? `Média atual: ${resultado.producao_media_propriedade.toFixed(1)} L/dia`
+                                : 'Comparativo'
+                            }
+                          />
+                          <MetricCard
+                            title="Potencial"
+                            value={resultado.classificacao_potencial || 'N/A'}
+                            subtitle="Classificação genética"
+                          />
+                        </>
+                      )}
+                      {temParentescoProximo && (
+                        <MetricCard
+                          title="Nível de Risco"
+                          value={resultado.risco_consanguinidade || 'Alto'}
+                          subtitle="Cruzamento não recomendado"
+                        />
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Detalhes adicionais */}
+                {resultado.detalhes && (
+                  <div
+                    className={`rounded-xl p-5 mb-6 border ${
+                      resultado.riscoAlto
+                        ? 'bg-red-50/50 border-red-200'
+                        : resultado.riscoModerado
+                          ? 'bg-amber-50/50 border-amber-200'
+                          : 'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <FiGitMerge
+                        className={`${
+                          resultado.riscoAlto
+                            ? 'text-red-500'
+                            : resultado.riscoModerado
+                              ? 'text-amber-500'
+                              : 'text-gray-500'
+                        }`}
+                        size={20}
+                      />
+                      <h4 className="font-semibold text-gray-700">
+                        Análise de Parentesco
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Coeficiente de parentesco */}
+                      <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                          Coeficiente de Parentesco
+                        </p>
+                        <p
+                          className={`text-2xl font-bold ${
+                            resultado.parentesco_pais > 6.25
+                              ? 'text-red-600'
+                              : resultado.parentesco_pais > 0
+                                ? 'text-amber-600'
+                                : 'text-green-600'
+                          }`}
+                        >
+                          {resultado.parentesco_pais}%
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Entre os pais selecionados
+                        </p>
+                      </div>
+
+                      {/* Tipo de relação */}
+                      <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                          Relação Identificada
+                        </p>
+                        {resultado.detalhes.e_meio_irmao ? (
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full bg-amber-400"></span>
+                            <p className="text-lg font-semibold text-amber-700">
+                              Meio-irmãos
+                            </p>
+                          </div>
+                        ) : resultado.detalhes.tem_parentesco_direto ? (
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full bg-red-400"></span>
+                            <p className="text-lg font-semibold text-red-700">
+                              {resultado.detalhes.tipo_parentesco_direto}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full bg-green-400"></span>
+                            <p className="text-lg font-semibold text-green-700">
+                              Sem parentesco próximo
+                            </p>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-400 mt-1">
+                          Base no pedigree disponível
+                        </p>
+                      </div>
+
+                      {/* Consanguinidade esperada na prole */}
+                      <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                          Endogamia da Prole
+                        </p>
+                        <p
+                          className={`text-2xl font-bold ${
+                            resultado.consanguinidade_prole > 6.25
+                              ? 'text-red-600'
+                              : resultado.consanguinidade_prole > 0
+                                ? 'text-amber-600'
+                                : 'text-green-600'
+                          }`}
+                        >
+                          {resultado.consanguinidade_prole}%
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {resultado.consanguinidade_prole > 6.25
+                            ? 'Risco de depressão endogâmica'
+                            : resultado.consanguinidade_prole > 0
+                              ? 'Monitorar nas próximas gerações'
+                              : 'Excelente diversidade genética'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </DashboardContainer>
@@ -418,99 +556,137 @@ export default function SimulacaoPage() {
 
         {/* --- TOP 5 BÚFALAS E TOUROS PARA SIMULAÇÃO --- */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top 5 Búfalas */}
+          {/* Top 5 Matrizes (Fêmeas) */}
           <DashboardContainer>
             <div className="mb-4">
               <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-                Top 5 Búfalas para Simulação
+                Top 5 Matrizes Recomendadas
               </h2>
               <p className="text-xs text-gray-500 mt-1 pl-4">
                 Classificadas por prontidão, idade, histórico e período ideal.
               </p>
             </div>
             <div className="flex flex-col gap-3">
-              {topBufalas.map((item) => (
-                <div
-                  key={item.rank}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-[#ffcf78] transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${item.rank === 1 ? 'bg-[#ce7d0a] text-white' : 'bg-gray-200 text-gray-600'}`}
-                    >
-                      {item.rank}º
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-800 text-sm">
-                        {item.nome}
-                      </h4>
-                      <div className="text-xs text-gray-500 flex gap-2">
-                        <span>{item.brinco}</span>
-                        <span>•</span>
-                        <span>{item.idade}</span>
-                        <span>•</span>
-                        <span>{item.raca}</span>
+              {loadingBufalos ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loading text="Carregando matrizes..." />
+                </div>
+              ) : listaMatrizes.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Nenhuma matriz encontrada para esta propriedade.
+                </div>
+              ) : (
+                listaMatrizes.slice(0, 5).map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-[#ffcf78] transition-colors cursor-pointer"
+                    onClick={() => {
+                      setMatrizId(item.id);
+                      if (simulationState === 'done')
+                        setSimulationState('idle');
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-[#ce7d0a] text-white' : 'bg-gray-200 text-gray-600'}`}
+                      >
+                        {index + 1}º
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-800 text-sm">
+                          {item.nome}
+                        </h4>
+                        <div className="text-xs text-gray-500 flex gap-2 flex-wrap">
+                          <span>{item.brinco}</span>
+                          <span>•</span>
+                          <span>
+                            {item.idadeMeses
+                              ? `${Math.floor(item.idadeMeses / 12)}a ${item.idadeMeses % 12}m`
+                              : 'N/A'}
+                          </span>
+                          <span>•</span>
+                          <span>{item.raca}</span>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                        {item.status || 'Apta'}
+                      </span>
+                      <span className="text-xs font-bold text-[#ce7d0a]">
+                        Score: {item.score}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                      {item.status}
-                    </span>
-                    <span className="text-xs font-bold text-[#ce7d0a]">
-                      Score: {item.score}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </DashboardContainer>
 
-          {/* Top 5 Touros */}
+          {/* Top 5 Touros (Machos) */}
           <DashboardContainer>
             <div className="mb-4">
               <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-                Top 5 Touros para Simulação
+                Top 5 Touros Recomendados
               </h2>
               <p className="text-xs text-gray-500 mt-1 pl-4">
                 Classificados por idade, histórico, taxa de sucesso e genética.
               </p>
             </div>
             <div className="flex flex-col gap-3">
-              {topTouros.map((item) => (
-                <div
-                  key={item.rank}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-[#ffcf78] transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${item.rank === 1 ? 'bg-[#ce7d0a] text-white' : 'bg-gray-200 text-gray-600'}`}
-                    >
-                      {item.rank}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-800 text-sm">
-                        {item.nome}
-                      </h4>
-                      <div className="text-xs text-gray-500 flex gap-2">
-                        <span>{item.brinco}</span>
-                        <span>•</span>
-                        <span>{item.idade}</span>
-                        <span>•</span>
-                        <span>{item.raca}</span>
+              {loadingBufalos ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loading text="Carregando touros..." />
+                </div>
+              ) : listaTouros.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Nenhum touro encontrado para esta propriedade.
+                </div>
+              ) : (
+                listaTouros.slice(0, 5).map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-[#ffcf78] transition-colors cursor-pointer"
+                    onClick={() => {
+                      setTouroId(item.id);
+                      if (simulationState === 'done')
+                        setSimulationState('idle');
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-[#ce7d0a] text-white' : 'bg-gray-200 text-gray-600'}`}
+                      >
+                        {index + 1}º
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-800 text-sm">
+                          {item.nome}
+                        </h4>
+                        <div className="text-xs text-gray-500 flex gap-2 flex-wrap">
+                          <span>{item.brinco}</span>
+                          <span>•</span>
+                          <span>
+                            {item.idadeMeses
+                              ? `${Math.floor(item.idadeMeses / 12)}a ${item.idadeMeses % 12}m`
+                              : 'N/A'}
+                          </span>
+                          <span>•</span>
+                          <span>{item.raca}</span>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                        Ativo
+                      </span>
+                      <span className="text-xs font-bold text-[#ce7d0a]">
+                        Score: {item.score}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs font-medium text-gray-500">
-                      {item.status === '-' ? 'Ativo' : item.status}
-                    </span>
-                    <span className="text-xs font-bold text-[#ce7d0a]">
-                      Score: {item.score}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </DashboardContainer>
         </div>

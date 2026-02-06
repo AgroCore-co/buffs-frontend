@@ -153,6 +153,34 @@ const bufaloService = {
       throw error;
     }
   },
+
+  /**
+   * Lista búfalos filtrados por sexo em uma propriedade
+   * @param {string} sexo - Sexo do búfalo (M ou F)
+   * @param {string} idPropriedade - ID da propriedade (UUID)
+   * @param {number} page - Número da página (começa em 1)
+   * @param {number} limit - Número de itens por página
+   */
+  async getBufalosBySexoEPropriedade(
+    sexo,
+    idPropriedade,
+    page = 1,
+    limit = 100
+  ) {
+    try {
+      const response = await apiCache.get(
+        `/bufalos/filtro/sexo/${sexo}/propriedade/${idPropriedade}`,
+        { params: { page, limit } },
+        CACHE_TTL.MEDIUM
+      );
+      return response;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return { data: [], meta: { total: 0 } };
+      }
+      throw error;
+    }
+  },
 };
 
 export default bufaloService;

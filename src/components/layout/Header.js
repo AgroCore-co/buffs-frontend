@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   HelpCircle,
   Bell,
-  Slash,
   LogOut,
   Maximize2,
   Minimize2,
@@ -16,8 +15,8 @@ import {
   FileText,
   MessageCircle,
   BookOpen,
-  X,
   Clock,
+  BellOff,
 } from 'lucide-react';
 
 export default function Header() {
@@ -29,47 +28,14 @@ export default function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
+  // Estado para notificações (vazio por enquanto - será integrado com API)
+  const [notifications, setNotifications] = useState([]);
+
   // Refs para fechar ao clicar fora
   const notificationRef = useRef(null);
   const supportRef = useRef(null);
 
-  // --- DADOS MOCKADOS (Baseados no seu index.js) ---
-  const notificationsMock = [
-    {
-      id: 1,
-      type: 'urgente',
-      title: 'Vacina de Brucelose',
-      desc: 'Vence em 3 dias - 5 búfalos pendentes.',
-      time: 'Há 2 horas',
-      read: false,
-    },
-    {
-      id: 2,
-      type: 'aviso',
-      title: 'Previsão de Parto',
-      desc: 'Búfala "Luna" (042) próxima do parto.',
-      time: 'Há 5 horas',
-      read: false,
-    },
-    {
-      id: 3,
-      type: 'info',
-      title: 'Relatório Mensal',
-      desc: 'O fechamento de produção de Outubro está pronto.',
-      time: 'Ontem',
-      read: true,
-    },
-    {
-      id: 4,
-      type: 'success',
-      title: 'Coleta Aprovada',
-      desc: 'Laticínio Buffs aprovou a coleta #8821.',
-      time: 'Ontem',
-      read: true,
-    },
-  ];
-
-  const unreadCount = notificationsMock.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   // --- FUNÇÕES ---
 
@@ -191,25 +157,6 @@ export default function Header() {
                       </p>
                     </div>
                   </button>
-                  <button
-                    onClick={() => {
-                      router.push('/suporte/chamados');
-                      setShowSupport(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors group"
-                  >
-                    <div className="p-2 bg-amber-50 text-amber-600 rounded-lg group-hover:bg-amber-100 transition-colors">
-                      <FileText size={16} />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-700 text-sm">
-                        Abrir Chamado
-                      </p>
-                      <p className="text-[10px] text-gray-400">
-                        Reportar um problema
-                      </p>
-                    </div>
-                  </button>
                 </div>
               </div>
             )}
@@ -242,58 +189,77 @@ export default function Header() {
                       </span>
                     )}
                   </div>
-                  <button className="text-xs text-[#ce7d0a] hover:underline font-medium">
-                    Marcar lidas
-                  </button>
+                  {unreadCount > 0 && (
+                    <button className="text-xs text-[#ce7d0a] hover:underline font-medium">
+                      Marcar lidas
+                    </button>
+                  )}
                 </div>
 
                 <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
-                  {notificationsMock.map((notif) => (
-                    <div
-                      key={notif.id}
-                      className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer group ${!notif.read ? 'bg-amber-50/30' : ''}`}
-                    >
-                      <div className="flex gap-3">
-                        <div
-                          className={`mt-1 p-1.5 rounded-full shrink-0 h-fit ${
-                            notif.type === 'urgente'
-                              ? 'bg-red-100'
-                              : notif.type === 'aviso'
-                                ? 'bg-amber-100'
-                                : notif.type === 'success'
-                                  ? 'bg-green-100'
-                                  : 'bg-blue-100'
-                          }`}
-                        >
-                          {getNotificationIcon(notif.type)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-1">
-                            <p
-                              className={`text-sm font-semibold ${!notif.read ? 'text-gray-900' : 'text-gray-600'}`}
-                            >
-                              {notif.title}
-                            </p>
-                            {!notif.read && (
-                              <span className="h-2 w-2 rounded-full bg-[#ce7d0a] mt-1.5" />
-                            )}
+                  {notifications.length > 0 ? (
+                    notifications.map((notif) => (
+                      <div
+                        key={notif.id}
+                        className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer group ${!notif.read ? 'bg-amber-50/30' : ''}`}
+                      >
+                        <div className="flex gap-3">
+                          <div
+                            className={`mt-1 p-1.5 rounded-full shrink-0 h-fit ${
+                              notif.type === 'urgente'
+                                ? 'bg-red-100'
+                                : notif.type === 'aviso'
+                                  ? 'bg-amber-100'
+                                  : notif.type === 'success'
+                                    ? 'bg-green-100'
+                                    : 'bg-blue-100'
+                            }`}
+                          >
+                            {getNotificationIcon(notif.type)}
                           </div>
-                          <p className="text-xs text-gray-500 mb-2 leading-relaxed">
-                            {notif.desc}
-                          </p>
-                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                            <Clock size={10} />
-                            <span>{notif.time}</span>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start mb-1">
+                              <p
+                                className={`text-sm font-semibold ${!notif.read ? 'text-gray-900' : 'text-gray-600'}`}
+                              >
+                                {notif.title}
+                              </p>
+                              {!notif.read && (
+                                <span className="h-2 w-2 rounded-full bg-[#ce7d0a] mt-1.5" />
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2 leading-relaxed">
+                              {notif.desc}
+                            </p>
+                            <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                              <Clock size={10} />
+                              <span>{notif.time}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    // Empty State
+                    <div className="flex flex-col items-center justify-center py-12 px-4">
+                      <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                        <BellOff size={24} className="text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 text-sm font-medium">
+                        Nenhuma notificação
+                      </p>
+                      <p className="text-gray-400 text-xs mt-1 text-center">
+                        Você será notificado sobre eventos importantes
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
 
-                <button className="w-full py-3 text-center text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-[#ce7d0a] border-t border-gray-100 transition-colors">
-                  Ver todas as notificações
-                </button>
+                {notifications.length > 0 && (
+                  <button className="w-full py-3 text-center text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-[#ce7d0a] border-t border-gray-100 transition-colors">
+                    Ver todas as notificações
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -11,53 +11,7 @@ import PiquetesTab from '@/components/proprietario/propriedade/PiquetesTab';
 import AlimentacaoTab from '@/components/proprietario/propriedade/AlimentacaoTab';
 import BackButton from '@/components/ui/BackButton';
 import { propriedadeService } from '@/services/propriedade.service';
-
-// --- MOCK SERVICES ---
-// Mantenho aqui para que o código rode, mas o ideal é que estejam em arquivos separados
-const alimentacaoDefService = {
-  listarDefinicoesPorPropriedade: async () => [
-    {
-      id_aliment_def: 1,
-      tipo_alimentacao: 'Sal Mineral',
-      descricao: 'Fosbovi 30',
-    },
-    {
-      id_aliment_def: 2,
-      tipo_alimentacao: 'Ração',
-      descricao: 'Ração de Engorda 18%',
-    },
-  ],
-  criarDefinicaoAlimentacao: async (data) => ({
-    ...data,
-    id_aliment_def: Date.now(),
-  }),
-  atualizarDefinicaoAlimentacao: async (id, data) => ({
-    ...data,
-    id_aliment_def: id,
-  }),
-  removerDefinicaoAlimentacao: async () => {},
-};
-
-const alimentacaoRegistroService = {
-  listarRegistrosPorPropriedade: async () => [
-    {
-      id_registro: 101,
-      grupo: { nome_grupo: 'Grupo A' },
-      alimentacao_def: { tipo_alimentacao: 'Sal Mineral' },
-      quantidade: 5,
-      unidade_medida: 'kg',
-      freq_dia: 1,
-      usuario: { nome: 'Paulo' },
-      dt_registro: '2025-05-10T08:00:00Z',
-    },
-  ],
-  criarRegistroAlimentacao: async (data) => ({
-    ...data,
-    id_registro: Date.now(),
-  }),
-  atualizarRegistroAlimentacao: async (id, data) => ({ ...data }),
-  removerRegistroAlimentacao: async () => {},
-};
+import grupoService from '@/services/grupo.service';
 
 export default function PropriedadePage() {
   const router = useRouter();
@@ -65,11 +19,12 @@ export default function PropriedadePage() {
   const { propriedade: propriedadeId } = router.query;
   const [activeTab, setActiveTab] = useState('propriedade');
   const [propriedade, setPropriedade] = useState(null);
+  const [grupos, setGrupos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchPropriedade = async () => {
+    const fetchData = async () => {
       if (!propriedadeId) return;
 
       // Validação básica de UUID
@@ -85,10 +40,11 @@ export default function PropriedadePage() {
       setError(null);
 
       try {
-        console.log('Buscando propriedade com ID:', propriedadeId);
-
-        const propriedadeData =
-          await propriedadeService.getPropriedadeById(propriedadeId);
+        // Buscar propriedade e grupos em paralelo
+        const [propriedadeData, gruposRes] = await Promise.all([
+          propriedadeService.getPropriedadeById(propriedadeId),
+          grupoService.getGruposByPropriedade(propriedadeId),
+        ]);
 
         if (!propriedadeData) {
           setError(
@@ -97,38 +53,18 @@ export default function PropriedadePage() {
           return;
         }
 
-        console.log('Propriedade carregada:', propriedadeData);
-
         setPropriedade(propriedadeData);
+        setGrupos(gruposRes?.data || []);
       } catch (err) {
-        console.error('Erro ao buscar propriedade:', err);
+        console.error('Erro ao buscar dados:', err);
         setError('Erro ao carregar dados da propriedade. Tente novamente.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPropriedade();
+    fetchData();
   }, [propriedadeId]);
-
-  const grupos = [
-    {
-      id_grupo: 1,
-      nome_grupo: 'Grupo A',
-      color: '#FCA90F',
-      nivel_maturidade: 'B',
-      created_at: '2025-01-10T10:00:00Z',
-      dias_no_local: 10,
-    },
-    {
-      id_grupo: 2,
-      nome_grupo: 'Grupo B',
-      color: '#CE7D0A',
-      nivel_maturidade: 'V',
-      created_at: '2025-01-12T10:00:00Z',
-      dias_no_local: 5,
-    },
-  ];
 
   // Helper function
   function nivelLabel(code) {
@@ -193,7 +129,7 @@ export default function PropriedadePage() {
   const tabList = [
     { key: 'propriedade', label: 'Propriedade' },
     { key: 'piquetes', label: 'Piquetes' },
-    { key: 'alimentacao', label: 'Alimentação' },
+    // { key: 'alimentacao', label: 'Alimentação' }, // Oculto temporariamente
   ];
 
   const { title, subtitle } = tabTitles[activeTab] || {};
@@ -252,10 +188,7 @@ export default function PropriedadePage() {
           {activeTab === 'alimentacao' && (
             <AlimentacaoTab
               grupos={grupos}
-              propriedadeId={
-                propriedade.idPropriedade || propriedade.id_propriedade
-              }
-              usuarioLogado={{ id_usuario: 1, nome: 'Admin' }} // Mock de usuário
+              propriedadeId={propriedadeId}
               hideTitle
             />
           )}

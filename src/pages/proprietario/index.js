@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import { usePropriedade } from '@/contexts/PropriedadeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { dashboardService } from '@/services/dashboard.service';
+import { laticinioService } from '@/services/laticinio.service';
+import { coletaService } from '@/services/coleta.service';
+import { apiCache, CACHE_TTL } from '@/lib/apiCache';
 import Loading from '@/components/loading/Loading';
 import DashboardContainer from '@/components/ui/DashboardContainer';
 import MetricCard from '@/components/ui/MetricCard';
@@ -12,104 +18,121 @@ import {
   FiUsers,
   FiUser,
   FiTruck,
-  FiAlertCircle,
-  FiInfo,
-  FiAlertTriangle,
   FiCheckCircle,
   FiXCircle,
 } from 'react-icons/fi';
 
 export default function ProprietarioPage() {
   const { loading } = useProtectedRoute(['PROPRIETARIO']);
+  const { propriedadeSelecionada } = usePropriedade();
+  const { user } = useAuth();
 
-  // --- DADOS MOCKADOS (ESTÁTICOS) PARA DESIGN ---
-  const userName = 'Paulo Candiani';
-  const dashboardStats = {
-    qtd_macho_ativos: 15,
-    qtd_femeas_ativas: 85,
-    qtd_bufalos_registradas: 100,
-    qtd_usuarios: 4,
-  };
-  const lactationData = [
-    { name: '01/24', producao: 1200 },
-    { name: '02/24', producao: 1350 },
-    { name: '03/24', producao: 1400 },
-    { name: '04/24', producao: 1100 },
-    { name: '05/24', producao: 1600 },
-    { name: '06/24', producao: 1800 },
-  ];
-  const topBuffalosData = [
-    { name: 'Estrela (001)', leite: 12.5 },
-    { name: 'Luna (042)', leite: 11.2 },
-    { name: 'Mimosa (103)', leite: 10.8 },
-    { name: 'Preta (055)', leite: 9.5 },
-    { name: 'Malhada (020)', leite: 9.0 },
-  ];
+  // Estados para dados da API
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [producaoMensal, setProducaoMensal] = useState([]);
+  const [topBufalas, setTopBufalas] = useState([]);
+  const [anoSelecionado, setAnoSelecionado] = useState(
+    new Date().getFullYear()
+  );
+  const [industrias, setIndustrias] = useState([]);
+  const [coletas, setColetas] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
 
-  const topIndustrias = [
-    { nome: 'Buffs Laticinio', volume: 2850, entregas: 12 },
-    { nome: 'Laticinio Valle', volume: 1920, entregas: 8 },
-    { nome: 'Laticinio São Jorge', volume: 1450, entregas: 6 },
-    { nome: 'Cooperativa Leite Bom', volume: 890, entregas: 4 },
-  ];
+  // Identificar ID da propriedade (mesmo padrão das outras páginas)
+  const idProp =
+    propriedadeSelecionada?.id ||
+    propriedadeSelecionada?.idPropriedade ||
+    propriedadeSelecionada?.id_propriedade;
 
-  const ultimasEntregas = [
-    {
-      data: '2025-12-03',
-      industria: 'Buffs Laticinio',
-      quantidade: '245 L',
-      status: 'Aprovado',
-    },
-    {
-      data: '2025-12-02',
-      industria: 'Laticinio Valle',
-      quantidade: '180 L',
-      status: 'Aprovado',
-    },
-    {
-      data: '2025-12-01',
-      industria: 'Buffs Laticinio',
-      quantidade: '220 L',
-      status: 'Aprovado',
-    },
-    {
-      data: '2025-11-30',
-      industria: 'Laticinio Valle',
-      quantidade: '195 L',
-      status: 'Reprovado',
-    },
-    {
-      data: '2025-11-29',
-      industria: 'Buffs Laticinio',
-      quantidade: '260 L',
-      status: 'Aprovado',
-    },
-  ];
+  // Buscar dados principais da API quando a propriedade estiver selecionada
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!idProp) {
+        setLoadingData(false);
+        return;
+      }
 
-  const alertas = [
-    {
-      tipo: 'urgente',
-      mensagem: 'Vacina de brucelose vence em 3 dias - 5 búfalos',
-      data: 'Hoje',
-    },
-    {
-      tipo: 'aviso',
-      mensagem: 'Búfala "Luna" próxima do parto (previsão: 5 dias)',
-      data: 'Hoje',
-    },
-    {
-      tipo: 'info',
-      mensagem: 'Relatório mensal de produção disponível',
-      data: 'Ontem',
-    },
-    {
-      tipo: 'urgente',
-      mensagem: 'Reposição de sal mineral necessária - Grupo A',
-      data: 'Ontem',
-    },
-  ];
+      try {
+        setLoadingData(true);
+        const [statsRes, industriasRes, coletasRes, bufalasRes] =
+          await Promise.all([
+            dashboardService.getDashboardStats(idProp),
+            laticinioService.getLaticiniosPorPropriedade(idProp),
+            coletaService.getColetasPorPropriedade(idProp, 1, 5),
+            apiCache.get(
+              `/ordenhas/femeas/em-lactacao/${idProp}`,
+              {},
+              CACHE_TTL.MEDIUM
+            ),
+          ]);
 
-  if (loading) {
+        setDashboardStats(statsRes || {});
+        setIndustrias(industriasRes || []);
+        setColetas(coletasRes?.data || coletasRes || []);
+
+        // Transformar dados das búfalas para o gráfico (top 5 por média diária)
+        if (Array.isArray(bufalasRes) && bufalasRes.length > 0) {
+          const top5 = bufalasRes
+            .sort(
+              (a, b) =>
+                (b.producao_atual?.media_diaria || 0) -
+                (a.producao_atual?.media_diaria || 0)
+            )
+            .slice(0, 5)
+            .map((bufala) => ({
+              name: `${bufala.nome} (${bufala.brinco})`,
+              leite: Number(
+                (bufala.producao_atual?.media_diaria || 0).toFixed(1)
+              ),
+            }));
+          setTopBufalas(top5);
+        } else {
+          setTopBufalas([]);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do dashboard:', error);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchData();
+  }, [idProp]);
+
+  // Buscar produção mensal separadamente (atualiza só o gráfico quando muda o ano)
+  useEffect(() => {
+    const fetchProducao = async () => {
+      if (!idProp) return;
+
+      try {
+        const producaoRes = await dashboardService.getProducaoMensal(
+          idProp,
+          anoSelecionado
+        );
+
+        // Transformar série histórica para o formato do gráfico
+        if (producaoRes?.serie_historica) {
+          const chartData = producaoRes.serie_historica.map((item) => {
+            // Formatar mês de "2025-01" para "01/25"
+            const [ano, mes] = item.mes.split('-');
+            return {
+              name: `${mes}/${ano.slice(2)}`,
+              producao: Math.round(item.total_litros || 0),
+            };
+          });
+          setProducaoMensal(chartData);
+        } else {
+          setProducaoMensal([]);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar produção mensal:', error);
+      }
+    };
+
+    fetchProducao();
+  }, [idProp, anoSelecionado]);
+
+  if (loading || loadingData) {
     return <Loading text="Carregando painel..." />;
   }
 
@@ -126,7 +149,7 @@ export default function ProprietarioPage() {
           {/* Indicadores e header */}
           <div>
             <h1 className="text-2xl font-bold text-[#404040] mb-1">
-              Olá, {userName}!
+              Olá, {user?.nome?.split(' ')[0] || 'Usuário'}!
             </h1>
             <p className="text-[#404040]/70 text-sm">
               Bem-vindo ao dashboard da sua fazenda de búfalos. Aqui está o
@@ -137,27 +160,27 @@ export default function ProprietarioPage() {
             <MetricCard
               title="Total de Búfalos"
               value={
-                dashboardStats.qtd_macho_ativos +
-                dashboardStats.qtd_femeas_ativas
+                (dashboardStats?.qtd_macho_ativos || 0) +
+                (dashboardStats?.qtd_femeas_ativas || 0)
               }
               subtitle="Rebanho ativo registrado"
               icon={<FiLayers className="text-[#ce7d0a]" />}
             />
             <MetricCard
               title="Machos"
-              value={dashboardStats.qtd_macho_ativos}
-              subtitle={`${Math.round((dashboardStats.qtd_macho_ativos / dashboardStats.qtd_bufalos_registradas) * 100)}% do rebanho`}
+              value={dashboardStats?.qtd_macho_ativos || 0}
+              subtitle={`${dashboardStats?.qtd_bufalos_registradas ? Math.round(((dashboardStats?.qtd_macho_ativos || 0) / dashboardStats.qtd_bufalos_registradas) * 100) : 0}% do rebanho`}
               icon={<FiUser className="text-[#ce7d0a]" />}
             />
             <MetricCard
               title="Fêmeas"
-              value={dashboardStats.qtd_femeas_ativas}
-              subtitle={`${Math.round((dashboardStats.qtd_femeas_ativas / dashboardStats.qtd_bufalos_registradas) * 100)}% do rebanho`}
+              value={dashboardStats?.qtd_femeas_ativas || 0}
+              subtitle={`${dashboardStats?.qtd_bufalos_registradas ? Math.round(((dashboardStats?.qtd_femeas_ativas || 0) / dashboardStats.qtd_bufalos_registradas) * 100) : 0}% do rebanho`}
               icon={<FiActivity className="text-[#ce7d0a]" />}
             />
             <MetricCard
               title="Equipe"
-              value={dashboardStats.qtd_usuarios}
+              value={dashboardStats?.qtd_usuarios || 0}
               subtitle="Funcionários com acesso"
               icon={<FiUsers className="text-[#ce7d0a]" />}
             />
@@ -167,10 +190,14 @@ export default function ProprietarioPage() {
         {/* Gráficos de Produção */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-[450px]">
           <div className="lg:col-span-3 h-full">
-            <ProducaoLeiteChart data={lactationData} />
+            <ProducaoLeiteChart
+              data={producaoMensal}
+              ano={anoSelecionado}
+              onAnoChange={setAnoSelecionado}
+            />
           </div>
           <div className="lg:col-span-2 h-full">
-            <TopBufalasChart data={topBuffalosData} />
+            <TopBufalasChart data={topBufalas} />
           </div>
         </div>
 
@@ -185,32 +212,25 @@ export default function ProprietarioPage() {
               <FiTruck className="text-[#ce7d0a] text-xl" />
             </div>
             <div className="space-y-3">
-              {topIndustrias.map((industria, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-amber-50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
+              {industrias.length > 0 ? (
+                industrias.map((industria, index) => (
+                  <div
+                    key={industria.id || index}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-amber-50 transition-colors"
+                  >
                     <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm">
                       {index + 1}
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">
-                        {industria.nome}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {industria.entregas} entregas
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-[#ce7d0a]">
-                      {industria.volume} L
+                    <p className="font-semibold text-gray-800">
+                      {industria.nome || industria.razao_social || 'Sem nome'}
                     </p>
-                    <p className="text-xs text-gray-500">no mês</p>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm text-center py-4">
+                  Nenhuma indústria cadastrada
+                </p>
+              )}
             </div>
           </DashboardContainer>
 
@@ -223,86 +243,68 @@ export default function ProprietarioPage() {
               <FiCheckCircle className="text-[#ce7d0a] text-xl" />
             </div>
             <div className="space-y-2">
-              {ultimasEntregas.map((entrega, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors rounded"
-                >
-                  <div className="flex items-center gap-3">
-                    {entrega.status === 'Aprovado' ? (
-                      <FiCheckCircle className="text-green-600 text-lg" />
-                    ) : (
-                      <FiXCircle className="text-red-600 text-lg" />
-                    )}
-                    <div>
-                      <p className="font-medium text-gray-800 text-sm">
-                        {entrega.industria}
-                      </p>
-                      <p className="text-xs text-gray-500">{entrega.data}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-800 text-sm">
-                      {entrega.quantidade}
-                    </p>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded ${
-                        entrega.status === 'Aprovado'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
+              {coletas.length > 0 ? (
+                coletas.map((coleta, index) => {
+                  // Formatar data
+                  let dataFormatada = '-';
+                  if (coleta.dt_coleta) {
+                    const datePart = coleta.dt_coleta
+                      .split(' ')[0]
+                      .split('T')[0];
+                    const [y, m, d] = datePart.split('-');
+                    dataFormatada = `${d}/${m}/${y}`;
+                  }
+
+                  const isApproved = coleta.resultado_teste;
+
+                  return (
+                    <div
+                      key={coleta.id || index}
+                      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors rounded"
                     >
-                      {entrega.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                      <div className="flex items-center gap-3">
+                        {isApproved ? (
+                          <FiCheckCircle className="text-green-600 text-lg" />
+                        ) : (
+                          <FiXCircle className="text-red-600 text-lg" />
+                        )}
+                        <div>
+                          <p className="font-medium text-gray-800 text-sm">
+                            {coleta.nome_empresa || 'Indústria'}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {dataFormatada}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-800 text-sm">
+                          {parseFloat(coleta.quantidade || 0).toLocaleString(
+                            'pt-BR'
+                          )}{' '}
+                          L
+                        </p>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded ${
+                            isApproved
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {isApproved ? 'Aprovado' : 'Reprovado'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-gray-500 text-sm text-center py-4">
+                  Nenhuma coleta registrada
+                </p>
+              )}
             </div>
           </DashboardContainer>
         </div>
-
-        {/* Alertas do Sistema */}
-        <DashboardContainer>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-              Notificações
-            </h2>
-            <span className="bg-[#ce7d0a] text-white text-xs font-bold px-2.5 py-1 rounded-full">
-              {alertas.length}
-            </span>
-          </div>
-          <div className="space-y-2">
-            {alertas.map((alerta, index) => {
-              const iconMap = {
-                urgente: <FiAlertCircle className="text-red-600" />,
-                aviso: <FiAlertTriangle className="text-amber-600" />,
-                info: <FiInfo className="text-blue-600" />,
-              };
-              const dotMap = {
-                urgente: 'bg-red-500',
-                aviso: 'bg-amber-500',
-                info: 'bg-blue-500',
-              };
-              return (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-amber-200 transition-all cursor-pointer"
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotMap[alerta.tipo]}`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-800 leading-snug">
-                      {alerta.mensagem}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">{alerta.data}</p>
-                  </div>
-                  <div className="shrink-0">{iconMap[alerta.tipo]}</div>
-                </div>
-              );
-            })}
-          </div>
-        </DashboardContainer>
       </div>
     </>
   );

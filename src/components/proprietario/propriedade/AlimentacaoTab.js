@@ -25,13 +25,18 @@ export default function AlimentacaoTab({ grupos = [], propriedadeId }) {
 
   // Fetch Definitions
   const fetchDefinicoes = useCallback(async () => {
-    if (!propriedadeId) return;
+    if (!propriedadeId) {
+      console.log('[AlimentacaoTab] propriedadeId não definido');
+      return;
+    }
+    console.log('[AlimentacaoTab] Buscando definições para:', propriedadeId);
     setLoadingDefs(true);
     try {
       const res =
         await alimentacaoDefService.getAlimentacoesDefByPropriedade(
           propriedadeId
         );
+      console.log('[AlimentacaoTab] Definições recebidas:', res);
       setDefinicoes(res?.data || []);
     } catch (error) {
       console.error('Erro ao buscar definições', error);

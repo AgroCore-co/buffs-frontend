@@ -6,9 +6,10 @@ import React, {
   useCallback,
 } from 'react';
 import DashboardContainer from '../../ui/DashboardContainer';
-import { Dna, User, Crown, Info } from 'lucide-react';
+import { Dna, User, Crown, Info, AlertTriangle } from 'lucide-react';
 import useSWR from 'swr';
 import bufaloService from '@/services/bufalo.service';
+import coberturaService from '@/services/cobertura.service';
 import Loading from '@/components/loading/Loading';
 
 // --- DADOS MOCKADOS ESTRUTURA BASE ---
@@ -155,6 +156,7 @@ const NodeCard = ({ node }) => {
 export default function GenealogiaTab({ bufalo }) {
   const containerRef = useRef(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
+  const [analiseGenetica, setAnaliseGenetica] = useState(null);
 
   // --- FETCHERS ---
   const fetchGenealogy = async (rootId) => {
@@ -163,60 +165,180 @@ export default function GenealogiaTab({ bufalo }) {
     // Helper para delay entre requisições
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    // Função recursiva interna - busca sequencialmente para evitar rate limiting
-    const fetchAncestor = async (id, depth) => {
-      if (!id || depth >= MAX_GENERATIONS) return null;
+    // Função para buscar detalhes de um búfalo por ID (com ancestrais opcionais)
+    const fetchBufaloWithAncestors = async (id, depth = 0, maxDepth = 2) => {
+      if (!id || depth >= maxDepth) return null;
       if (cache.has(id)) return cache.get(id);
 
       try {
-        // Pequeno delay para evitar rate limiting (100ms entre requisições)
-        await delay(100);
+        await delay(100); // Pequeno delay para evitar rate limiting
+        const data = await bufaloService.getBufaloById(id);
+        if (data) {
+          // Buscar ancestrais se não atingimos a profundidade máxima
+          const pai =
+            depth < maxDepth - 1
+              ? await fetchBufaloWithAncestors(data.idPai, depth + 1, maxDepth)
+              : null;
+          const mae =
+            depth < maxDepth - 1
+              ? await fetchBufaloWithAncestors(data.idMae, depth + 1, maxDepth)
+              : null;
 
-        const data = (await bufaloService.getBufaloById(id)) || {};
-
-        // Busca pai e mãe sequencialmente (não em paralelo) para evitar 429
-        const pai = await fetchAncestor(data.idPai, depth + 1);
-        const mae = await fetchAncestor(data.idMae, depth + 1);
-
-        const node = {
-          id: data.idBufalo,
-          nome: data.nome,
-          registro: data.registroDef || data.registroProv || data.brinco,
-          sexo: data.sexo,
-          pai,
-          mae,
-        };
-
-        cache.set(id, node);
-        return node;
-      } catch (error) {
-        // Se for erro 429, tenta novamente após esperar mais tempo
-        if (error.response?.status === 429) {
-          console.warn(`Rate limit atingido, aguardando 2 segundos...`);
-          await delay(2000);
-          return fetchAncestor(id, depth); // Tenta novamente
+          const node = {
+            id: data.idBufalo,
+            nome: data.nome,
+            registro: data.registroDef || data.registroProv || data.brinco,
+            sexo: data.sexo,
+            pai,
+            mae,
+          };
+          cache.set(id, node);
+          return node;
         }
-        console.error(`Erro ao buscar ancestral ${id}:`, error);
+        return null;
+      } catch (error) {
+        if (error.response?.status === 429) {
+          console.warn('Rate limit atingido, aguardando...');
+          await delay(2000);
+          return fetchBufaloWithAncestors(id, depth, maxDepth);
+        }
+        console.error(`Erro ao buscar búfalo ${id}:`, error);
         return null;
       }
     };
 
-    const rootData = await bufaloService.getBufaloById(rootId);
-    if (!rootData) throw new Error('Bufalo não encontrado');
+    // Função para buscar apenas detalhes básicos (sem ancestrais)
+    const fetchBufaloDetails = async (id) => {
+      if (!id) return null;
+      if (cache.has(id)) return cache.get(id);
 
-    // Busca pai e mãe sequencialmente
-    const pai = await fetchAncestor(rootData.idPai, 1);
-    const mae = await fetchAncestor(rootData.idMae, 1);
-
-    return {
-      id: rootData.idBufalo,
-      nome: rootData.nome,
-      registro:
-        rootData.registroDef || rootData.registroProv || rootData.brinco,
-      sexo: rootData.sexo,
-      pai,
-      mae,
+      try {
+        await delay(50);
+        const data = await bufaloService.getBufaloById(id);
+        if (data) {
+          const node = {
+            id: data.idBufalo,
+            nome: data.nome,
+            registro: data.registroDef || data.registroProv || data.brinco,
+            sexo: data.sexo,
+          };
+          cache.set(id, node);
+          return node;
+        }
+        return null;
+      } catch (error) {
+        console.error(`Erro ao buscar búfalo ${id}:`, error);
+        return null;
+      }
     };
+
+    // Tentar usar a API de análise genealógica primeiro
+    try {
+      const analise = await coberturaService.getAnaliseGenealogica(rootId);
+      setAnaliseGenetica(analise);
+
+      // Se a API funcionou, usar os IDs retornados
+      const rootData = await bufaloService.getBufaloById(rootId);
+      if (!rootData) throw new Error('Bufalo não encontrado');
+
+      const paiId = analise?.pais?.pai_id;
+      const maeId = analise?.pais?.mae_id;
+
+      const [paiData, maeData] = await Promise.all([
+        fetchBufaloDetails(paiId),
+        fetchBufaloDetails(maeId),
+      ]);
+
+      // Buscar avós
+      let avoPaterno = null,
+        avoaPaterna = null,
+        avoMaterno = null,
+        avoaMaterna = null;
+
+      if (paiId) {
+        try {
+          const analisePai =
+            await coberturaService.getAnaliseGenealogica(paiId);
+          if (analisePai?.pais) {
+            [avoPaterno, avoaPaterna] = await Promise.all([
+              fetchBufaloDetails(analisePai.pais.pai_id),
+              fetchBufaloDetails(analisePai.pais.mae_id),
+            ]);
+          }
+        } catch (err) {
+          // Fallback: buscar via idPai/idMae do búfalo
+          if (paiData) {
+            const paiCompleto = await bufaloService.getBufaloById(paiId);
+            if (paiCompleto) {
+              [avoPaterno, avoaPaterna] = await Promise.all([
+                fetchBufaloDetails(paiCompleto.idPai),
+                fetchBufaloDetails(paiCompleto.idMae),
+              ]);
+            }
+          }
+        }
+      }
+
+      if (maeId) {
+        try {
+          const analiseMae =
+            await coberturaService.getAnaliseGenealogica(maeId);
+          if (analiseMae?.pais) {
+            [avoMaterno, avoaMaterna] = await Promise.all([
+              fetchBufaloDetails(analiseMae.pais.pai_id),
+              fetchBufaloDetails(analiseMae.pais.mae_id),
+            ]);
+          }
+        } catch (err) {
+          // Fallback: buscar via idPai/idMae do búfalo
+          if (maeData) {
+            const maeCompleta = await bufaloService.getBufaloById(maeId);
+            if (maeCompleta) {
+              [avoMaterno, avoaMaterna] = await Promise.all([
+                fetchBufaloDetails(maeCompleta.idPai),
+                fetchBufaloDetails(maeCompleta.idMae),
+              ]);
+            }
+          }
+        }
+      }
+
+      return {
+        id: rootData.idBufalo,
+        nome: rootData.nome,
+        registro:
+          rootData.registroDef || rootData.registroProv || rootData.brinco,
+        sexo: rootData.sexo,
+        pai: paiData ? { ...paiData, pai: avoPaterno, mae: avoaPaterna } : null,
+        mae: maeData ? { ...maeData, pai: avoMaterno, mae: avoaMaterna } : null,
+      };
+    } catch (error) {
+      console.warn(
+        'API de análise genealógica indisponível, usando fallback:',
+        error.message
+      );
+      setAnaliseGenetica(null);
+
+      // FALLBACK: Buscar genealogia diretamente via idPai/idMae dos búfalos
+      const rootData = await bufaloService.getBufaloById(rootId);
+      if (!rootData) throw new Error('Bufalo não encontrado');
+
+      // Buscar pai e mãe com seus ancestrais
+      const [pai, mae] = await Promise.all([
+        fetchBufaloWithAncestors(rootData.idPai, 0, 2),
+        fetchBufaloWithAncestors(rootData.idMae, 0, 2),
+      ]);
+
+      return {
+        id: rootData.idBufalo,
+        nome: rootData.nome,
+        registro:
+          rootData.registroDef || rootData.registroProv || rootData.brinco,
+        sexo: rootData.sexo,
+        pai,
+        mae,
+      };
+    }
   };
 
   const { data: treeData, isLoading: loading } = useSWR(
@@ -348,7 +470,7 @@ export default function GenealogiaTab({ bufalo }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="flex items-center gap-4 bg-gradient-to-br from-white to-slate-50">
           <div className="p-3 bg-amber-50 rounded-xl">
             <Dna className="w-6 h-6 text-amber-600" />
@@ -388,6 +510,62 @@ export default function GenealogiaTab({ bufalo }) {
               {treeData?.mae?.nome ||
                 (loading ? 'Carregando...' : 'Não informado')}
             </p>
+          </div>
+        </Card>
+        <Card
+          className={`flex items-center gap-4 bg-gradient-to-br ${
+            analiseGenetica?.risco_genetico === 'Alto' ||
+            analiseGenetica?.risco_genetico === 'Crítico'
+              ? 'from-red-50 to-red-100 border-red-200'
+              : analiseGenetica?.risco_genetico === 'Moderado'
+                ? 'from-amber-50 to-amber-100 border-amber-200'
+                : 'from-green-50 to-slate-50 border-green-200'
+          }`}
+        >
+          <div
+            className={`p-3 rounded-xl ${
+              analiseGenetica?.risco_genetico === 'Alto' ||
+              analiseGenetica?.risco_genetico === 'Crítico'
+                ? 'bg-red-100'
+                : analiseGenetica?.risco_genetico === 'Moderado'
+                  ? 'bg-amber-100'
+                  : 'bg-green-100'
+            }`}
+          >
+            {analiseGenetica?.risco_genetico === 'Alto' ||
+            analiseGenetica?.risco_genetico === 'Crítico' ? (
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            ) : analiseGenetica?.risco_genetico === 'Moderado' ? (
+              <AlertTriangle className="w-6 h-6 text-amber-600" />
+            ) : (
+              <Dna className="w-6 h-6 text-green-600" />
+            )}
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+              Consanguinidade
+            </p>
+            <p
+              className={`text-lg font-bold ${
+                analiseGenetica?.risco_genetico === 'Alto' ||
+                analiseGenetica?.risco_genetico === 'Crítico'
+                  ? 'text-red-700'
+                  : analiseGenetica?.risco_genetico === 'Moderado'
+                    ? 'text-amber-700'
+                    : 'text-green-700'
+              }`}
+            >
+              {analiseGenetica
+                ? `${analiseGenetica.consanguinidade}%`
+                : loading
+                  ? '...'
+                  : 'N/A'}
+            </p>
+            {analiseGenetica?.risco_genetico && (
+              <p className="text-[10px] text-slate-500">
+                Risco: {analiseGenetica.risco_genetico}
+              </p>
+            )}
           </div>
         </Card>
       </div>

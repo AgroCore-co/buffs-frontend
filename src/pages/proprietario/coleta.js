@@ -1,12 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Loading from '@/components/loading/Loading';
 import DashboardContainer from '@/components/ui/DashboardContainer';
-import MetricCard from '@/components/ui/MetricCard';
 import Pagination from '@/components/ui/Pagination';
-import { FiTruck, FiCheckCircle, FiXCircle, FiActivity } from 'react-icons/fi';
 import { usePropriedade } from '@/contexts/PropriedadeContext';
 import { useCachedFetch } from '@/hooks/useCachedFetch';
 import ColetaModal from '@/components/proprietario/coleta/ColetaModal';
@@ -38,11 +36,7 @@ export default function ColetasPage() {
     propriedadeSelecionada?.id_propriedade;
 
   // 2. Hook de Busca com Cache
-  const {
-    data: coletasData,
-    loading: loadingColetas,
-    error: errorColetas,
-  } = useCachedFetch(
+  const { data: coletasData, loading: loadingColetas } = useCachedFetch(
     idProp ? `/retiradas/propriedade/${idProp}` : null,
     { page, limit },
     { enabled: !!idProp, ttl: 60000 }
@@ -51,15 +45,8 @@ export default function ColetasPage() {
   // 3. Dados Derivados
   const coletas = coletasData?.data || [];
   const meta = coletasData?.meta || {};
-  const totalPages = meta.totalPages || 1;
+  const totalPages = meta.totalPages || meta.total_pages || 1;
   const totalItems = meta.total || 0;
-
-  const metrics = {
-    volumeTotal: `${parseFloat(meta.totalVolumeColetado || 0).toLocaleString('pt-BR')} L`,
-    totalColetas: meta.total || 0,
-    taxaAprovacao: `${meta.taxaAprovacao || '0.0'}%`,
-    volumeRejeitado: `${parseFloat(meta.totalVolumeRejeitado || 0).toLocaleString('pt-BR')} L`,
-  };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
@@ -142,7 +129,7 @@ export default function ColetasPage() {
       </Head>
 
       <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500 pb-10">
-        {/* --- HEADER E MÉTRICAS --- */}
+        {/* --- HEADER --- */}
         <DashboardContainer>
           <div>
             <h1 className="text-2xl font-bold text-[#404040] mb-1">
@@ -151,33 +138,6 @@ export default function ColetasPage() {
             <p className="text-[#404040]/70 text-sm">
               Monitoramento da Produção de Leite de Búfalas.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Volume Total Coletado"
-              value={metrics.volumeTotal}
-              subtitle="Volume total na propriedade"
-              icon={<FiTruck className="text-[#ce7d0a]" />}
-            />
-            <MetricCard
-              title="Total de Coletas"
-              value={metrics.totalColetas}
-              subtitle="Registros totais"
-              icon={<FiActivity className="text-[#ce7d0a]" />}
-            />
-            <MetricCard
-              title="Taxa de Aprovação"
-              value={metrics.taxaAprovacao}
-              subtitle="Geral"
-              icon={<FiCheckCircle className="text-green-600" />}
-            />
-            <MetricCard
-              title="Volume Rejeitado"
-              value={metrics.volumeRejeitado}
-              subtitle="Volume total rejeitado"
-              icon={<FiXCircle className="text-red-500" />}
-            />
           </div>
         </DashboardContainer>
 
