@@ -95,14 +95,14 @@ jobs:
             mkdir -p logs
 
             # Instalar dependências de produção
-            npm ci --omit=dev --no-audit
+            npm ci --omit=dev --no-audit --legacy-peer-deps
 
             # Iniciar aplicação
             pm2 start ecosystem.config.js --env production
             pm2 save
 
             # Aguardar e verificar
-            sleep 5
+            sleep 10
             curl -f http://localhost:3000 || exit 1
 
             echo "Deploy concluído com sucesso!"
