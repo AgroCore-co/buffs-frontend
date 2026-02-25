@@ -54,7 +54,10 @@ export default function PropriedadeEditModal({
         rua: propriedade.endereco?.rua || '',
         cep: maskCEP(propriedade.endereco?.cep || ''),
         numero: propriedade.endereco?.numero || '',
-        pontoReferencia: (propriedade.endereco?.pontoReferencia ?? propriedade.endereco?.ponto_referencia) || '',
+        pontoReferencia:
+          (propriedade.endereco?.pontoReferencia ??
+            propriedade.endereco?.ponto_referencia) ||
+          '',
       });
       setError(null);
     }
@@ -85,7 +88,11 @@ export default function PropriedadeEditModal({
         ponto_referencia: form.pontoReferencia || undefined,
       };
       // idEndereco pode vir de vários formatos
-      const idEndereco = propriedade.endereco?.idEndereco || propriedade.endereco?.id_endereco || propriedade.idEndereco || propriedade.id_endereco;
+      const idEndereco =
+        propriedade.endereco?.idEndereco ||
+        propriedade.endereco?.id_endereco ||
+        propriedade.idEndereco ||
+        propriedade.id_endereco;
       await enderecoService.updateEndereco(idEndereco, enderecoPayload);
       // Atualiza propriedade
       const propriedadePayload = {
@@ -95,8 +102,12 @@ export default function PropriedadeEditModal({
         p_abcb: form.pAbcb,
         tipoManejo: form.tipoManejo,
       };
-      const idPropriedade = propriedade.idPropriedade || propriedade.id_propriedade;
-      await propriedadeService.updatePropriedade(idPropriedade, propriedadePayload);
+      const idPropriedade =
+        propriedade.idPropriedade || propriedade.id_propriedade;
+      await propriedadeService.updatePropriedade(
+        idPropriedade,
+        propriedadePayload
+      );
       onUpdated && onUpdated();
       onClose();
     } catch (err) {

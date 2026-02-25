@@ -33,15 +33,20 @@ export default function PropriedadeDeleteModal({
         }
       }
       // Depois deleta a propriedade
-      const idPropriedade = propriedade.idPropriedade || propriedade.id_propriedade;
+      const idPropriedade =
+        propriedade.idPropriedade || propriedade.id_propriedade;
       await propriedadeService.deletePropriedade(idPropriedade);
       onDeleted && onDeleted();
       onClose && onClose();
     } catch (err) {
       if (err?.response?.status === 500) {
-        setError('Não foi possível excluir esta propriedade porque existem vínculos obrigatórios (ex: animais, lactações, etc). Remova os vínculos antes de tentar novamente.');
+        setError(
+          'Não foi possível excluir esta propriedade porque existem vínculos obrigatórios (ex: animais, lactações, etc). Remova os vínculos antes de tentar novamente.'
+        );
       } else {
-        setError('Erro ao excluir propriedade. Verifique se ela existe ou se já foi removida.');
+        setError(
+          'Erro ao excluir propriedade. Verifique se ela existe ou se já foi removida.'
+        );
       }
     } finally {
       setLoading(false);

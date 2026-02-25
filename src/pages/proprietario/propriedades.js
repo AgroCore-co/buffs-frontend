@@ -144,7 +144,9 @@ export default function Propriedades({
       ...propriedade,
       id_propriedade: propriedade.id_propriedade || propriedade.idPropriedade,
       id_endereco:
-        (propriedade.endereco && (propriedade.endereco.id_endereco || propriedade.endereco.idEndereco)) ||
+        (propriedade.endereco &&
+          (propriedade.endereco.id_endereco ||
+            propriedade.endereco.idEndereco)) ||
         propriedade.id_endereco ||
         propriedade.idEndereco ||
         undefined,

@@ -109,46 +109,93 @@ export default function SimulacaoPage() {
         touroId,
         matrizId
       );
+      console.log('Retorno da simulação:', response);
+
+      // Normalizar resposta (aceitar snake_case e camelCase)
+      const norm = {
+        consanguinidade_prole:
+          response.consanguinidade_prole ??
+          response.consanguinidadeProle ??
+          response.consanguinidadeProle ??
+          0,
+        parentesco_pais:
+          response.parentesco_pais ?? response.parentescoPais ?? 0,
+        nivel_parentesco:
+          response.nivel_parentesco ?? response.nivelParentesco ?? null,
+        risco_consanguinidade:
+          response.risco_consanguinidade ??
+          response.riscoConsanguinidade ??
+          null,
+        recomendacao: response.recomendacao ?? response.recomendacao ?? '',
+        detalhes: (() => {
+          const d = response.detalhes || response.detalhes || {};
+          return {
+            e_meio_irmao: d.e_meio_irmao ?? d.eMeioIrmao ?? false,
+            tem_parentesco_direto:
+              d.tem_parentesco_direto ?? d.temParentescoDireto ?? false,
+            tipo_parentesco_direto:
+              d.tipo_parentesco_direto ?? d.tipoParentescoDireto ?? null,
+            coeficiente_decimal:
+              d.coeficiente_decimal ?? d.coeficienteDecimal ?? 0,
+          };
+        })(),
+        predicao_producao_femea:
+          response.predicao_producao_femea ??
+          response.predicaoProducaoFemea ??
+          null,
+      };
 
       // Determinar se há risco baseado no risco de consanguinidade
       const riscoAlto =
-        response.risco_consanguinidade === 'Alto' ||
-        response.risco_consanguinidade === 'Crítico';
-      const riscoModerado = response.risco_consanguinidade === 'Moderado';
+        norm.risco_consanguinidade === 'Alto' ||
+        norm.risco_consanguinidade === 'Crítico';
+      const riscoModerado = norm.risco_consanguinidade === 'Moderado';
       const temRisco = riscoAlto || riscoModerado;
 
-      // Calcular variação de produção
-      const predicao = response.predicao_producao_femea;
-      const variacaoProducao = predicao?.percentual_vs_media
-        ? `${predicao.percentual_vs_media > 0 ? '+' : ''}${predicao.percentual_vs_media.toFixed(1)}%`
-        : 'N/A';
+      // Calcular variação de produção (aceitar campos camelCase ou snake_case)
+      const predicao = norm.predicao_producao_femea;
+      const percentual_vs_media =
+        predicao?.percentual_vs_media ?? predicao?.percentualVsMedia ?? null;
+      const variacaoProducao =
+        percentual_vs_media !== null && percentual_vs_media !== undefined
+          ? `${percentual_vs_media > 0 ? '+' : ''}${Number(percentual_vs_media).toFixed(1)}%`
+          : 'N/A';
+
+      const predicao_litros =
+        predicao?.predicao_litros ?? predicao?.predicaoLitros ?? null;
+      const producao_media_propriedade =
+        predicao?.producao_media_propriedade ??
+        predicao?.producaoMediaPropriedade ??
+        null;
+      const classificacao_potencial =
+        predicao?.classificacao_potencial ??
+        predicao?.classificacaoPotencial ??
+        null;
 
       setResultado({
         // Dados de consanguinidade
-        consanguinidade_prole: response.consanguinidade_prole,
-        parentesco_pais: response.parentesco_pais,
-        nivel_parentesco: response.nivel_parentesco,
-        risco_consanguinidade: response.risco_consanguinidade,
-        recomendacao: response.recomendacao,
-        detalhes: response.detalhes,
+        consanguinidade_prole: norm.consanguinidade_prole,
+        parentesco_pais: norm.parentesco_pais,
+        nivel_parentesco: norm.nivel_parentesco,
+        risco_consanguinidade: norm.risco_consanguinidade,
+        recomendacao: norm.recomendacao,
+        detalhes: norm.detalhes,
         // Dados de predição de produção (converter de ml para L se valor muito alto)
         predicao_litros:
-          predicao?.predicao_litros > 50
-            ? predicao?.predicao_litros / 1000
-            : predicao?.predicao_litros,
-        classificacao_potencial: predicao?.classificacao_potencial,
-        percentual_vs_media: predicao?.percentual_vs_media,
+          predicao_litros > 50 ? predicao_litros / 1000 : predicao_litros,
+        classificacao_potencial,
+        percentual_vs_media,
         producao_media_propriedade:
-          predicao?.producao_media_propriedade > 50
-            ? predicao?.producao_media_propriedade / 1000
-            : predicao?.producao_media_propriedade,
+          producao_media_propriedade > 50
+            ? producao_media_propriedade / 1000
+            : producao_media_propriedade,
         // Dados para a UI
         risco: temRisco,
         riscoAlto,
         riscoModerado,
-        inbreeding: `${response.consanguinidade_prole}%`,
+        inbreeding: `${norm.consanguinidade_prole}%`,
         producaoEstimada: variacaoProducao,
-        mensagem: response.recomendacao,
+        mensagem: norm.recomendacao,
       });
       setSimulationState('done');
     } catch (error) {
