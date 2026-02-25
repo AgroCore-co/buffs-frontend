@@ -45,8 +45,8 @@ export default function PropriedadeEditModal({
       setForm({
         nome: propriedade.nome || '',
         cnpj: maskCNPJ(propriedade.cnpj || ''),
-        p_abcb: !!propriedade.p_abcb,
-        tipo_manejo: propriedade.tipo_manejo || 'P',
+        pAbcb: propriedade.pAbcb ?? propriedade.p_abcb ?? false,
+        tipoManejo: propriedade.tipoManejo ?? propriedade.tipo_manejo ?? 'P',
         pais: propriedade.endereco?.pais || 'Brasil',
         estado: propriedade.endereco?.estado || '',
         cidade: propriedade.endereco?.cidade || '',
@@ -54,7 +54,10 @@ export default function PropriedadeEditModal({
         rua: propriedade.endereco?.rua || '',
         cep: maskCEP(propriedade.endereco?.cep || ''),
         numero: propriedade.endereco?.numero || '',
-        ponto_referencia: propriedade.endereco?.ponto_referencia || '',
+        pontoReferencia:
+          (propriedade.endereco?.pontoReferencia ??
+            propriedade.endereco?.ponto_referencia) ||
+          '',
       });
       setError(null);
     }
@@ -82,22 +85,27 @@ export default function PropriedadeEditModal({
         rua: form.rua,
         cep: form.cep,
         numero: form.numero,
-        ponto_referencia: form.ponto_referencia || undefined,
+        ponto_referencia: form.pontoReferencia || undefined,
       };
-      await enderecoService.updateEndereco(
-        propriedade.endereco.id_endereco,
-        enderecoPayload
-      );
+      // idEndereco pode vir de vários formatos
+      const idEndereco =
+        propriedade.endereco?.idEndereco ||
+        propriedade.endereco?.id_endereco ||
+        propriedade.idEndereco ||
+        propriedade.id_endereco;
+      await enderecoService.updateEndereco(idEndereco, enderecoPayload);
       // Atualiza propriedade
       const propriedadePayload = {
         nome: form.nome,
         cnpj: formatarCNPJ(form.cnpj),
-        id_endereco: propriedade.endereco.id_endereco,
-        p_abcb: form.p_abcb,
-        tipo_manejo: form.tipo_manejo,
+        idEndereco: idEndereco,
+        p_abcb: form.pAbcb,
+        tipoManejo: form.tipoManejo,
       };
+      const idPropriedade =
+        propriedade.idPropriedade || propriedade.id_propriedade;
       await propriedadeService.updatePropriedade(
-        propriedade.id_propriedade,
+        idPropriedade,
         propriedadePayload
       );
       onUpdated && onUpdated();
@@ -145,8 +153,8 @@ export default function PropriedadeEditModal({
             />
             <Select
               label="Sistema de Manejo"
-              name="tipo_manejo"
-              value={form.tipo_manejo}
+              name="tipoManejo"
+              value={form.tipoManejo}
               onChange={handleChange}
               required
               icon={FiActivity}
@@ -159,8 +167,8 @@ export default function PropriedadeEditModal({
             <div className="flex flex-col justify-end pb-1">
               <Toggle
                 label="Certificação ABCB"
-                name="p_abcb"
-                checked={form.p_abcb}
+                name="pAbcb"
+                checked={!!form.pAbcb}
                 onChange={handleChange}
               />
             </div>
@@ -268,8 +276,8 @@ export default function PropriedadeEditModal({
             <div className="md:col-span-6">
               <Input
                 label="Ponto de Referência (Opcional)"
-                name="ponto_referencia"
-                value={form.ponto_referencia}
+                name="pontoReferencia"
+                value={form.pontoReferencia}
                 onChange={handleChange}
                 placeholder="Próximo ao km 45, antiga fazenda..."
                 icon={FiNavigation}

@@ -59,6 +59,16 @@ export default function ProducaoLeiteChart({ data, ano, onAnoChange }) {
     );
   }
 
+  // Ajustes de layout e estilo para melhor leitura
+  const safeData = Array.isArray(data) ? data : [];
+  const isSingle = safeData.length === 1;
+  const chartMinHeight = 380; // aumentar altura para melhor presença visual
+  const barSize = isSingle ? 140 : 100; // barra mais larga
+  const barCategoryGap = isSingle ? '50%' : '5%';
+  const chartMargin = isSingle
+    ? { top: 10, right: 120, bottom: 0, left: 120 }
+    : { top: 10, right: 10, bottom: 0, left: -20 };
+
   return (
     <DashboardContainer className="p-6 flex flex-col h-full min-h-[400px]">
       {header}
@@ -66,21 +76,25 @@ export default function ProducaoLeiteChart({ data, ano, onAnoChange }) {
         className="flex-1 w-full"
         style={{ minHeight: '300px', height: '100%' }}
       >
-        <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          minHeight={chartMinHeight}
+        >
           <BarChart
-            data={data}
-            margin={{ top: 10, right: 10, bottom: 0, left: -20 }}
-            barCategoryGap="5%"
+            data={safeData}
+            margin={chartMargin}
+            barCategoryGap={barCategoryGap}
           >
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="#E5E7EB"
+              stroke="#F3F4F6"
             />
             <XAxis
               dataKey="name"
               interval={0}
-              tick={{ fontSize: 14, fill: '#6B7280', fontWeight: 500 }}
+              tick={{ fontSize: 16, fill: '#374151', fontWeight: 600 }}
               axisLine={false}
               tickLine={false}
             />
@@ -92,16 +106,19 @@ export default function ProducaoLeiteChart({ data, ano, onAnoChange }) {
               tickFormatter={(value) => value.toLocaleString('pt-BR')}
             />
             <Tooltip
-              cursor={{ fill: '#F3F4F6' }}
+              cursor={{ fill: '#FBF7ED' }}
               contentStyle={{
                 borderRadius: '8px',
                 border: 'none',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.08)',
               }}
-              formatter={(value) => [`${value} L`, 'Produção']}
+              formatter={(value) => [
+                `${Number(value).toLocaleString('pt-BR')} L`,
+                'Produção',
+              ]}
             />
-            <Bar dataKey="producao" radius={[4, 4, 0, 0]} barSize={80}>
-              {data.map((entry, index) => (
+            <Bar dataKey="producao" radius={[4, 4, 0, 0]} barSize={barSize}>
+              {safeData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill="#CE7D0A" />
               ))}
             </Bar>

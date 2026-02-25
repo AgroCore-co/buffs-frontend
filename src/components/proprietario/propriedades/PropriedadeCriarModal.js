@@ -120,9 +120,9 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
       const propriedadePayload = {
         nome: form.nome,
         cnpj: cnpjFormatado,
-        idEndereco: newAddressId, // Envia com padrão camelCase se possível, ou ajusta conforme backend espera
-        p_abcb: form.p_abcb,
-        tipo_manejo: form.tipo_manejo,
+        idEndereco: newAddressId,
+        p_abcb: !!form.p_abcb,
+        tipoManejo: form.tipo_manejo,
       };
 
       // Import dinâmico conforme seu código original
@@ -207,7 +207,7 @@ export default function PropriedadeCriarModal({ isOpen, onClose, onCreated }) {
               <Toggle
                 label="Certificação ABCB"
                 name="p_abcb"
-                checked={form.p_abcb}
+                checked={!!form.p_abcb}
                 onChange={handleChange}
               />
             </div>
