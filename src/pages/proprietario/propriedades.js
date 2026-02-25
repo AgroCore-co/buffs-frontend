@@ -38,10 +38,13 @@ export default function Propriedades({
   // SWR Fetcher consolidado
   const fetcher = async () => {
     const res = await propriedadeService.getPropriedades();
-    if (!res || !res.propriedades)
+    // Suporta resposta no formato { data: { propriedades: [...] } } (axios)
+    // ou quando o service já devolve o body diretamente
+    const payload = res && res.data ? res.data : res;
+    if (!payload || !payload.propriedades)
       return { propriedades: [], proprietarios: {}, enderecos: {} };
 
-    const props = res.propriedades;
+    const props = payload.propriedades;
 
     // Buscar proprietários únicos
     const ids = [...new Set(props.map((p) => p.idDono).filter(Boolean))];
@@ -136,7 +139,17 @@ export default function Propriedades({
 
   // Handler para abrir modal de edição
   const handleEditarPropriedade = (propriedade) => {
-    setPropriedadeSelecionada(propriedade);
+    // Garante que os campos snake_case existam para o modal
+    const propEdit = {
+      ...propriedade,
+      id_propriedade: propriedade.id_propriedade || propriedade.idPropriedade,
+      id_endereco:
+        (propriedade.endereco && (propriedade.endereco.id_endereco || propriedade.endereco.idEndereco)) ||
+        propriedade.id_endereco ||
+        propriedade.idEndereco ||
+        undefined,
+    };
+    setPropriedadeSelecionada(propEdit);
     setEditModalOpen(true);
   };
 

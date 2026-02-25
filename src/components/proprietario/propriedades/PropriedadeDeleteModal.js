@@ -33,13 +33,16 @@ export default function PropriedadeDeleteModal({
         }
       }
       // Depois deleta a propriedade
-      await propriedadeService.deletePropriedade(propriedade.id_propriedade);
+      const idPropriedade = propriedade.idPropriedade || propriedade.id_propriedade;
+      await propriedadeService.deletePropriedade(idPropriedade);
       onDeleted && onDeleted();
       onClose && onClose();
     } catch (err) {
-      setError(
-        'Erro ao excluir propriedade. Verifique se ela existe ou se já foi removida.'
-      );
+      if (err?.response?.status === 500) {
+        setError('Não foi possível excluir esta propriedade porque existem vínculos obrigatórios (ex: animais, lactações, etc). Remova os vínculos antes de tentar novamente.');
+      } else {
+        setError('Erro ao excluir propriedade. Verifique se ela existe ou se já foi removida.');
+      }
     } finally {
       setLoading(false);
       if (enderecoError) {
@@ -48,12 +51,18 @@ export default function PropriedadeDeleteModal({
     }
   };
 
+  // Limpa erro ao fechar o modal
+  const handleClose = () => {
+    setError(null);
+    onClose && onClose();
+  };
+
   if (!propriedade) return null;
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Confirmar Exclusão"
       size="md"
     >
@@ -121,7 +130,7 @@ export default function PropriedadeDeleteModal({
           <Button
             type="button"
             variant="secondary"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
           >
             Cancelar
