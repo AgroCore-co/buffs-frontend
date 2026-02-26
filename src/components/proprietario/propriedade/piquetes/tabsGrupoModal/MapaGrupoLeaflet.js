@@ -45,6 +45,37 @@ export default function MapaGrupoLeaflet({ todosLotes, grupo, idLoteAtual }) {
     return count > 0 ? [latSum / count, lngSum / count] : [-24.7046, -47.9876];
   }, [todosLotes]);
 
+  // Métricas do grupo (pré-calculadas)
+  const lotesDoGrupo = useMemo(() => {
+    try {
+      const gid = grupo?.idGrupo || grupo?.id_grupo;
+      if (!gid) return [];
+      return (todosLotes || []).filter(
+        (l) => (l.idGrupo || l.id_grupo) === gid
+      );
+    } catch (e) {
+      return [];
+    }
+  }, [todosLotes, grupo]);
+
+  const getAreaM2 = (l) =>
+    Number(
+      l?.area ||
+        l?.area_m2 ||
+        l?.areaM2 ||
+        l?.area_total_m2 ||
+        l?.area_total ||
+        0
+    ) || 0;
+
+  const groupAreaM2 = useMemo(() => {
+    return lotesDoGrupo.reduce((s, l) => s + getAreaM2(l), 0);
+  }, [lotesDoGrupo]);
+
+  const totalAreaM2 = useMemo(() => {
+    return (todosLotes || []).reduce((s, l) => s + getAreaM2(l), 0);
+  }, [todosLotes]);
+
   // Inicializar Mapa
   useEffect(() => {
     if (!leafletLoaded || !mapContainerRef.current || mapInstanceRef.current)
@@ -235,6 +266,27 @@ export default function MapaGrupoLeaflet({ todosLotes, grupo, idLoteAtual }) {
             style={{ opacity: 0.4, border: '1px dashed #94a3b8' }}
           ></span>
           <span>Outros grupos</span>
+        </div>
+        {/* Métricas do grupo */}
+        <div className="mt-3 text-slate-700">
+          <div className="text-xs">
+            Quantidade de lotes:{' '}
+            <span className="font-semibold">{lotesDoGrupo.length}</span>
+          </div>
+          <div className="text-xs">
+            Área total:{' '}
+            <span className="font-semibold">
+              {(groupAreaM2 / 10000).toFixed(2)} ha
+            </span>
+          </div>
+          <div className="text-xs">
+            % da fazenda ocupada:{' '}
+            <span className="font-semibold">
+              {totalAreaM2
+                ? ((groupAreaM2 / totalAreaM2) * 100).toFixed(1) + '%'
+                : '-'}
+            </span>
+          </div>
         </div>
       </div>
     </div>

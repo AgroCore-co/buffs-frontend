@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FiMapPin } from 'react-icons/fi';
 import MapaGrupoLeaflet from './MapaGrupoLeaflet';
 import { useEffect, useState } from 'react';
@@ -76,16 +76,37 @@ export default function MapaTab({ grupo, lotes, todosLotes }) {
               {lotes.length} {lotes.length === 1 ? 'piquete' : 'piquetes'}
             </p>
           </div>
-          <p className="text-2xl font-bold text-amber-800">
-            {(
-              lotes.reduce(
-                (sum, lote) =>
-                  sum + (parseFloat(lote.areaM2 || lote.area_m2) || 0),
-                0
-              ) / 10000
-            ).toFixed(2)}{' '}
-            ha
-          </p>
+          <div className="text-right">
+            <p className="text-2xl font-bold text-amber-800">
+              {(
+                lotes.reduce(
+                  (sum, lote) =>
+                    sum + (parseFloat(lote.areaM2 || lote.area_m2) || 0),
+                  0
+                ) / 10000
+              ).toFixed(2)}{' '}
+              ha
+            </p>
+            <p className="text-xs text-amber-700 mt-1">
+              {(() => {
+                try {
+                  const groupM2 = lotes.reduce(
+                    (s, l) => s + (parseFloat(l.areaM2 || l.area_m2) || 0),
+                    0
+                  );
+                  const totalM2 = (todosLotes || []).reduce(
+                    (s, l) => s + (parseFloat(l.areaM2 || l.area_m2) || 0),
+                    0
+                  );
+                  if (!totalM2) return '-';
+                  const pct = (groupM2 / totalM2) * 100;
+                  return `${pct.toFixed(1)}% da fazenda`;
+                } catch (e) {
+                  return '-';
+                }
+              })()}
+            </p>
+          </div>
         </div>
       </div>
     </div>

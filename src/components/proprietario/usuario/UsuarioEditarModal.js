@@ -7,7 +7,12 @@ import { ShieldCheck } from 'lucide-react';
 
 const CARGO_OPTIONS = ['GERENTE', 'FUNCIONARIO', 'VETERINARIO'];
 
-export default function UsuarioEditarModal({ isOpen, onClose, data, onRefresh }) {
+export default function UsuarioEditarModal({
+  isOpen,
+  onClose,
+  data,
+  onRefresh,
+}) {
   const [loading, setLoading] = useState(false);
   const [cargo, setCargo] = useState('');
 
@@ -19,7 +24,7 @@ export default function UsuarioEditarModal({ isOpen, onClose, data, onRefresh })
     }
   }, [data]);
 
-  const id = data ? (data.id_usuario || data.id || data._id) : null;
+  const id = data ? data.id_usuario || data.id || data._id : null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,9 +63,15 @@ export default function UsuarioEditarModal({ isOpen, onClose, data, onRefresh })
             <ShieldCheck className="w-4 h-4 text-amber-500" /> Cargo
           </label>
           {currentCargo === 'PROPRIETARIO' ? (
-            <div className="text-sm text-red-600">Cargo do proprietário não pode ser alterado.</div>
+            <div className="text-sm text-red-600">
+              Cargo do proprietário não pode ser alterado.
+            </div>
           ) : (
-            <select value={cargo} onChange={(e) => setCargo(e.target.value)} className="w-full p-3 rounded-lg border border-slate-200">
+            <select
+              value={cargo}
+              onChange={(e) => setCargo(e.target.value)}
+              className="w-full p-3 rounded-lg border border-slate-200"
+            >
               <option value="">Selecione um cargo</option>
               {CARGO_OPTIONS.map((c) => (
                 <option key={c} value={c}>
@@ -72,8 +83,22 @@ export default function UsuarioEditarModal({ isOpen, onClose, data, onRefresh })
         </div>
 
         <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>Cancelar</Button>
-          <Button type="submit" variant="primary" className="font-bold min-w-[120px]" disabled={loading || currentCargo === 'PROPRIETARIO' || !cargo}>{loading ? 'Salvando...' : 'Salvar'}</Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            className="font-bold min-w-[120px]"
+            disabled={loading || currentCargo === 'PROPRIETARIO' || !cargo}
+          >
+            {loading ? 'Salvando...' : 'Salvar'}
+          </Button>
         </div>
       </form>
     </Modal>

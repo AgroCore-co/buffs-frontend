@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   FiInfo,
   FiMapPin,
@@ -11,6 +11,7 @@ import {
   FiTrendingUp,
 } from 'react-icons/fi';
 import movimentacaoService from '@/services/movimentacao.service';
+import bufaloService from '@/services/bufalo.service';
 
 // Componente visual simples para métricas (Mini Card)
 const StatCard = ({
@@ -34,9 +35,13 @@ const StatCard = ({
   </div>
 );
 
-export default function DetalhesTab({ grupo, lotes }) {
+export default function DetalhesTab({ grupo, lotes, idPropriedade }) {
   const [statusAtual, setStatusAtual] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
+  const [historico, setHistorico] = useState(null);
+  const [loadingHistorico, setLoadingHistorico] = useState(true);
+  const [bufalosCount, setBufalosCount] = useState(grupo.total_animais || 0);
+  const [loadingBufalos, setLoadingBufalos] = useState(true);
 
   useEffect(() => {
     async function fetchStatus() {
@@ -54,6 +59,97 @@ export default function DetalhesTab({ grupo, lotes }) {
     }
     if (grupo?.idGrupo || grupo?.id_grupo) fetchStatus();
   }, [grupo?.idGrupo, grupo?.id_grupo]);
+
+  useEffect(() => {
+    async function fetchHistorico() {
+      setLoadingHistorico(true);
+      try {
+        const resp = await movimentacaoService.getHistoricoByGrupo(
+          grupo.idGrupo || grupo.id_grupo
+        );
+        setHistorico(resp);
+      } catch (err) {
+        setHistorico(null);
+      } finally {
+        setLoadingHistorico(false);
+      }
+    }
+    if (grupo?.idGrupo || grupo?.id_grupo) fetchHistorico();
+  }, [grupo?.idGrupo, grupo?.id_grupo]);
+
+  useEffect(() => {
+    async function fetchBufalos() {
+      setLoadingBufalos(true);
+      try {
+        if (!idPropriedade || !grupo?.idGrupo) {
+          setBufalosCount(grupo.total_animais || 0);
+          return;
+        }
+        const resp = await bufaloService.getBufalosByGrupo(
+          idPropriedade,
+          grupo.idGrupo || grupo.id_grupo
+        );
+        const list = resp?.data || resp || [];
+        setBufalosCount(Array.isArray(list) ? list.length : 0);
+      } catch (e) {
+        setBufalosCount(grupo.total_animais || 0);
+      } finally {
+        setLoadingBufalos(false);
+      }
+    }
+    fetchBufalos();
+  }, [idPropriedade, grupo?.idGrupo, grupo?.id_grupo, grupo.total_animais]);
+
+  // Métricas do mini-dashboard
+  const totalLotes = useMemo(() => (lotes ? lotes.length : 0), [lotes]);
+
+  const areaTotalM2 = useMemo(() => {
+    if (!lotes) return 0;
+    return lotes.reduce((s, l) => {
+      const v =
+        Number(l.area || l.area_m2 || l.areaM2 || l.area_total_m2 || 0) || 0;
+      return s + v;
+    }, 0);
+  }, [lotes]);
+
+  const areaTotalHa = useMemo(() => areaTotalM2 / 10000, [areaTotalM2]);
+
+  const capacidadeTotal = useMemo(() => {
+    if (!lotes) return 0;
+    return lotes.reduce(
+      (s, l) => s + (Number(l.capacidade || l.qtd_max || l.qtdMax || 0) || 0),
+      0
+    );
+  }, [lotes]);
+
+  const mediaPermanenciaDias = useMemo(() => {
+    try {
+      const arr = Array.isArray(historico?.data)
+        ? historico.data
+        : historico || [];
+      const values = arr
+        .map((h) => {
+          if (h.dias_no_local) return Number(h.dias_no_local);
+          // try compute from date fields
+          const entrada =
+            h.desde || h.dt_entrada || h.data_entrada || h.dtInicio || h.inicio;
+          const saida = h.ate || h.dt_saida || h.data_saida || h.dtFim || h.fim;
+          if (entrada && saida) {
+            const d1 = new Date(entrada);
+            const d2 = new Date(saida);
+            const diff = (d2 - d1) / (1000 * 60 * 60 * 24);
+            return isFinite(diff) ? Math.round(diff) : null;
+          }
+          return null;
+        })
+        .filter((v) => typeof v === 'number' && !isNaN(v));
+      if (!values.length) return null;
+      const sum = values.reduce((s, v) => s + v, 0);
+      return Math.round(sum / values.length);
+    } catch (e) {
+      return null;
+    }
+  }, [historico]);
 
   const formatarData = (data) => {
     if (!data) return '-';
@@ -76,11 +172,52 @@ export default function DetalhesTab({ grupo, lotes }) {
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+      {/* Mini dashboard: Total de lotes, Área total ocupada, Média de permanência, Capacidade total */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatCard
+          label="Total de lotes"
+          value={totalLotes}
+          subtext="Piquetes vinculados"
+          icon={FiLayers}
+          colorClass="bg-blue-50 text-blue-600"
+        />
+        <StatCard
+          label="Área total ocupada"
+          value={`${areaTotalHa.toFixed(2)} ha`}
+          subtext={`${areaTotalM2.toLocaleString('pt-BR')} m²`}
+          icon={FiMapPin}
+          colorClass="bg-amber-100 text-[#ce7d0a]"
+        />
+        <StatCard
+          label="Média de permanência"
+          value={
+            loadingHistorico
+              ? '...'
+              : mediaPermanenciaDias
+                ? `${mediaPermanenciaDias} dias`
+                : '-'
+          }
+          subtext="(com base no histórico)"
+          icon={FiClock}
+          colorClass={
+            mediaPermanenciaDias && mediaPermanenciaDias > 30
+              ? 'bg-red-100 text-red-600'
+              : 'bg-green-100 text-green-600'
+          }
+        />
+        <StatCard
+          label="Capacidade total"
+          value={`${capacidadeTotal} animais`}
+          subtext="Capacidade somada dos lotes"
+          icon={FiLayers}
+          colorClass="bg-emerald-50 text-emerald-600"
+        />
+      </div>
       {/* --- GRID DE INDICADORES (KPIs) --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           label="Total de Animais"
-          value={grupo.total_animais || 0}
+          value={loadingBufalos ? '...' : (bufalosCount ?? 0)}
           subtext="Cabeças registradas"
           icon={FiLayers}
           colorClass="bg-amber-100 text-[#ce7d0a]"

@@ -71,7 +71,11 @@ export default function GrupoModal({
             <MapaTab grupo={grupo} lotes={lotesDoGrupo} todosLotes={lotes} />
           )}
           {activeTab === 'detalhes' && (
-            <DetalhesTab grupo={grupo} lotes={lotesDoGrupo} />
+            <DetalhesTab
+              grupo={grupo}
+              lotes={lotesDoGrupo}
+              idPropriedade={idPropriedade}
+            />
           )}
           {activeTab === 'bufalos' && (
             <BufalosTab grupo={grupo} idPropriedade={idPropriedade} />
@@ -312,6 +316,93 @@ function MapaGrupoLeaflet({ todosLotes, grupo }) {
             style={{ opacity: 0.9, border: '1px dashed #94a3b8' }}
           ></span>
           <span>Outros grupos</span>
+        </div>
+
+        {/* Métricas do grupo */}
+        <div className="mt-3 text-slate-700">
+          <div className="text-xs">
+            Quantidade de lotes:{' '}
+            <span className="font-semibold">
+              {(() => {
+                try {
+                  const grupoId = grupo.idGrupo || grupo.id_grupo;
+                  const lotesDoGrupo = (todosLotes || []).filter(
+                    (l) => (l.idGrupo || l.id_grupo) === grupoId
+                  );
+                  return lotesDoGrupo.length;
+                } catch (e) {
+                  return '-';
+                }
+              })()}
+            </span>
+          </div>
+
+          <div className="text-xs">
+            Área total:{' '}
+            <span className="font-semibold">
+              {(() => {
+                try {
+                  const grupoId = grupo.idGrupo || grupo.id_grupo;
+                  const lotesDoGrupo = (todosLotes || []).filter(
+                    (l) => (l.idGrupo || l.id_grupo) === grupoId
+                  );
+                  const getArea = (l) =>
+                    Number(
+                      l.area ||
+                        l.area_m2 ||
+                        l.area_total_m2 ||
+                        l.area_m ||
+                        l.area_total ||
+                        0
+                    ) || 0;
+                  const totalM2 = lotesDoGrupo.reduce(
+                    (s, l) => s + getArea(l),
+                    0
+                  );
+                  const ha = totalM2 / 10000;
+                  return isFinite(ha) ? `${ha.toFixed(2)} ha` : '-';
+                } catch (e) {
+                  return '-';
+                }
+              })()}
+            </span>
+          </div>
+
+          <div className="text-xs">
+            % da fazenda ocupada:{' '}
+            <span className="font-semibold">
+              {(() => {
+                try {
+                  const grupoId = grupo.idGrupo || grupo.id_grupo;
+                  const lotesDoGrupo = (todosLotes || []).filter(
+                    (l) => (l.idGrupo || l.id_grupo) === grupoId
+                  );
+                  const getArea = (l) =>
+                    Number(
+                      l.area ||
+                        l.area_m2 ||
+                        l.area_total_m2 ||
+                        l.area_m ||
+                        l.area_total ||
+                        0
+                    ) || 0;
+                  const groupArea = lotesDoGrupo.reduce(
+                    (s, l) => s + getArea(l),
+                    0
+                  );
+                  const totalArea = (todosLotes || []).reduce(
+                    (s, l) => s + getArea(l),
+                    0
+                  );
+                  if (!totalArea || totalArea === 0) return '-';
+                  const pct = (groupArea / totalArea) * 100;
+                  return isFinite(pct) ? `${pct.toFixed(1)}%` : '-';
+                } catch (e) {
+                  return '-';
+                }
+              })()}
+            </span>
+          </div>
         </div>
       </div>
     </div>

@@ -51,7 +51,9 @@ export default function UsuariosPage() {
     { enabled: !!idProp, ttl: 60000 }
   );
 
-  const usuarios = Array.isArray(usuariosData) ? usuariosData : usuariosData?.data || [];
+  const usuarios = Array.isArray(usuariosData)
+    ? usuariosData
+    : usuariosData?.data || [];
   const meta = Array.isArray(usuariosData) ? null : usuariosData?.meta || {};
   const totalItems = meta?.total || meta?.totalItems || usuarios.length || 0;
   const totalPages = meta
@@ -77,13 +79,25 @@ export default function UsuariosPage() {
     { key: 'nome', label: 'Nome', className: 'p-4 text-left font-semibold' },
     { key: 'email', label: 'E-mail', className: 'p-4 text-left font-semibold' },
     { key: 'papel', label: 'Papel', className: 'p-4 text-left font-semibold' },
-    { key: 'contato', label: 'Contato', className: 'p-4 text-left font-semibold' },
-    { key: 'criado_em', label: 'Criado em', className: 'p-4 text-left font-semibold' },
+    {
+      key: 'contato',
+      label: 'Contato',
+      className: 'p-4 text-left font-semibold',
+    },
+    {
+      key: 'criado_em',
+      label: 'Criado em',
+      className: 'p-4 text-left font-semibold',
+    },
   ];
 
   const renderCell = (row, key) => {
     if (key === 'nome') {
-      return <span className="font-bold text-gray-800">{row.nome || row.nome_completo || '-'}</span>;
+      return (
+        <span className="font-bold text-gray-800">
+          {row.nome || row.nome_completo || '-'}
+        </span>
+      );
     }
     if (key === 'email') {
       return <span className="text-sm text-gray-600">{row.email || '-'}</span>;
@@ -93,12 +107,22 @@ export default function UsuariosPage() {
       return <span className="text-sm text-gray-700 capitalize">{papel}</span>;
     }
     if (key === 'contato') {
-      return <span className="text-sm text-gray-600">{row.telefone || row.contato || '-'}</span>;
+      return (
+        <span className="text-sm text-gray-600">
+          {row.telefone || row.contato || '-'}
+        </span>
+      );
     }
     if (key === 'criado_em') {
-      return <span className="text-sm text-gray-600">{formatDate(row.created_at || row.criado_em || row.createdAt || row.created_at)}</span>;
+      return (
+        <span className="text-sm text-gray-600">
+          {formatDate(
+            row.created_at || row.criado_em || row.createdAt || row.created_at
+          )}
+        </span>
+      );
     }
-    
+
     return row[key];
   };
 
@@ -122,8 +146,12 @@ export default function UsuariosPage() {
         <DashboardContainer>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#404040] mb-1">Usuários</h1>
-              <p className="text-[#404040]/70 text-sm">Usuários com acesso à propriedade selecionada.</p>
+              <h1 className="text-2xl font-bold text-[#404040] mb-1">
+                Usuários
+              </h1>
+              <p className="text-[#404040]/70 text-sm">
+                Usuários com acesso à propriedade selecionada.
+              </p>
             </div>
           </div>
         </DashboardContainer>
@@ -170,7 +198,9 @@ export default function UsuariosPage() {
           </div>
 
           <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
-            <p>Mostrando {Math.min(limit, totalItems)} de {totalItems} registros</p>
+            <p>
+              Mostrando {Math.min(limit, totalItems)} de {totalItems} registros
+            </p>
             <Pagination
               currentPage={page}
               totalPages={totalPages}
@@ -182,8 +212,6 @@ export default function UsuariosPage() {
           </div>
         </DashboardContainer>
       </div>
-
-      
 
       <UsuarioEditarModal
         isOpen={isEditarOpen}
