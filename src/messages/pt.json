@@ -1,0 +1,14 @@
+{
+  "Auth": {
+    "Login": {
+      "title": "Bem-Vindo!",
+      "subtitle": "Faça login com os dados inseridos durante seu cadastro.",
+      "email": "Email",
+      "password": "Senha",
+      "button": "Log in",
+      "forgotPassword": "Esqueci minha senha",
+      "noAccount": "Não tem uma conta?",
+      "register": "Cadastre-se"
+    }
+  }
+}

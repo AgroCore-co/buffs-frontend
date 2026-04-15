@@ -1,0 +1,932 @@
+﻿=== @/app/globals.css ===
+
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+-----------------------------
+
+=== @/app/layout.tsx ===
+
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+// Importe o provider que acabamos de criar
+import { QueryProvider } from "@/providers/QueryProvider"; 
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Buffs",
+  description: "Gerenciamento inteligente",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="pt-BR">
+      <body className={inter.className}>
+        {/* Envelopando a aplicaÃ§Ã£o inteira para que qualquer 
+            componente (como a tela de Login) tenha acesso ao useQuery */}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
+      </body>
+    </html>
+  );
+}
+
+-----------------------------
+
+=== @/app/page.tsx ===
+
+import Image from "next/image";
+
+export default function Home() {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+        <Image
+          className="dark:invert"
+          src="/next.svg"
+          alt="Next.js logo"
+          width={100}
+          height={20}
+          priority
+        />
+        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
+          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+            To get started, edit the page.tsx file.
+          </h1>
+          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+            Looking for a starting point or more instructions? Head over to{" "}
+            <a
+              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              className="font-medium text-zinc-950 dark:text-zinc-50"
+            >
+              Templates
+            </a>{" "}
+            or the{" "}
+            <a
+              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              className="font-medium text-zinc-950 dark:text-zinc-50"
+            >
+              Learning
+            </a>{" "}
+            center.
+          </p>
+        </div>
+        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+          <a
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
+            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              className="dark:invert"
+              src="/vercel.svg"
+              alt="Vercel logomark"
+              width={16}
+              height={16}
+            />
+            Deploy Now
+          </a>
+          <a
+            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Documentation
+          </a>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+
+-----------------------------
+
+=== @/app/auth/login/page.tsx ===
+
+"use client";
+
+import React, { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+import Logo from '@/components/ui/Logo';
+import { useAuth } from '@/hooks/useAuth';
+
+// 1. DefiniÃ§Ã£o do Schema de ValidaÃ§Ã£o com Zod
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email Ã© obrigatÃ³rio.')
+    .email('Insira um email vÃ¡lido.'),
+  password: z
+    .string()
+    .min(1, 'Senha Ã© obrigatÃ³ria.')
+});
+
+// InferÃªncia de tipagem automÃ¡tica baseada no schema
+type LoginFormInputs = z.infer<typeof loginSchema>;
+
+export default function Login() {
+  const router = useRouter();
+  const { login, isLoggingIn } = useAuth();
+  
+  // O estado de visibilidade da senha continua no useState pois Ã© apenas UI
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  // 2. ConfiguraÃ§Ã£o do React Hook Form com Zod
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<LoginFormInputs>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  // 3. FunÃ§Ã£o de submissÃ£o (sÃ³ Ã© chamada se o Zod validar com sucesso)
+  const onSubmit = async (data: LoginFormInputs) => {
+    try {
+      // Chama a mutation do TanStack Query que estÃ¡ no useAuth
+      await login(data);
+      
+      // Sucesso: Redireciona para o sistema
+      router.push('/dashboard'); 
+    } catch (error: any) {
+      // Falha: Extrai a mensagem da API e joga para o erro global (root) do form
+      const backendMessage = 
+        error.response?.data?.message || 
+        error.response?.data?.error || 
+        'Falha ao realizar login. Verifique suas credenciais.';
+        
+      setError('root', {
+        type: 'manual',
+        message: backendMessage,
+      });
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen w-full bg-white font-sans text-[#404040]">
+      {/* SEÃ‡ÃƒO DO FORMULÃRIO (ESQUERDA) */}
+      <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col justify-center items-center px-8 sm:px-12 relative z-10 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.05)]">
+        <div className="w-full max-w-[300px] flex flex-col items-center">
+          <div className="mb-6 flex items-center justify-center">
+            <Logo style={{ width: 90, height: 32 }} />
+          </div>
+
+          <h1 className="text-2xl font-bold text-[#43310b] mb-1.5">
+            Bem-Vindo!
+          </h1>
+          <p className="text-xs text-[#838181] text-center mb-6 leading-relaxed">
+            FaÃ§a login com os dados inseridos
+            <br />
+            durante seu cadastro.
+          </p>
+
+          {/* Alerta de Erro Geral da API (Erro Root) */}
+          {errors.root && (
+            <div className="w-full bg-[#fff5f5] text-[#e90000] text-[11px] font-medium py-2.5 px-4 rounded border border-[#ffe0e0] mb-5 text-center animate-in fade-in duration-300">
+              {errors.root.message}
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="w-full flex flex-col gap-5"
+            noValidate
+          >
+            {/* Input de Email */}
+            <div className="relative">
+              <input
+                type="email"
+                id="email"
+                disabled={isLoggingIn}
+                placeholder=" "
+                {...register('email')}
+                className={`peer w-full border ${errors.email ? 'border-red-500' : 'border-[#b0b0b0]'} rounded-md py-2.5 px-3 pr-10 text-sm bg-white text-[#43310b] focus:outline-none focus:border-[#ffcf78] focus:ring-1 focus:ring-[#ffcf78] transition-colors`}
+              />
+              <label
+                htmlFor="email"
+                className="absolute left-3 bg-white px-1 font-medium z-10 transition-all duration-200 pointer-events-none
+                           -top-[7px] translate-y-0 text-[10px] text-[#404040]
+                           peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#838181]
+                           peer-focus:-top-[7px] peer-focus:translate-y-0 peer-focus:text-[10px] peer-focus:text-[#404040]"
+              >
+                Email
+              </label>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#838181] pointer-events-none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect width="20" height="16" x="2" y="4" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+              </div>
+              {errors.email && (
+                <span className="text-[10px] text-red-500 absolute -bottom-4 left-1">
+                  {errors.email.message}
+                </span>
+              )}
+            </div>
+
+            {/* Input de Senha */}
+            <div className="relative mt-1">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                disabled={isLoggingIn}
+                placeholder=" "
+                {...register('password')}
+                className={`peer w-full border ${errors.password ? 'border-red-500' : 'border-[#b0b0b0]'} rounded-md py-2.5 px-3 pr-10 text-sm bg-white text-[#43310b] focus:outline-none focus:border-[#ffcf78] focus:ring-1 focus:ring-[#ffcf78] transition-colors`}
+              />
+              <label
+                htmlFor="password"
+                className="absolute left-3 bg-white px-1 font-medium z-10 transition-all duration-200 pointer-events-none
+                           -top-[7px] translate-y-0 text-[10px] text-[#404040]
+                           peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#838181]
+                           peer-focus:-top-[7px] peer-focus:translate-y-0 peer-focus:text-[10px] peer-focus:text-[#404040]"
+              >
+                Senha
+              </label>
+              <button
+                type="button"
+                disabled={isLoggingIn}
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#838181] hover:text-[#404040] focus:outline-none z-20"
+              >
+                {showPassword ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" x2="22" y1="2" y2="22" />
+                  </svg>
+                )}
+              </button>
+              {errors.password && (
+                <span className="text-[10px] text-red-500 absolute -bottom-4 left-1">
+                  {errors.password.message}
+                </span>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className={`w-full bg-[#ffcf78] hover:bg-[#f2b84d] text-[#43310b] font-bold py-2.5 rounded text-sm transition-colors mt-2 flex justify-center items-center ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {isLoggingIn ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-[#43310b]/30 border-t-[#43310b] rounded-full animate-spin" />
+                  Entrando...
+                </span>
+              ) : (
+                'Log in'
+              )}
+            </button>
+          </form>
+
+         
+
+          <div className="flex flex-col items-center gap-2 mt-8">
+            <Link
+              href="/auth/forgot-password"
+              className="text-[11px] text-[#838181] hover:text-[#43310b] transition-colors"
+            >
+              Esqueci minha senha
+            </Link>
+
+            <p className="text-[11px] text-[#838181]">
+              NÃ£o tem uma conta?{' '}
+              <Link
+                href="/auth/register"
+                className="text-[#404040] hover:text-[#43310b] font-medium transition-colors"
+              >
+                Cadastre-se
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* SEÃ‡ÃƒO DA IMAGEM (DIREITA) */}
+      <div className="hidden md:block flex-1 bg-[#2c2621] relative overflow-hidden">
+        <Image
+          src="/images/login-bg.jpg"
+          alt="Rebanho de BÃºfalos"
+          fill
+          priority
+          sizes="(max-width: 768px) 0px, 100vw"
+          className="absolute inset-0 h-full w-full object-cover object-center opacity-90"
+        />
+        <div className="absolute inset-0 bg-black/10 mix-blend-multiply"></div>
+      </div>
+    </div>
+  );
+}
+
+-----------------------------
+
+=== @/components/ui/Logo.tsx ===
+
+import React from 'react';
+
+interface LogoProps extends React.SVGProps<SVGSVGElement> {
+  className?: string;
+}
+
+
+export default function Logo({ className = '', ...props }: LogoProps) {
+  return (
+    <svg
+      width="90"
+      height="32"
+      viewBox="0 0 90 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M78.5364 29.8247C79.7503 30.2161 80.9515 30.4118 82.1401 30.4118C87.0337 30.4118 89.4804 28.4674 89.4804 24.5786C89.4804 23.2402 89.1453 22.1228 88.4752 21.2264C87.805 20.3299 86.7302 19.6355 85.2508 19.1431L81.9315 24.6731C82.4536 24.8569 82.8645 25.0274 83.1644 25.1846C83.6702 25.4371 83.9231 25.7275 83.9231 26.0558C83.9231 26.3967 83.7776 26.6618 83.4868 26.8512C83.2086 27.0406 82.6902 27.1353 81.9315 27.1353C80.882 27.1353 79.8514 26.9838 78.8399 26.6808C77.8409 26.3778 77.1265 26.0179 76.6966 25.6013L76.2034 28.6504C76.5448 29.0292 77.3225 29.4206 78.5364 29.8247ZM80.6986 24.2755C77.7524 23.3917 76.2793 21.5609 76.2793 18.7832C76.2793 17.6469 76.6081 16.6747 77.2656 15.8666C77.9231 15.0459 78.764 14.4525 79.7882 14.0863C80.8124 13.7202 81.9568 13.5371 83.2213 13.5371C85.3835 13.5371 86.9768 13.9348 88.001 14.7303L88.3424 15.0522L87.5078 17.7605C86.6733 16.9398 85.5226 16.5295 84.0558 16.5295C82.8546 16.5295 82.2539 16.883 82.2539 17.5901C82.2539 17.7921 82.2982 17.9625 82.3867 18.1014C82.4752 18.2277 82.6206 18.3413 82.823 18.4423C83.0379 18.5307 83.2466 18.6065 83.4489 18.6696C83.6512 18.7201 83.9357 18.7958 84.3024 18.8969L80.6986 24.2755Z"
+        fill="#43310B"
+      />
+      <path
+        d="M76.2037 26.6808C71.1659 29.9359 71.1655 23.8697 75.6112 24.0809C73.2406 25.8883 74.6364 26.6862 76.2037 26.6808Z"
+        fill="#43310B"
+      />
+      <path
+        d="M13.1956 26.9889C14.0934 26.9889 14.7509 26.7364 15.1682 26.2313C15.5855 25.7263 15.7941 25.1266 15.7941 24.4322V23.1064C15.7941 22.2857 15.5286 21.7049 14.9975 21.364C14.4664 21.0105 13.8658 20.8337 13.1956 20.8337H11.7162V26.9889H13.1956ZM15.5286 14.1861C15.5286 13.4286 15.3199 12.9046 14.9027 12.6142C14.4854 12.3112 13.8848 12.1597 13.1008 12.1597H11.7162V17.633H13.2525C13.9859 17.633 14.5486 17.349 14.9406 16.7808C15.3326 16.2 15.5286 15.4929 15.5286 14.6596V14.1861ZM14.4854 30.8714C13.4991 30.8714 12.222 30.8462 10.654 30.7957C9.08607 30.7452 7.96069 30.7136 7.27787 30.701H5.45703V8.50444H8.73834C9.53496 8.50444 10.4454 8.47918 11.4696 8.42868C12.4938 8.36555 13.2336 8.33398 13.6888 8.33398C15.1682 8.33398 16.4137 8.45393 17.4253 8.69383C18.4495 8.93372 19.2524 9.29356 19.8341 9.77335C20.4158 10.2531 20.8267 10.8087 21.067 11.44C21.3199 12.0713 21.4463 12.8225 21.4463 13.6937C21.4463 15.0321 21.1365 16.1811 20.5169 17.1406C19.8973 18.1002 18.9996 18.6999 17.8236 18.9398C20.8078 19.205 22.2998 20.9537 22.2998 24.186C22.2998 25.1582 22.1544 26.042 21.8636 26.8374C21.5728 27.6202 21.1239 28.321 20.5169 28.9396C19.9226 29.5457 19.1134 30.0192 18.0891 30.3601C17.0649 30.701 15.8637 30.8714 14.4854 30.8714Z"
+        fill="#43310B"
+      />
+      <path
+        d="M1.24854 2.88477C3.91579 8.21137 11.8917 5.25214 12.7807 9.69098C6.47065 10.8747 6.28686 7.32362 2.43385 9.98692C3.32282 7.32362 0.95182 8.21137 1.24854 2.88477Z"
+        fill="#43310B"
+        stroke="#43310B"
+      />
+      <path
+        d="M23.5093 2.88477C20.842 8.21137 12.8661 5.25214 11.9771 9.69098C18.2872 10.8747 18.4709 7.32362 22.324 9.98692C21.435 7.32362 23.806 8.21137 23.5093 2.88477Z"
+        fill="#43310B"
+        stroke="#43310B"
+      />
+      <path
+        d="M34.7892 28.3019C34.7133 28.4787 34.5552 28.7123 34.315 29.0027C34.0874 29.2931 33.6092 29.8753 33.2298 30.2288C32.9335 29.9329 32.6008 28.5093 32.0444 28.7492C31.488 29.0017 30.2425 28.1574 29.6735 28.1574C27.8906 28.1574 26.2964 27.5497 26.4135 28.8755C25.6548 27.8149 25.3435 26.7994 25.3435 24.3247V17.5825L24.6797 16.9006V14.7227H31.5648V25.5179C31.5521 26.0861 31.6469 26.509 31.8493 26.7868C32.0516 27.0519 32.4183 27.1845 32.9494 27.1845C33.0252 27.1845 33.0948 27.1845 33.158 27.1845C33.2212 27.1719 33.2844 27.1593 33.3477 27.1466C33.4109 27.1214 33.4615 27.1025 33.4994 27.0898C33.55 27.0772 33.6069 27.0583 33.6701 27.033C33.7333 26.9951 33.7839 26.9636 33.8218 26.9383C33.8598 26.9131 33.9104 26.8815 33.9736 26.8436C34.0368 26.7931 34.0811 26.7552 34.1063 26.73C34.1443 26.7047 34.1949 26.6669 34.2581 26.6163C34.334 26.5532 34.3909 26.509 34.4288 26.4838V17.5825L33.4046 16.9006V14.7227H40.631V28.5597L37.3789 28.7492L34.7892 28.3019Z"
+        fill="#43310B"
+      />
+      <path
+        d="M33.2295 30.2285C28.488 28.1572 25.5242 28.1573 23.7461 31.1162V27.2695H33.2295V30.2285Z"
+        fill="#43310B"
+      />
+      <path
+        d="M33.2295 30.2285C28.488 28.1572 25.5242 28.1573 23.7461 31.1162V27.2695H33.2295V30.2285Z"
+        stroke="#43310B"
+      />
+      <path
+        d="M33.2314 30.2285C37.973 28.1572 40.9367 28.1573 42.7148 31.1162V27.2695H33.2314V30.2285Z"
+        fill="#43310B"
+      />
+      <path
+        d="M33.2314 30.2285C37.973 28.1572 40.9367 28.1573 42.7148 31.1162V27.2695H33.2314V30.2285Z"
+        stroke="#43310B"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M53.6202 30.5592H47.5312L47.5318 17.7943V14.461V12.8133C47.5318 11.5381 47.7088 10.4333 48.0629 9.49898C48.4169 8.56466 48.9101 7.83866 49.5423 7.32099C50.1872 6.80333 50.8953 6.43086 51.6666 6.20359C52.4506 5.9637 53.3231 5.84375 54.2841 5.84375C55.1439 5.84375 55.9532 5.95738 56.7119 6.18465C57.4706 6.41192 57.9447 6.62025 58.1344 6.80964L57.4137 9.68837C56.8067 9.38535 56.1808 9.23384 55.5359 9.23384C55.3715 9.23384 55.2198 9.24646 55.0807 9.27171C54.107 9.42323 53.6202 10.2502 53.6202 11.7527V14.461V17.7943V30.5592Z"
+        fill="#43310B"
+      />
+      <path
+        d="M57.2347 15.9043H45.0839L43.8984 19.7513H55.4565L57.2347 15.9043Z"
+        fill="#43310B"
+        stroke="#43310B"
+      />
+      <path
+        d="M75.9042 7.61943L77.9787 8.80312L77.386 4.95613L79.7569 4.06836L80.646 6.13982L77.9787 8.80312L80.646 8.21127L80.0533 10.5787L74.7188 14.7216L75.9042 7.61943Z"
+        fill="#43310B"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M68.4366 30.5592H62.3477L62.3482 17.7943V14.461V12.8133C62.3482 11.5381 62.5252 10.4333 62.8793 9.49898C63.2333 8.56466 63.7265 7.83866 64.3587 7.32099C65.0036 6.80333 65.7117 6.43086 66.483 6.20359C67.267 5.9637 68.1395 5.84375 69.1005 5.84375C69.9603 5.84375 70.7696 5.95738 71.5283 6.18465C72.287 6.41192 72.7611 6.62025 72.9508 6.80964L72.2301 9.68837C71.6231 9.38535 70.9972 9.23384 70.3523 9.23384C70.1879 9.23384 70.0362 9.24646 69.8971 9.27171C68.9235 9.42323 68.4366 10.2502 68.4366 11.7527V14.461V17.7943V30.5592Z"
+        fill="#43310B"
+      />
+      <path
+        d="M72.0511 15.9043H59.9003L58.7148 19.7513H70.2729L72.0511 15.9043Z"
+        fill="#43310B"
+        stroke="#43310B"
+      />
+    </svg>
+  );
+}
+
+-----------------------------
+
+=== @/hooks/useAuth.ts ===
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { 
+  authService, 
+  SigninDTO, 
+  SignupProprietarioDTO, 
+  SignupFuncionarioDTO 
+} from '@/services/auth.service';
+
+// Chave global de cache para a sessÃ£o
+export const AUTH_QUERY_KEY = ['auth', 'session'];
+
+export function useAuth() {
+  const queryClient = useQueryClient();
+
+  // ==========================================
+  // QUERY: ESTADO DA SESSÃƒO
+  // ==========================================
+  
+  // MantÃ©m a sessÃ£o em cache. Como a leitura Ã© local (localStorage), 
+  // setamos staleTime como Infinity para evitar refetches desnecessÃ¡rios.
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: AUTH_QUERY_KEY,
+    queryFn: async () => {
+      // O React Query espera uma Promise, entÃ£o envolvemos o helper sÃ­ncrono
+      return authService.getSession();
+    },
+    staleTime: Infinity,
+  });
+
+  // ==========================================
+  // MUTATIONS: AÃ‡Ã•ES DE AUTENTICAÃ‡ÃƒO
+  // ==========================================
+
+  // Login
+  const loginMutation = useMutation({
+    mutationFn: (credentials: SigninDTO) => authService.signin(credentials),
+    onSuccess: (sessionData) => {
+      // 1. Salva no localStorage (persistÃªncia real)
+      authService.setSession(sessionData);
+      
+      // 2. Atualiza o cache do React Query (reatividade da UI)
+      queryClient.setQueryData(AUTH_QUERY_KEY, sessionData);
+    },
+  });
+
+  // Logout
+  const logoutMutation = useMutation({
+    mutationFn: () => authService.signout(),
+    onSettled: () => {
+      // Independente de sucesso ou erro na API de signout, 
+      // limpamos a sessÃ£o localmente para garantir a seguranÃ§a.
+      queryClient.setQueryData(AUTH_QUERY_KEY, null);
+      
+      // Limpa todo o cache da aplicaÃ§Ã£o associado ao usuÃ¡rio anterior
+      queryClient.clear();
+    },
+  });
+
+  // Cadastro de ProprietÃ¡rio
+  const signupProprietarioMutation = useMutation({
+    mutationFn: (data: SignupProprietarioDTO) => authService.signupProprietario(data),
+  });
+
+  // Cadastro de FuncionÃ¡rio
+  const signupFuncionarioMutation = useMutation({
+    mutationFn: (data: SignupFuncionarioDTO) => authService.signupFuncionario(data),
+  });
+
+  // ==========================================
+  // RETORNO DO HOOK
+  // ==========================================
+  
+  return {
+    // Dados e Status
+    session,
+    isAuthenticated: !!session?.access_token,
+    user: session?.user ?? null,
+    isLoading: isSessionLoading,
+    
+    // FunÃ§Ãµes de aÃ§Ã£o (expÃµe a Promise para quem chamar o hook poder usar try/catch)
+    login: loginMutation.mutateAsync,
+    logout: logoutMutation.mutateAsync,
+    signupProprietario: signupProprietarioMutation.mutateAsync,
+    signupFuncionario: signupFuncionarioMutation.mutateAsync,
+    
+    // Status das requisiÃ§Ãµes em andamento (Ãºtil para spinners nos botÃµes)
+    isLoggingIn: loginMutation.isPending,
+    isLoggingOut: logoutMutation.isPending,
+    isSigningUp: signupProprietarioMutation.isPending || signupFuncionarioMutation.isPending,
+  };
+}
+
+-----------------------------
+
+=== @/lib/apiClient.ts ===
+
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+
+// VariÃ¡veis para controle da fila de requisiÃ§Ãµes durante o refresh token
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: any) => void;
+}> = [];
+
+// Processa as requisiÃ§Ãµes que ficaram pendentes enquanto o token era renovado
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token as string);
+    }
+  });
+  failedQueue = [];
+};
+
+const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// ---------------------------------------------------
+// INTERCEPTOR DE REQUISIÃ‡ÃƒO (Injeta o Token)
+// ---------------------------------------------------
+apiClient.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const sessionData = localStorage.getItem('@Buffs:session');
+      
+      if (sessionData) {
+        try {
+          const session = JSON.parse(sessionData);
+          const token = session.access_token;
+          
+          if (token && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (error) {
+          console.error('Erro ao ler a sessÃ£o do usuÃ¡rio:', error);
+        }
+      }
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// ---------------------------------------------------
+// INTERCEPTOR DE RESPOSTA (Trata o 401 e faz o Refresh)
+// ---------------------------------------------------
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error: AxiosError) => {
+    // Pegamos a requisiÃ§Ã£o original para poder refazÃª-la depois
+    // Estendemos a tipagem para incluir a flag _retry e nÃ£o entrar em loop infinito
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // Se o erro for 401 e ainda nÃ£o tentamos fazer retry nesta requisiÃ§Ã£o especÃ­fica
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      // Evita o endpoint de login ou o prÃ³prio refresh de entrarem no fluxo de retry
+      if (originalRequest.url?.includes('/auth/signin') || originalRequest.url?.includes('/auth/refresh')) {
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      // Se jÃ¡ existe uma renovaÃ§Ã£o em andamento, jogamos a requisiÃ§Ã£o na fila
+      if (isRefreshing) {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({
+            resolve: (token: string) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(apiClient(originalRequest));
+            },
+            reject: (err: any) => {
+              reject(err);
+            },
+          });
+        });
+      }
+
+      // Bloqueia novas requisiÃ§Ãµes 401 e inicia o processo de refresh
+      isRefreshing = true;
+
+      try {
+        const sessionData = localStorage.getItem('@Buffs:session');
+        if (!sessionData) throw new Error('SessÃ£o nÃ£o encontrada localmente.');
+
+        const session = JSON.parse(sessionData);
+        const refreshToken = session.refresh_token;
+
+        if (!refreshToken) throw new Error('Refresh token nÃ£o encontrado.');
+
+        // Chamamos o endpoint de refresh
+        // IMPORTANTE: usamos uma instÃ¢ncia limpa do axios para nÃ£o cair nos interceptors deste arquivo e causar loop
+        const { data: newSession } = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+          { refresh_token: refreshToken },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        // Atualiza a sessÃ£o inteira no LocalStorage com o novo access_token e refresh_token
+        localStorage.setItem('@Buffs:session', JSON.stringify(newSession));
+
+        // Atualiza o header da requisiÃ§Ã£o que falhou lÃ¡ no comeÃ§o
+        originalRequest.headers.Authorization = `Bearer ${newSession.access_token}`;
+
+        // Libera a fila injetando o novo token nas requisiÃ§Ãµes aguardando
+        processQueue(null, newSession.access_token);
+
+        // Refaz a requisiÃ§Ã£o original com o token vÃ¡lido
+        return apiClient(originalRequest);
+        
+      } catch (refreshError) {
+        // Se a renovaÃ§Ã£o falhar (refresh token expirado ou invÃ¡lido)
+        processQueue(refreshError, null);
+        
+        // Mata a sessÃ£o
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('@Buffs:session');
+          window.location.href = '/auth/login';
+        }
+
+        return Promise.reject(refreshError);
+      } finally {
+        // Libera o lock independente de sucesso ou erro
+        isRefreshing = false;
+      }
+    }
+
+    // Retorna qualquer outro erro (400, 404, 500) normalmente
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+
+-----------------------------
+
+=== @/providers/QueryProvider.tsx ===
+
+"use client";
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState } from 'react';
+
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  // Instanciamos o QueryClient dentro do useState para garantir que 
+  // ele nÃ£o seja recriado a cada renderizaÃ§Ã£o do componente, 
+  // e tambÃ©m para evitar o vazamento de cache entre usuÃ¡rios no SSR do Next.js.
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        // OpÃ§Ãµes globais: evita que a tela fique fazendo requisiÃ§Ãµes 
+        // repetidas caso o usuÃ¡rio mude de aba e volte.
+        refetchOnWindowFocus: false,
+        retry: 1,
+      },
+    },
+  }));
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+}
+
+-----------------------------
+
+=== @/services/auth.service.ts ===
+
+import apiClient from '@/lib/apiClient';
+
+// ==========================================
+// DTOs (Data Transfer Objects)
+// ==========================================
+
+export interface SignupProprietarioDTO {
+  email: string;
+  password: string;
+  nome: string;
+  telefone: string;
+  idEndereco: string;
+}
+
+export interface SignupFuncionarioDTO {
+  email: string;
+  password: string;
+  nome: string;
+  telefone: string;
+  cargo: 'GERENTE' | 'FUNCIONARIO' | 'VETERINARIO';
+  idEndereco: string;
+  idPropriedade?: string; 
+}
+
+export interface SigninDTO {
+  email: string;
+  password: string;
+}
+
+// Estrutura de sessÃ£o retornada pelo backend
+export interface AuthSessionResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_at: number;
+  user: {
+    id: string;
+    email: string;
+    metadata: {
+      email: string;
+      email_verified: boolean;
+      nome: string;
+      phone_verified: boolean;
+      sub: string;
+      telefone: string;
+    };
+  };
+}
+
+// ==========================================
+// SERVIÃ‡O DE AUTENTICAÃ‡ÃƒO
+// ==========================================
+
+export const authService = {
+  /**
+   * Cria conta principal e perfil de proprietÃ¡rio.
+   * Em caso de falha em qualquer etapa interna, ocorre rollback automÃ¡tico.
+   */
+  async signupProprietario(data: SignupProprietarioDTO) {
+    const response = await apiClient.post('/auth/signup-proprietario', data);
+    return response.data;
+  },
+
+  /**
+   * Registra um novo funcionÃ¡rio e vincula Ã s propriedades.
+   * Exige que a requisiÃ§Ã£o seja feita por um usuÃ¡rio com cargo PROPRIETARIO ou GERENTE.
+   */
+  async signupFuncionario(data: SignupFuncionarioDTO) {
+    const response = await apiClient.post('/auth/signup-funcionario', data);
+    return response.data;
+  },
+
+  /**
+   * Autentica o usuÃ¡rio e retorna os tokens de acesso (JWT).
+   */
+  async signin(data: SigninDTO): Promise<AuthSessionResponse> {
+    const response = await apiClient.post<AuthSessionResponse>('/auth/signin', data);
+    return response.data;
+  },
+
+  /**
+   * Solicita um novo access_token utilizando o refresh_token ativo.
+   */
+  async refresh(refreshToken: string): Promise<AuthSessionResponse> {
+    const response = await apiClient.post<AuthSessionResponse>('/auth/refresh', {
+      refresh_token: refreshToken,
+    });
+    return response.data;
+  },
+
+  /**
+   * Invalida a sessÃ£o atual no backend e limpa os dados locais.
+   */
+  async signout() {
+    const response = await apiClient.post('/auth/signout');
+    
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('@Buffs:session');
+    }
+    
+    return response.data;
+  },
+
+  // ==========================================
+  // HELPERS DE SESSÃƒO LOCAL
+  // ==========================================
+  
+  setSession(sessionData: AuthSessionResponse) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('@Buffs:session', JSON.stringify(sessionData));
+    }
+  },
+
+  getSession(): AuthSessionResponse | null {
+    if (typeof window !== 'undefined') {
+      const data = localStorage.getItem('@Buffs:session');
+      return data ? JSON.parse(data) : null;
+    }
+    return null;
+  }
+};
+
+-----------------------------
+
+==== ARVORE DE ARQUIVOS (tree /f) ====
+Listagem de caminhos de pasta para o volume Acer
+O n·mero de sÚrie do volume Ú 4A7C-3B20
+C:\USERS\USER\DESKTOP\PAULO\BUFFS-FRONTEND\SRC
++---app
+ª   ª   globals.css
+ª   ª   layout.tsx
+ª   ª   page.tsx
+ª   ª   
+ª   +---auth
+ª       +---login
+ª               page.tsx
+ª               
++---components
+ª   +---ui
+ª           Logo.tsx
+ª           
++---hooks
+ª       useAuth.ts
+ª       
++---lib
+ª       apiClient.ts
+ª       
++---providers
+ª       QueryProvider.tsx
+ª       
++---services
+        auth.service.ts
+        

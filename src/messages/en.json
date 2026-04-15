@@ -1,0 +1,14 @@
+{
+  "Auth": {
+    "Login": {
+      "title": "Welcome!",
+      "subtitle": "Log in with the details provided during registration.",
+      "email": "Email",
+      "password": "Password",
+      "button": "Log in",
+      "forgotPassword": "Forgot my password",
+      "noAccount": "Don't have an account?",
+      "register": "Sign up"
+    }
+  }
+}
