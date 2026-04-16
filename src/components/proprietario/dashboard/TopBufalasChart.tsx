@@ -14,7 +14,11 @@ import {
 } from 'recharts';
 import { Droplet } from 'lucide-react';
 
-export default function TopBufalasChart({ data }) {
+interface TopBufalasChartProps {
+  data: any[];
+}
+
+export default function TopBufalasChart({ data }: TopBufalasChartProps) {
   const colors = ['#FCA90F', '#FFCF78', '#CE7D0A', '#F2B84D', '#E6A23C'];
 
   // Empty state quando não há dados

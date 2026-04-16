@@ -32,10 +32,16 @@ export const useAuthStore = create<AuthState>((set) => {
 
     setProfile: (profile) => set({ profile }),
 
-    clearAuth: () => set({ 
-      session: null, 
-      profile: null, 
-      isAuthenticated: false 
-    }),
+    clearAuth: () => {
+      // Limpa também a propriedade ativa para não vazar dados entre sessões
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('@Buffs:activePropriedade');
+      }
+      set({ 
+        session: null, 
+        profile: null, 
+        isAuthenticated: false 
+      });
+    },
   };
 });

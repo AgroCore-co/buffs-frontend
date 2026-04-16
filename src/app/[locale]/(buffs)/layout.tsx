@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 // Ajuste os caminhos de importação se necessário
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -11,6 +12,8 @@ interface BuffsLayoutProps {
 }
 
 export default function BuffsLayout({ children }: BuffsLayoutProps) {
+  const t = useTranslations('BuffsLayout');
+
   return (
     <div className="flex h-screen w-full bg-[#f8fcfa] text-[#404040] font-sans">
       <Sidebar />
@@ -29,11 +32,10 @@ export default function BuffsLayout({ children }: BuffsLayoutProps) {
                   <div className="h-8 w-8 rounded bg-[#ffcf78] animate-pulse" />
                 </div>
                 <h2 className="text-xl font-bold text-[#404040]">
-                  Área de Conteúdo
+                  {t('contentArea')}
                 </h2>
                 <p className="text-[#404040]/60 mt-2 max-w-md">
-                  Selecione um item no menu lateral para começar ou adicione
-                  componentes aqui.
+                  {t('contentAreaDesc')}
                 </p>
               </div>
             )}

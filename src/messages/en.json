@@ -6,9 +6,149 @@
       "email": "Email",
       "password": "Password",
       "button": "Log in",
+      "loggingIn": "Logging in...",
+      "redirecting": "Redirecting...",
       "forgotPassword": "Forgot my password",
       "noAccount": "Don't have an account?",
-      "register": "Sign up"
+      "register": "Sign up",
+      "loginError": "Login failed. Please check your credentials."
+    }
+  },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "propriedades": "Properties",
+    "rebanho": "Herd",
+    "lactacao": "Lactation",
+    "controleReproducao": "Reproduction Control",
+    "simulacao": "Simulation",
+    "coletas": "Collections",
+    "industria": "Industry",
+    "layoutOptions": "Layout Options",
+    "sections": {
+      "main": "Main",
+      "propriedades": "Properties",
+      "rebanho": "Herd",
+      "lactacao": "Lactation",
+      "controle": "Control",
+      "industria": "Industry"
+    }
+  },
+  "Header": {
+    "support": "Support & Help",
+    "helpCenter": "Help Center",
+    "helpCenterDesc": "How can we help?",
+    "documentation": "Documentation",
+    "documentationDesc": "System guide",
+    "talkSupport": "Talk to Support",
+    "talkSupportDesc": "Real-time chat",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "noNotificationsDesc": "You'll be notified about important events",
+    "fullscreen": "Fullscreen mode",
+    "exitFullscreen": "Exit fullscreen mode",
+    "user": "User",
+    "admin": "Admin",
+    "logout": "Log out",
+    "propertySelector": {
+      "select": "Select property",
+      "noProperties": "No properties found",
+      "loading": "Loading...",
+      "management": "Management"
+    }
+  },
+  "Dashboard": {
+    "greeting": "Hello, {name}!",
+    "welcome": "Welcome to your buffalo farm dashboard. Here's today's summary.",
+    "totalBuffalos": "Total Buffalos",
+    "totalBuffalosDesc": "Active registered herd",
+    "males": "Males",
+    "malesDesc": "{percent}% of herd",
+    "females": "Females",
+    "femalesDesc": "{percent}% of herd",
+    "team": "Team",
+    "teamDesc": "Employees with access",
+    "milkProduction": "Monthly Milk Production",
+    "topBuffalos": "Top 5 Producing Buffalos",
+    "noProduction": "No production recorded",
+    "noProductionDesc": "Register milking to see monthly production",
+    "noLactation": "No buffalos in lactation",
+    "noLactationDesc": "Register milking to see top producers",
+    "mainIndustries": "Main Industries",
+    "lastDeliveries": "Latest Deliveries",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "production": "Production"
+  },
+  "Proprietario": {
+    "propriedades": {
+      "title": "Property Management",
+      "subtitle": "Control and monitor all your business units.",
+      "total": "Total",
+      "totalDesc": "Properties",
+      "active": "Active",
+      "activeDesc": "In operation",
+      "livestock": "Livestock",
+      "livestockDesc": "Buffalo focus",
+      "certified": "Certified",
+      "certifiedDesc": "ABCB Standard",
+      "registered": "Registered Properties",
+      "unitsFound": "{count} units found",
+      "management": "Management",
+      "update": "Last Update",
+      "address": "Address not registered",
+      "noOwner": "No owner",
+      "edit": "Edit",
+      "delete": "Delete",
+      "managementTypes": {
+        "P": "Livestock",
+        "E": "Extensive",
+        "I": "Intensive"
+      },
+      "notInformed": "Not informed",
+      "loading": "Loading properties...",
+      "errorLoading": "Error loading properties",
+      "errorLoadingDesc": "Please try again later.",
+      "noProperties": "No properties registered",
+      "noPropertiesDesc": "Register your first property to get started."
+    },
+    "detalhes": {
+      "back": "Back",
+      "report": "Report",
+      "edit": "Edit"
+    }
+  },
+  "Gerente": {
+    "testPage": "Test Page",
+    "testDescription": "This is a test page for the Manager module.",
+    "environment": "Environment",
+    "role": "Manager",
+    "editHint": "(You can remove or edit this file freely.)"
+  },
+  "Funcionario": {
+    "testPage": "Test Page",
+    "testDescription": "This is a test page for the Employee module.",
+    "environment": "Environment",
+    "role": "Employee",
+    "editHint": "(You can remove or edit this file freely.)"
+  },
+  "Veterinario": {
+    "testPage": "Test Page",
+    "testDescription": "This is a test page for the Veterinarian module.",
+    "environment": "Environment",
+    "role": "Veterinarian",
+    "editHint": "(You can remove or edit this file freely.)"
+  },
+  "BuffsLayout": {
+    "contentArea": "Content Area",
+    "contentAreaDesc": "Select an item from the sidebar to get started or add components here."
+  },
+  "General": {
+    "loadingSession": "Loading session...",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
     }
   }
 }

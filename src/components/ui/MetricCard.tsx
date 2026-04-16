@@ -1,4 +1,11 @@
-export default function MetricCard({ title, value, subtitle, icon }) {
+interface MetricCardProps {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: React.ReactNode;
+}
+
+export default function MetricCard({ title, value, subtitle, icon }: MetricCardProps) {
   return (
     <div className="bg-[#f8fcfa] p-3 rounded-xl border border-[#ce7d0a]/10 hover:border-[#ffcf78] transition-all hover:shadow-sm group">
       <div className="flex items-center justify-between mb-2">

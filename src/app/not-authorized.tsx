@@ -1,5 +1,5 @@
 // ==========================================
-// Página de Não Autorizado (Exemplo)
+// Página de Não Autorizado
 // ==========================================
 
 export default function NotAuthorizedPage() {
@@ -16,13 +16,21 @@ export default function NotAuthorizedPage() {
       fontFamily: 'sans-serif',
       textAlign: 'center',
     }}>
-      <h1 style={{ fontSize: 48, marginBottom: 16 }}>Não autorizado</h1>
+      <h1 style={{ fontSize: 48, marginBottom: 16 }}>403</h1>
       <p style={{ fontSize: 20, color: '#404040', marginBottom: 32 }}>
-        Você não tem permissão para acessar esta página.
+        Not authorized / Não autorizado
       </p>
-      <span style={{ fontSize: 14, color: '#999' }}>
-        (Esta tela é apenas um exemplo. Personalize como desejar.)
-      </span>
+      <a
+        href="/"
+        style={{
+          fontSize: 14,
+          color: '#ce7d0a',
+          textDecoration: 'underline',
+          cursor: 'pointer',
+        }}
+      >
+        ← Home
+      </a>
     </div>
   );
 }

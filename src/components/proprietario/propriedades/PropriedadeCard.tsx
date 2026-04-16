@@ -1,8 +1,9 @@
 "use client";
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { MouseEvent } from 'react';
 import { Pencil, Trash2, MapPin, User, Calendar } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Badge from '@/components/ui/Badge';
 
 export interface Endereco {
@@ -34,6 +35,9 @@ interface PropriedadeCardProps {
 }
 
 export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: PropriedadeCardProps) {
+  const t = useTranslations('Proprietario.propriedades');
+  const tGeneral = useTranslations('General');
+  
   const formatCNPJ = (cnpj?: string) => cnpj || 'N/A';
   
   const formatDate = (dateString?: string) => {
@@ -55,8 +59,10 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
   };
 
   const getManejoLabel = (tipo?: string) => {
-    const map: Record<string, string> = { P: 'Pecuária', E: 'Extensivo', I: 'Intensivo' };
-    return tipo && map[tipo] ? map[tipo] : tipo || 'Não informado';
+    if (tipo && ['P', 'E', 'I'].includes(tipo)) {
+      return t(`managementTypes.${tipo}`);
+    }
+    return tipo || t('notInformed');
   };
 
   return (
@@ -65,12 +71,11 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
       <Link
         href={`/proprietario/propriedade/${propriedade.idPropriedade}`}
         className="flex flex-col h-full p-5 no-underline"
-        passHref
       >
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-2 flex-wrap">
             <Badge type={propriedade.status === 'Inativa' ? 'inactive' : 'active'}>
-              {propriedade.status || 'Ativa'}
+              {propriedade.status || tGeneral('status.active')}
             </Badge>
             {propriedade.pAbcb && <Badge type="info">ABCB</Badge>}
           </div>
@@ -89,7 +94,7 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
         <div className="grid grid-cols-2 gap-3 mb-5 mt-auto">
           <div className="bg-[#f8fcfa] p-2.5 rounded-lg border border-gray-100 group-hover:border-[#ffcf78]/30 transition-colors">
             <span className="text-[10px] text-gray-400 uppercase font-bold block mb-1">
-              Manejo
+              {t('management')}
             </span>
             <span className="text-xs font-semibold text-[#404040] block truncate">
               {getManejoLabel(propriedade.tipoManejo)}
@@ -97,7 +102,7 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
           </div>
           <div className="bg-[#f8fcfa] p-2.5 rounded-lg border border-gray-100 group-hover:border-[#ffcf78]/30 transition-colors">
             <span className="text-[10px] text-gray-400 uppercase font-bold block mb-1">
-              Atualização
+              {t('update')}
             </span>
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3 h-3 text-[#ce7d0a]/70" />
@@ -115,7 +120,7 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
             <span className="text-xs text-gray-600 leading-snug line-clamp-2">
               {propriedade.endereco && propriedade.endereco.cidade
                 ? `${propriedade.endereco.bairro || ''}, ${propriedade.endereco.cidade} - ${propriedade.endereco.estado || ''}`
-                : 'Endereço não cadastrado'}
+                : t('address')}
             </span>
           </div>
           <div className="flex items-center gap-2.5">
@@ -123,7 +128,7 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
               <User className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#ce7d0a] transition-colors" />
             </div>
             <span className="text-xs text-gray-600 font-medium truncate">
-              {propriedade.dono?.nome || 'Sem proprietário'}
+              {propriedade.dono?.nome || t('noOwner')}
             </span>
           </div>
         </div>
@@ -135,7 +140,7 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
             onEditar && onEditar(e, propriedade);
           }}
           className="p-2 bg-white text-[#ce7d0a] border border-[#ce7d0a]/20 rounded-lg shadow-sm hover:bg-[#FFCF78] hover:text-[#404040] hover:border-[#FFCF78] transition-colors"
-          title="Editar"
+          title={t('edit')}
         >
           <Pencil size={14} />
         </button>
@@ -146,7 +151,7 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
             onDeletar && onDeletar(propriedade);
           }}
           className="p-2 bg-white text-gray-400 border border-gray-200 rounded-lg shadow-sm hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors"
-          title="Excluir"
+          title={t('delete')}
         >
           <Trash2 size={14} />
         </button>

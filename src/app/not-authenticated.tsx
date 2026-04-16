@@ -1,13 +1,13 @@
 // ==========================================
-// Página de Não Encontrado (404)
+// Página de Não Autenticado (401)
 // ==========================================
 
-export default function NotFoundPage() {
+export default function NotAuthenticatedPage() {
   return (
     <div style={{
       minHeight: '100vh',
       width: '100vw',
-      background: '#fff',
+      background: '#fffbeb',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -16,20 +16,24 @@ export default function NotFoundPage() {
       fontFamily: 'sans-serif',
       textAlign: 'center',
     }}>
-      <h1 style={{ fontSize: 48, marginBottom: 16 }}>404</h1>
+      <h1 style={{ fontSize: 48, marginBottom: 16 }}>401</h1>
       <p style={{ fontSize: 20, color: '#404040', marginBottom: 32 }}>
-        Page not found / Página não encontrada
+        Not authenticated / Não autenticado
       </p>
       <a
-        href="/"
+        href="/auth/login"
         style={{
           fontSize: 14,
-          color: '#ce7d0a',
-          textDecoration: 'underline',
+          color: '#fff',
+          background: '#ce7d0a',
+          padding: '10px 24px',
+          borderRadius: 8,
+          textDecoration: 'none',
           cursor: 'pointer',
+          fontWeight: 'bold',
         }}
       >
-        ← Home
+        Login
       </a>
     </div>
   );

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useParams } from 'next/navigation';
+import { Link, usePathname } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import {
   Home,
   Building2,
@@ -17,74 +17,74 @@ import {
 // --- TIPAGENS ---
 interface MenuItem {
   icon: LucideIcon;
-  label: string;
+  labelKey: string;
   href: string;
 }
 
 interface MenuSection {
-  section: string;
+  sectionKey: string;
   items: MenuItem[];
 }
 
 export default function Sidebar() {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const pathname = usePathname();
-
-  const { locale } = useParams();
+  const pathname = usePathname(); // Já retorna sem o prefixo de locale
+  const t = useTranslations('Sidebar');
 
   // --- ESTRUTURA DE MENU (Rotas de Proprietário) ---
+  // Nota: NÃO concatenamos /${locale} — o Link do next-intl já faz isso
   const menuItems: MenuSection[] = [
     {
-      section: 'main',
+      sectionKey: 'sections.main',
       items: [
-        { icon: Home, label: 'Dashboard', href: `/${locale}/proprietario` },
+        { icon: Home, labelKey: 'dashboard', href: '/proprietario' },
       ],
     },
     {
-      section: 'propriedades',
+      sectionKey: 'sections.propriedades',
       items: [
         {
           icon: Building2,
-          label: 'Propriedades',
-          href: `/${locale}/proprietario/propriedades`,
+          labelKey: 'propriedades',
+          href: '/proprietario/propriedades',
         },
       ],
     },
     {
-      section: 'rebanho',
+      sectionKey: 'sections.rebanho',
       items: [
-        { icon: PawPrint, label: 'Rebanho', href: `/${locale}/proprietario/rebanho` },
+        { icon: PawPrint, labelKey: 'rebanho', href: '/proprietario/rebanho' },
       ],
     },
     {
-      section: 'lactacao',
+      sectionKey: 'sections.lactacao',
       items: [
-        { icon: Milk, label: 'Lactação', href: `/${locale}/proprietario/lactacao` },
+        { icon: Milk, labelKey: 'lactacao', href: '/proprietario/lactacao' },
       ],
     },
     {
-      section: 'controle',
+      sectionKey: 'sections.controle',
       items: [
         {
           icon: CalendarCheck2,
-          label: 'Controle Reprodução',
-          href: `/${locale}/proprietario/controle-reproducao`,
+          labelKey: 'controleReproducao',
+          href: '/proprietario/controle-reproducao',
         },
         {
           icon: PawPrint,
-          label: 'Simulação',
-          href: `/${locale}/proprietario/simulacao`,
+          labelKey: 'simulacao',
+          href: '/proprietario/simulacao',
         },
       ],
     },
     {
-      section: 'industria',
+      sectionKey: 'sections.industria',
       items: [
-        { icon: Milk, label: 'Coletas', href: `/${locale}/proprietario/coleta` },
+        { icon: Milk, labelKey: 'coletas', href: '/proprietario/coleta' },
         {
           icon: Factory,
-          label: 'Indústria',
-          href: `/${locale}/proprietario/industria`,
+          labelKey: 'industria',
+          href: '/proprietario/industria',
         },
       ],
     },
@@ -111,7 +111,7 @@ export default function Sidebar() {
             )}
             {isExpanded && (
               <div className="px-4 py-1 text-[10px] uppercase tracking-wider font-semibold text-[#ce7d0a]/70">
-                {group.section}
+                {t(group.sectionKey)}
               </div>
             )}
             <ul className="flex flex-col gap-1 px-2">
@@ -151,7 +151,7 @@ export default function Sidebar() {
                           }
                         `}
                       >
-                        {item.label}
+                        {t(item.labelKey)}
                       </span>
                       {isActive && isExpanded && (
                         <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#ce7d0a]" />
@@ -181,7 +181,7 @@ export default function Sidebar() {
                 }
               `}
           >
-            Layout Options
+            {t('layoutOptions')}
           </span>
         </button>
       </div>

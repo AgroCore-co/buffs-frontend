@@ -14,7 +14,13 @@ import {
 } from 'recharts';
 import { BarChart3 } from 'lucide-react';
 
-export default function ProducaoLeiteChart({ data, ano, onAnoChange }) {
+interface ProducaoLeiteChartProps {
+  data: any[];
+  ano?: number;
+  onAnoChange?: (ano: number) => void;
+}
+
+export default function ProducaoLeiteChart({ data, ano, onAnoChange }: ProducaoLeiteChartProps) {
   // Gerar lista de anos (últimos 5 anos)
   const anoAtual = new Date().getFullYear();
   const anos = Array.from({ length: 5 }, (_, i) => anoAtual - i);

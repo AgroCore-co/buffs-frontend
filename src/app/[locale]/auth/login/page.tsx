@@ -3,14 +3,15 @@
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQueryClient } from '@tanstack/react-query';
 
+// Usar Link e useRouter do next-intl (já injetam locale automaticamente)
+import { Link, useRouter } from '@/i18n/routing';
 import Logo from '@/components/ui/Logo';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import { useAuth } from '@/hooks/useAuth';
 import { usuariosService } from '@/services/usuarios.service';
 import { USUARIOS_QUERY_KEYS } from '@/hooks/useUsuarios';
@@ -29,8 +30,8 @@ const loginSchema = z.object({
 type LoginFormInputs = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const { locale } = useParams();
   const t = useTranslations('Auth.Login');
+  const tGeneral = useTranslations('General');
   const router = useRouter();
   const queryClient = useQueryClient();
   const { login, isLoggingIn } = useAuth();
@@ -62,21 +63,22 @@ export default function Login() {
       });
 
       // 4. Redirecionamento baseado no cargo
+      // Nota: useRouter do next-intl já injeta o locale, então NÃO precisamos de /${locale}
       switch (userProfile.cargo) {
         case 'PROPRIETARIO':
-          router.push(`/${locale}/(buffs)/proprietario`);
+          router.push('/proprietario');
           break;
         case 'GERENTE':
-          router.push(`/${locale}/(buffs)/gerente`);
+          router.push('/gerente');
           break;
         case 'FUNCIONARIO':
-          router.push(`/${locale}/(buffs)/funcionario`);
+          router.push('/funcionario');
           break;
         case 'VETERINARIO':
-          router.push(`/${locale}/(buffs)/veterinario`);
+          router.push('/veterinario');
           break;
         default:
-          router.push(`/${locale}/auth/login`);
+          router.push('/auth/login');
       }
 
     } catch (error: any) {
@@ -85,7 +87,7 @@ export default function Login() {
       const backendMessage = 
         error.response?.data?.message || 
         error.response?.data?.error || 
-        'Falha ao realizar login. Verifique suas credenciais.';
+        t('loginError');
         
       setError('root', {
         type: 'manual',
@@ -101,6 +103,11 @@ export default function Login() {
     <div className="flex min-h-screen w-full bg-white font-sans text-[#404040]">
       {/* SEÇÃO DO FORMULÁRIO (ESQUERDA) */}
       <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col justify-center items-center px-8 sm:px-12 relative z-10 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.05)]">
+        {/* Seletor de idioma no topo */}
+        <div className="absolute top-5 right-5">
+          <LanguageSwitcher variant="pill" />
+        </div>
+
         <div className="w-full max-w-[300px] flex flex-col items-center">
           <div className="mb-6 flex items-center justify-center">
             <Logo style={{ width: 90, height: 32 }} />
@@ -190,7 +197,7 @@ export default function Login() {
                 type="button"
                 disabled={isProcessing}
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-label={showPassword ? tGeneral('hidePassword') : tGeneral('showPassword')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#838181] hover:text-[#404040] focus:outline-none z-20"
               >
                 {showPassword ? (
@@ -242,7 +249,7 @@ export default function Login() {
               {isProcessing ? (
                 <span className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-[#43310b]/30 border-t-[#43310b] rounded-full animate-spin" />
-                  {isRedirecting ? t('button') : t('button')}
+                  {isRedirecting ? t('redirecting') : t('loggingIn')}
                 </span>
               ) : (
                 t('button')

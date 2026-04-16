@@ -6,9 +6,149 @@
       "email": "Email",
       "password": "Senha",
       "button": "Log in",
+      "loggingIn": "Entrando...",
+      "redirecting": "Redirecionando...",
       "forgotPassword": "Esqueci minha senha",
       "noAccount": "Não tem uma conta?",
-      "register": "Cadastre-se"
+      "register": "Cadastre-se",
+      "loginError": "Falha ao realizar login. Verifique suas credenciais."
+    }
+  },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "propriedades": "Propriedades",
+    "rebanho": "Rebanho",
+    "lactacao": "Lactação",
+    "controleReproducao": "Controle Reprodução",
+    "simulacao": "Simulação",
+    "coletas": "Coletas",
+    "industria": "Indústria",
+    "layoutOptions": "Opções de Layout",
+    "sections": {
+      "main": "Principal",
+      "propriedades": "Propriedades",
+      "rebanho": "Rebanho",
+      "lactacao": "Lactação",
+      "controle": "Controle",
+      "industria": "Indústria"
+    }
+  },
+  "Header": {
+    "support": "Suporte e Ajuda",
+    "helpCenter": "Central de Ajuda",
+    "helpCenterDesc": "Como podemos ajudar?",
+    "documentation": "Documentação",
+    "documentationDesc": "Guia do sistema",
+    "talkSupport": "Falar com Suporte",
+    "talkSupportDesc": "Chat em tempo real",
+    "notifications": "Notificações",
+    "noNotifications": "Nenhuma notificação",
+    "noNotificationsDesc": "Você será notificado sobre eventos importantes",
+    "fullscreen": "Modo tela cheia",
+    "exitFullscreen": "Sair do modo tela cheia",
+    "user": "Usuário",
+    "admin": "Admin",
+    "logout": "Sair",
+    "propertySelector": {
+      "select": "Selecionar propriedade",
+      "noProperties": "Nenhuma propriedade encontrada",
+      "loading": "Carregando...",
+      "management": "Manejo"
+    }
+  },
+  "Dashboard": {
+    "greeting": "Olá, {name}!",
+    "welcome": "Bem-vindo ao dashboard da sua fazenda de búfalos. Aqui está o resumo de hoje.",
+    "totalBuffalos": "Total de Búfalos",
+    "totalBuffalosDesc": "Rebanho ativo registrado",
+    "males": "Machos",
+    "malesDesc": "{percent}% do rebanho",
+    "females": "Fêmeas",
+    "femalesDesc": "{percent}% do rebanho",
+    "team": "Equipe",
+    "teamDesc": "Funcionários com acesso",
+    "milkProduction": "Produção de Leite Mensal",
+    "topBuffalos": "Top 5 Búfalas Produtoras",
+    "noProduction": "Nenhuma produção registrada",
+    "noProductionDesc": "Registre ordenhas para ver a produção mensal",
+    "noLactation": "Nenhuma búfala em lactação",
+    "noLactationDesc": "Registre ordenhas para ver as melhores produtoras",
+    "mainIndustries": "Principais Indústrias",
+    "lastDeliveries": "Últimas Entregas",
+    "approved": "Aprovado",
+    "rejected": "Reprovado",
+    "production": "Produção"
+  },
+  "Proprietario": {
+    "propriedades": {
+      "title": "Gestão de Propriedades",
+      "subtitle": "Controle e monitore todas as unidades do seu negócio.",
+      "total": "Total",
+      "totalDesc": "Propriedades",
+      "active": "Ativas",
+      "activeDesc": "Em operação",
+      "livestock": "Pecuária",
+      "livestockDesc": "Foco bubalino",
+      "certified": "Certificadas",
+      "certifiedDesc": "Padrão ABCB",
+      "registered": "Propriedades Cadastradas",
+      "unitsFound": "{count} unidades encontradas",
+      "management": "Manejo",
+      "update": "Atualização",
+      "address": "Endereço não cadastrado",
+      "noOwner": "Sem proprietário",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "managementTypes": {
+        "P": "Pecuária",
+        "E": "Extensivo",
+        "I": "Intensivo"
+      },
+      "notInformed": "Não informado",
+      "loading": "Carregando propriedades...",
+      "errorLoading": "Erro ao carregar propriedades",
+      "errorLoadingDesc": "Tente novamente mais tarde.",
+      "noProperties": "Nenhuma propriedade cadastrada",
+      "noPropertiesDesc": "Cadastre sua primeira propriedade para começar."
+    },
+    "detalhes": {
+      "back": "Voltar",
+      "report": "Relatório",
+      "edit": "Editar"
+    }
+  },
+  "Gerente": {
+    "testPage": "Página de Teste",
+    "testDescription": "Esta é uma página de teste para o módulo de Gerente.",
+    "environment": "Ambiente",
+    "role": "Gerente",
+    "editHint": "(Você pode remover ou editar este arquivo livremente.)"
+  },
+  "Funcionario": {
+    "testPage": "Página de Teste",
+    "testDescription": "Esta é uma página de teste para o módulo de Funcionário.",
+    "environment": "Ambiente",
+    "role": "Funcionário",
+    "editHint": "(Você pode remover ou editar este arquivo livremente.)"
+  },
+  "Veterinario": {
+    "testPage": "Página de Teste",
+    "testDescription": "Esta é uma página de teste para o módulo de Veterinário.",
+    "environment": "Ambiente",
+    "role": "Veterinário",
+    "editHint": "(Você pode remover ou editar este arquivo livremente.)"
+  },
+  "BuffsLayout": {
+    "contentArea": "Área de Conteúdo",
+    "contentAreaDesc": "Selecione um item no menu lateral para começar ou adicione componentes aqui."
+  },
+  "General": {
+    "loadingSession": "Carregando sessão...",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
+    "status": {
+      "active": "Ativa",
+      "inactive": "Inativa"
     }
   }
 }

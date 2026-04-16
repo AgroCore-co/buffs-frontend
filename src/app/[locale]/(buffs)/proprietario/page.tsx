@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from 'next-intl';
 import ProducaoLeiteChart from "@/components/proprietario/dashboard/ProducaoLeiteChart";
 import TopBufalasChart from "@/components/proprietario/dashboard/TopBufalasChart";
 import Container from "@/components/ui/Container";
@@ -44,39 +47,41 @@ const mockColetas = [
 ];
 
 export default function DashboardPageProprietario() {
+  const t = useTranslations('Dashboard');
+
   return (
     <div className="flex flex-col gap-6 pb-10">
       <Container>
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#404040]">Olá, Vinicius!</h1>
+          <h1 className="text-2xl font-bold text-[#404040]">{t('greeting', { name: 'Vinicius' })}</h1>
           <p className="text-sm text-[#404040]/60 mt-1">
-            Bem-vindo ao dashboard da sua fazenda de búfalos. Aqui está o resumo de hoje.
+            {t('welcome')}
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Total de Búfalos"
+            title={t('totalBuffalos')}
             value="117"
-            subtitle="Rebanho ativo registrado"
+            subtitle={t('totalBuffalosDesc')}
             icon={<Layers className="w-4 h-4" />}
           />
           <MetricCard
-            title="Machos"
+            title={t('males')}
             value="37"
-            subtitle="27% do rebanho"
+            subtitle={t('malesDesc', { percent: '27' })}
             icon={<Target className="w-4 h-4" />}
           />
           <MetricCard
-            title="Fêmeas"
+            title={t('females')}
             value="80"
-            subtitle="59% do rebanho"
+            subtitle={t('femalesDesc', { percent: '59' })}
             icon={<Heart className="w-4 h-4" />}
           />
           <MetricCard
-            title="Equipe"
+            title={t('team')}
             value="1"
-            subtitle="Funcionários com acesso"
+            subtitle={t('teamDesc')}
             icon={<Users className="w-4 h-4" />}
           />
         </div>
@@ -95,7 +100,7 @@ export default function DashboardPageProprietario() {
         <Container>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-              Principais Indústrias
+              {t('mainIndustries')}
             </h2>
             <Truck className="text-[#ce7d0a] w-5 h-5" />
           </div>
@@ -120,7 +125,7 @@ export default function DashboardPageProprietario() {
         <Container>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-              Últimas Entregas
+              {t('lastDeliveries')}
             </h2>
             <CheckCircle className="text-[#ce7d0a] w-5 h-5" />
           </div>
@@ -162,7 +167,7 @@ export default function DashboardPageProprietario() {
                           : 'bg-red-100 text-red-700'
                       }`}
                     >
-                      {isApproved ? 'Aprovado' : 'Reprovado'}
+                      {isApproved ? t('approved') : t('rejected')}
                     </span>
                   </div>
                 </div>

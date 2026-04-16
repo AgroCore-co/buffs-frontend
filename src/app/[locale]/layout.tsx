@@ -18,13 +18,15 @@ export const metadata: Metadata = {
   description: "Gerenciamento inteligente",
 };
 
-export default async function RootLayout({
-  children,
-  params: { locale }
-}: Readonly<{
-  children: React.ReactNode;
-  params: { locale: string };
-}>) {
+export default async function RootLayout(
+  props: Readonly<{
+    children: React.ReactNode;
+    params: Promise<{ locale: string }>;
+  }>
+) {
+  // No Next.js 15+, params é async e precisa ser await
+  const { locale } = await props.params;
+  const { children } = props;
   
   // Busca os dicionários de tradução (JSONs) no servidor antes de renderizar a página
   const messages = await getMessages();

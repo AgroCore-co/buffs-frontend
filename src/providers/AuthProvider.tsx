@@ -1,21 +1,26 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 const NotAuthorized = dynamic(() => import('@/app/not-authorized'), { ssr: false });
-import { useRouter, usePathname, useParams } from 'next/navigation';
+const NotAuthenticated = dynamic(() => import('@/app/not-authenticated'), { ssr: false });
+import { useRouter, usePathname } from '@/i18n/routing';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
 import { usuariosService } from '@/services/usuarios.service';
 import { USUARIOS_QUERY_KEYS } from '@/hooks/useUsuarios';
+import { useTranslations } from 'next-intl';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, profile, setProfile, clearAuth } = useAuthStore();
   const router = useRouter();
-  const pathname = usePathname();
-  const { locale } = useParams();
+  const pathname = usePathname(); // Retorna o path SEM o locale (ex: /proprietario)
+  const t = useTranslations('General');
+  
   // Estado para controlar exibição da tela de não autorizado
   const [showNotAuthorized, setShowNotAuthorized] = useState(false);
+  // Estado para controlar exibição da tela de não autenticado
+  const [showNotAuthenticated, setShowNotAuthenticated] = useState(false);
   
   // Controle de hidratação do Next.js para evitar erros de renderização no servidor (SSR)
   const [isMounted, setIsMounted] = useState(false);
@@ -56,36 +61,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isMounted) return;
 
-    const isAuthRoute = pathname.match(/^\/(\w{2})(\/auth)/) || pathname.startsWith('/auth');
+    // O usePathname do next-intl retorna o path SEM o prefixo de locale
+    // Ex: /auth/login, /proprietario, /gerente etc.
+    const isAuthRoute = pathname.startsWith('/auth');
     
-    // Lista de rotas que podem ser acessadas sem login (ex: landing page)
+    // Lista de rotas que podem ser acessadas sem login
     const isPublicRoute = pathname === '/';
 
     if (!isAuthenticated && !isAuthRoute && !isPublicRoute) {
-      // TENTATIVA DE INVASÃO: Não tá logado e tentou acessar área restrita
-      router.replace(`/${locale}/auth/login`);
+      // Não está logado e tentou acessar área restrita: mostra tela de não autenticado
+      setShowNotAuthenticated(true);
     } 
     else if (isAuthenticated && profile) {
       // Protege para que o usuário só acesse a página do seu cargo
       const cargoToPath: Record<string, string> = {
-        PROPRIETARIO: `/${locale}/proprietario`,
-        GERENTE: `/${locale}/gerente`,
-        FUNCIONARIO: `/${locale}/funcionario`,
-        VETERINARIO: `/${locale}/veterinario`,
+        PROPRIETARIO: '/proprietario',
+        GERENTE: '/gerente',
+        FUNCIONARIO: '/funcionario',
+        VETERINARIO: '/veterinario',
       };
 
-      // Extrai o segmento principal da rota atual (ex: /pt/proprietario)
-      const pathLower = pathname.toLowerCase();
       const expectedPath = cargoToPath[profile.cargo];
 
       // Se está em rota de login/cadastro, sempre redireciona para a rota do cargo
       if (isAuthRoute) {
         router.replace(expectedPath);
-      } else if (expectedPath && !pathLower.startsWith(expectedPath.toLowerCase())) {
+      } else if (expectedPath && !pathname.toLowerCase().startsWith(expectedPath.toLowerCase())) {
         // Se está tentando acessar rota de outro cargo, exibe tela de não autorizado
         setShowNotAuthorized(true);
+        setShowNotAuthenticated(false);
       } else {
         setShowNotAuthorized(false);
+        setShowNotAuthenticated(false);
       }
     }
   }, [isAuthenticated, profile, pathname, isMounted, router]);
@@ -104,10 +111,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen w-full items-center justify-center bg-white">
          <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-4 border-[#ffcf78] border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-sm text-[#838181]">Carregando sessão...</p>
+            <p className="text-sm text-[#838181]">{t('loadingSession')}</p>
          </div>
       </div>
     );
+  }
+  if (showNotAuthenticated) {
+    return <NotAuthenticated />;
   }
   if (showNotAuthorized) {
     return <NotAuthorized />;

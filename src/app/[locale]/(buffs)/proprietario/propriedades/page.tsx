@@ -1,129 +1,225 @@
 "use client";
 
-import { useRouter } from "@/i18n/routing"; // Import correto para next-intl
+import { useState } from "react";
+import { useRouter } from "@/i18n/routing";
+import { useTranslations } from 'next-intl';
+import { usePropriedades } from '@/hooks/usePropriedades';
+import { useEnderecos } from '@/hooks/useEnderecos';
+import { useUsuarios } from '@/hooks/useUsuarios';
 import Container from "@/components/ui/Container";
 import MetricCard from "@/components/ui/MetricCard";
 import PropriedadeCard from "@/components/proprietario/propriedades/PropriedadeCard";
-import { Map, CheckCircle, Tractor, Award, ArrowLeft } from "lucide-react";
-import Link from "next/link";
 
-// Mock de dados
-const mockPropriedades = [
-  {
-    idPropriedade: "1",
-    nome: "Fazenda Vale Búfalos",
-    cnpj: "12.345.678/0001-90",
-    status: "Ativa",
-    pAbcb: true,
-    tipoManejo: "P",
-    updatedAt: "2026-04-14T10:30:00Z",
-    endereco: { cidade: "Cajati", estado: "SP", bairro: "Zona Rural" },
-    dono: { nome: "Vinicius" }
-  },
-  {
-    idPropriedade: "2",
-    nome: "Sítio Águas Claras",
-    cnpj: "98.765.432/0001-10",
-    status: "Ativa",
-    pAbcb: false,
-    tipoManejo: "E",
-    updatedAt: "2026-04-12T14:15:00Z",
-    endereco: { cidade: "Registro", estado: "SP", bairro: "Boa Vista" },
-    dono: { nome: "Vinicius" }
-  },
-  {
-    idPropriedade: "3",
-    nome: "Estância Bubalina",
-    cnpj: "45.678.901/0001-23",
-    status: "Ativa",
-    pAbcb: false,
-    tipoManejo: "P",
-    updatedAt: "2026-04-10T09:00:00Z",
-    endereco: { cidade: "Jacupiranga", estado: "SP", bairro: "Rio Abaixo" },
-    dono: { nome: "Vinicius" }
-  }
-];
+import CreatePropriedadeModal from "@/components/proprietario/propriedades/CreatePropriedadeModal";
+import DeletePropriedadeModal from "@/components/proprietario/propriedades/DeletePropriedadeModal";
+import EditPropriedadeModal from "@/components/proprietario/propriedades/EditPropriedadeModal";
+
+import { Map, CheckCircle, Tractor, Award, Building2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 export default function PropriedadesPageProprietario() {
   const router = useRouter();
+  const t = useTranslations('Proprietario.propriedades');
+
+  // Estados dos Modais
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [propriedadeSelecionada, setPropriedadeSelecionada] = useState(null);
+
+  // Busca as propriedades do servidor via React Query (cache de 2 minutos)
+  const {
+    propriedades,
+    totalPropriedades,
+    isLoadingPropriedades,
+    isErrorPropriedades,
+  } = usePropriedades();
+
+
+  // Busca o perfil do usuário logado (proprietário) para exibir o nome nos cards
+  const { me } = useUsuarios();
+
+  // Hook de endereços para buscar dados completos pelo idEndereco
+  const { getById: getEnderecoById } = useEnderecos({ enabled: false });
+
+  // Componente filho para buscar o endereço sem violar as regras de hooks
+  function PropriedadeCardWithEndereco({ propriedade, me, onEditar, onDeletar }) {
+    const { data: endereco, isLoading: isLoadingEndereco } = getEnderecoById(propriedade.idEndereco);
+    return (
+      <div
+        key={propriedade.idPropriedade}
+        onClick={() => router.push(`/proprietario/propriedade/${propriedade.idPropriedade}`)}
+        className="cursor-pointer transition-transform active:scale-[0.98]"
+      >
+        <PropriedadeCard
+          propriedade={{
+            ...propriedade,
+            endereco: endereco || null,
+            dono: { nome: me?.nome },
+          }}
+          isLoadingEndereco={isLoadingEndereco}
+          onEditar={onEditar}
+          onDeletar={onDeletar}
+        />
+      </div>
+    );
+  }
+
+  // Métricas derivadas dos dados reais
+  const totalAtivas = propriedades.filter((p) => !p.deletedAt).length;
+  const totalPecuaria = propriedades.filter((p) => p.tipoManejo === 'P').length;
+  const totalAbcb = propriedades.filter((p) => p.pAbcb).length;
 
   return (
     <div className="flex flex-col gap-6 pb-10">
+      {/* PRIMEIRO CONTAINER - Apenas Título e Métricas */}
       <Container className="p-5">
         <div className="flex flex-col gap-4">
-          
-
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black text-[#111827] tracking-tight uppercase leading-none">
-                Gestão de Propriedades
-              </h1>
-              <p className="text-xs font-medium text-gray-400 mt-2 uppercase">
-                Controle e monitore todas as unidades do seu negócio.
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-[#404040]">
+              {t('title')}
+            </h1>
+            <p className="text-sm text-[#404040]/60 mt-1">
+              {t('subtitle')}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
             <MetricCard
-              title="Total"
-              value="3"
-              subtitle="Propriedades"
+              title={t('total')}
+              value={isLoadingPropriedades ? '—' : String(totalPropriedades)}
+              subtitle={t('totalDesc')}
               icon={<Map className="w-4 h-4" />}
             />
             <MetricCard
-              title="Ativas"
-              value="3"
-              subtitle="Em operação"
+              title={t('active')}
+              value={isLoadingPropriedades ? '—' : String(totalAtivas)}
+              subtitle={t('activeDesc')}
               icon={<CheckCircle className="w-4 h-4" />}
             />
             <MetricCard
-              title="Pecuária"
-              value="2"
-              subtitle="Foco bubalino"
+              title={t('livestock')}
+              value={isLoadingPropriedades ? '—' : String(totalPecuaria)}
+              subtitle={t('livestockDesc')}
               icon={<Tractor className="w-4 h-4" />}
             />
             <MetricCard
-              title="Certificadas"
-              value="1"
-              subtitle="Padrão ABCB"
+              title={t('certified')}
+              value={isLoadingPropriedades ? '—' : String(totalAbcb)}
+              subtitle={t('certifiedDesc')}
               icon={<Award className="w-4 h-4" />}
             />
           </div>
         </div>
       </Container>
 
+      {/* SEGUNDO CONTAINER - Botão de criar e Lista de Propriedades */}
       <Container className="p-5">
-        <div className="mb-6">
-          <h2 className="text-lg font-extrabold text-[#111827] tracking-tight uppercase">
-            Propriedades Cadastradas
-          </h2>
-          <p className="text-[11px] font-bold text-gray-400 uppercase mt-1">
-            {mockPropriedades.length} unidades encontradas
-          </p>
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-[#404040]">
+              {t('registered')}
+            </h2>
+            <p className="text-sm text-[#404040]/60 mt-1">
+              {isLoadingPropriedades
+                ? '...'
+                : t('unitsFound', { count: totalPropriedades })
+              }
+            </p>
+          </div>
+
+          {/* Botão corrigido - A div em volta bloqueia o esticamento infinito */}
+          <div className="shrink-0">
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              icon={Plus}
+              size="md"
+              className="w-full sm:w-fit"
+            >
+              Nova Propriedade
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockPropriedades.map((propriedade) => (
-            <div
-              key={propriedade.idPropriedade}
-              onClick={() => router.push(`/proprietario/propriedade/${propriedade.idPropriedade}`)}
-              className="cursor-pointer transition-transform active:scale-[0.98]"
-            >
-              <PropriedadeCard
+        {/* Estado de carregamento */}
+        {isLoadingPropriedades && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-8 h-8 border-4 border-[#ffcf78] border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-sm text-[#404040]/60">{t('loading')}</p>
+          </div>
+        )}
+
+        {/* Estado de erro */}
+        {isErrorPropriedades && !isLoadingPropriedades && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+              <Building2 size={24} className="text-red-400" />
+            </div>
+            <p className="text-sm font-medium text-[#404040]">{t('errorLoading')}</p>
+            <p className="text-xs text-[#404040]/60 mt-1">{t('errorLoadingDesc')}</p>
+          </div>
+        )}
+
+        {/* Estado vazio */}
+        {!isLoadingPropriedades && !isErrorPropriedades && propriedades.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-14 h-14 rounded-full bg-[#ffcf78]/20 flex items-center justify-center mb-4">
+              <Building2 size={24} className="text-[#ce7d0a]" />
+            </div>
+            <p className="text-sm font-medium text-[#404040]">{t('noProperties')}</p>
+            <p className="text-xs text-[#404040]/60 mt-1">{t('noPropertiesDesc')}</p>
+          </div>
+        )}
+
+        {/* Lista de propriedades */}
+        {!isLoadingPropriedades && !isErrorPropriedades && propriedades.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {propriedades.map((propriedade) => (
+              <PropriedadeCardWithEndereco
+                key={propriedade.idPropriedade}
                 propriedade={propriedade}
+                me={me}
                 onEditar={(e, prop) => {
-                  e.stopPropagation();
-                  console.log("Editar:", prop.nome);
+                  if (e && e.stopPropagation) e.stopPropagation();
+                  setPropriedadeSelecionada(prop || e);
+                  setIsEditModalOpen(true);
                 }}
-                onDeletar={(prop) => {
-                  console.log("Deletar:", prop.nome);
+                onDeletar={(e, prop) => {
+                  if (e && e.stopPropagation) e.stopPropagation();
+                  setPropriedadeSelecionada(prop || e); 
+                  setIsDeleteModalOpen(true);
                 }}
               />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Container>
+
+      {/* Renderização do Modal de Criação */}
+      {isCreateModalOpen && (
+        <CreatePropriedadeModal 
+          isOpen={isCreateModalOpen} 
+          onClose={() => setIsCreateModalOpen(false)} 
+        />
+      )}
+
+      {/* Renderização do Modal de Exclusão */}
+      {isDeleteModalOpen && (
+        <DeletePropriedadeModal 
+          isOpen={isDeleteModalOpen} 
+          onClose={() => setIsDeleteModalOpen(false)} 
+          propriedade={propriedadeSelecionada}
+        />
+      )}
+
+      {/* Renderização do Modal de Edição */}
+      {isEditModalOpen && (
+        <EditPropriedadeModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          propriedade={propriedadeSelecionada}
+        />
+      )}
     </div>
   );
 }
