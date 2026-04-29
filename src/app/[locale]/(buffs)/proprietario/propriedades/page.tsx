@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useTranslations } from 'next-intl';
 import { usePropriedades } from '@/hooks/usePropriedades';
-import { useEnderecos } from '@/hooks/useEnderecos';
+// Importe o hook singular aqui
+import { useEnderecos, useEndereco } from '@/hooks/useEnderecos'; 
 import { useUsuarios } from '@/hooks/useUsuarios';
 import Container from "@/components/ui/Container";
 import MetricCard from "@/components/ui/MetricCard";
@@ -17,8 +18,36 @@ import EditPropriedadeModal from "@/components/proprietario/propriedades/EditPro
 import { Map, CheckCircle, Tractor, Award, Building2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-export default function PropriedadesPageProprietario() {
+
+function PropriedadeCardWithEndereco({ propriedade, me, onEditar, onDeletar }) {
   const router = useRouter();
+  // Usa o hook específico passando o ID diretamente
+  const { data: endereco, isLoading: isLoadingEndereco } = useEndereco(propriedade.idEndereco);
+  
+  return (
+    <div
+      key={propriedade.idPropriedade}
+      onClick={() => router.push(`/proprietario/propriedade/${propriedade.idPropriedade}`)}
+      className="cursor-pointer transition-transform active:scale-[0.98]"
+    >
+      <PropriedadeCard
+        propriedade={{
+          ...propriedade,
+          endereco: endereco || null,
+          dono: { nome: me?.nome },
+        }}
+        isLoadingEndereco={isLoadingEndereco}
+        onEditar={onEditar}
+        onDeletar={onDeletar}
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// COMPONENTE PRINCIPAL
+// ============================================================================
+export default function PropriedadesPageProprietario() {
   const t = useTranslations('Proprietario.propriedades');
 
   // Estados dos Modais
@@ -27,7 +56,7 @@ export default function PropriedadesPageProprietario() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [propriedadeSelecionada, setPropriedadeSelecionada] = useState(null);
 
-  // Busca as propriedades do servidor via React Query (cache de 2 minutos)
+  // Busca as propriedades
   const {
     propriedades,
     totalPropriedades,
@@ -35,44 +64,19 @@ export default function PropriedadesPageProprietario() {
     isErrorPropriedades,
   } = usePropriedades();
 
-
-  // Busca o perfil do usuário logado (proprietário) para exibir o nome nos cards
+  // Busca o perfil do usuário logado
   const { me } = useUsuarios();
 
-  // Hook de endereços para buscar dados completos pelo idEndereco
-  const { getById: getEnderecoById } = useEnderecos({ enabled: false });
+  // REMOVIDO: const { getById: getEnderecoById } = useEnderecos({ enabled: false });
 
-  // Componente filho para buscar o endereço sem violar as regras de hooks
-  function PropriedadeCardWithEndereco({ propriedade, me, onEditar, onDeletar }) {
-    const { data: endereco, isLoading: isLoadingEndereco } = getEnderecoById(propriedade.idEndereco);
-    return (
-      <div
-        key={propriedade.idPropriedade}
-        onClick={() => router.push(`/proprietario/propriedade/${propriedade.idPropriedade}`)}
-        className="cursor-pointer transition-transform active:scale-[0.98]"
-      >
-        <PropriedadeCard
-          propriedade={{
-            ...propriedade,
-            endereco: endereco || null,
-            dono: { nome: me?.nome },
-          }}
-          isLoadingEndereco={isLoadingEndereco}
-          onEditar={onEditar}
-          onDeletar={onDeletar}
-        />
-      </div>
-    );
-  }
-
-  // Métricas derivadas dos dados reais
+  // Métricas derivadas
   const totalAtivas = propriedades.filter((p) => !p.deletedAt).length;
   const totalPecuaria = propriedades.filter((p) => p.tipoManejo === 'P').length;
   const totalAbcb = propriedades.filter((p) => p.pAbcb).length;
 
   return (
     <div className="flex flex-col gap-6 pb-10">
-      {/* PRIMEIRO CONTAINER - Apenas Título e Métricas */}
+      {/* Container das Métricas */}
       <Container className="p-5">
         <div className="flex flex-col gap-4">
           <div>
@@ -113,7 +117,7 @@ export default function PropriedadesPageProprietario() {
         </div>
       </Container>
 
-      {/* SEGUNDO CONTAINER - Botão de criar e Lista de Propriedades */}
+      {/* Container da Lista de Propriedades */}
       <Container className="p-5">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -128,7 +132,6 @@ export default function PropriedadesPageProprietario() {
             </p>
           </div>
 
-          {/* Botão corrigido - A div em volta bloqueia o esticamento infinito */}
           <div className="shrink-0">
             <Button
               onClick={() => setIsCreateModalOpen(true)}
@@ -141,7 +144,7 @@ export default function PropriedadesPageProprietario() {
           </div>
         </div>
 
-        {/* Estado de carregamento */}
+        {/* Loading State */}
         {isLoadingPropriedades && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-8 h-8 border-4 border-[#ffcf78] border-t-transparent rounded-full animate-spin mb-3" />
@@ -149,7 +152,7 @@ export default function PropriedadesPageProprietario() {
           </div>
         )}
 
-        {/* Estado de erro */}
+        {/* Error State */}
         {isErrorPropriedades && !isLoadingPropriedades && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
@@ -160,7 +163,7 @@ export default function PropriedadesPageProprietario() {
           </div>
         )}
 
-        {/* Estado vazio */}
+        {/* Empty State */}
         {!isLoadingPropriedades && !isErrorPropriedades && propriedades.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-14 h-14 rounded-full bg-[#ffcf78]/20 flex items-center justify-center mb-4">
@@ -171,7 +174,7 @@ export default function PropriedadesPageProprietario() {
           </div>
         )}
 
-        {/* Lista de propriedades */}
+        {/* Propriedades Grid */}
         {!isLoadingPropriedades && !isErrorPropriedades && propriedades.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {propriedades.map((propriedade) => (
@@ -195,7 +198,6 @@ export default function PropriedadesPageProprietario() {
         )}
       </Container>
 
-      {/* Renderização do Modal de Criação */}
       {isCreateModalOpen && (
         <CreatePropriedadeModal 
           isOpen={isCreateModalOpen} 
@@ -203,7 +205,6 @@ export default function PropriedadesPageProprietario() {
         />
       )}
 
-      {/* Renderização do Modal de Exclusão */}
       {isDeleteModalOpen && (
         <DeletePropriedadeModal 
           isOpen={isDeleteModalOpen} 
@@ -212,7 +213,6 @@ export default function PropriedadesPageProprietario() {
         />
       )}
 
-      {/* Renderização do Modal de Edição */}
       {isEditModalOpen && (
         <EditPropriedadeModal
           isOpen={isEditModalOpen}

@@ -10,8 +10,9 @@ export function TabNav({
   inactiveTabClassName = '',
 }) {
   return (
-    // Container com scroll horizontal invisível e linha de base sutil
-    <div className={`relative flex gap-8 overflow-x-auto border-b border-border [&::-webkit-scrollbar]:hidden ${className}`}>
+    <div 
+      className={`relative flex w-full gap-8 overflow-x-auto overflow-y-hidden border-b border-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
+    >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
         
@@ -20,7 +21,7 @@ export function TabNav({
             key={tab.key}
             type="button"
             onClick={() => onTabChange(tab.key)}
-            className={`group relative pb-4 pt-2 text-sm font-bold tracking-wide transition-colors duration-300 ease-in-out whitespace-nowrap ${tabClassName} ${
+            className={`group relative flex-shrink-0 pb-4 pt-2 text-sm font-bold tracking-wide transition-colors duration-300 ease-in-out whitespace-nowrap ${tabClassName} ${
               isActive
                 ? `text-[var(--color-primary-dark)] ${activeTabClassName}`
                 : `text-muted-foreground hover:text-foreground ${inactiveTabClassName}`
@@ -30,7 +31,7 @@ export function TabNav({
             
             {/* Linha indicadora animada */}
             <span
-              className={`absolute left-0 bottom-[-1px] h-[2px] w-full rounded-t-full transition-all duration-300 ease-in-out origin-center ${
+              className={`absolute left-0 bottom-[-1px] z-10 h-[2px] w-full rounded-t-full transition-all duration-300 ease-in-out origin-center ${
                 isActive
                   ? "bg-[var(--color-primary-dark)] scale-x-100 opacity-100"
                   : "bg-border scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-50"

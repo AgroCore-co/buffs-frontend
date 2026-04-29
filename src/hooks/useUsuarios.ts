@@ -14,47 +14,30 @@ export const USUARIOS_QUERY_KEYS = {
 };
 
 // ==========================================
-// Hook de Orquestração de Usuários
+// Hook para Listagem e Mutações
 // ==========================================
 
 export function useUsuarios() {
   const queryClient = useQueryClient();
 
-  // ==========================================
-  // QUERIES
-  // ==========================================
-
-  // Perfil do usuário logado
   const meQuery = useQuery({
     queryKey: USUARIOS_QUERY_KEYS.me,
     queryFn: usuariosService.getMe,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Lista geral de usuários
   const allQuery = useQuery({
     queryKey: USUARIOS_QUERY_KEYS.all,
     queryFn: usuariosService.getAll,
-    staleTime: 2 * 60 * 1000, // 2 minutos
+    staleTime: 2 * 60 * 1000,
   });
 
-  // Lista de funcionários de todas as propriedades
   const funcionariosQuery = useQuery({
     queryKey: USUARIOS_QUERY_KEYS.funcionarios,
     queryFn: usuariosService.getFuncionarios,
     staleTime: 2 * 60 * 1000,
   });
 
-  // Busca usuário por ID
-  const getById = (id: string) =>
-    useQuery({
-      queryKey: USUARIOS_QUERY_KEYS.byId(id),
-      queryFn: () => usuariosService.getById(id),
-      enabled: !!id,
-      staleTime: 2 * 60 * 1000,
-    });
-
-  // Lista funcionários de uma propriedade específica
   const getFuncionariosByPropriedade = (idPropriedade: string) =>
     useQuery({
       queryKey: USUARIOS_QUERY_KEYS.funcionariosByPropriedade(idPropriedade),
@@ -63,68 +46,49 @@ export function useUsuarios() {
       staleTime: 2 * 60 * 1000,
     });
 
-  // ==========================================
-  // MUTATIONS
-  // ==========================================
-
-  // Atualizar dados do usuário
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUsuarioDTO }) => usuariosService.update(id, data),
     onSuccess: (_, { id }) => {
-      // Invalida cache do usuário e lista geral para refletir a edição
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.byId(id) });
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.all });
     },
   });
 
-  // Atualizar cargo do funcionário
   const updateCargoMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateCargoDTO }) => usuariosService.updateCargo(id, data),
     onSuccess: (_, { id }) => {
-      // Invalida listas de funcionários e usuário específico
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.byId(id) });
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.funcionarios });
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.all });
     },
   });
 
-  // Excluir usuário
   const deleteMutation = useMutation({
     mutationFn: (id: string) => usuariosService.delete(id),
     onSuccess: () => {
-      // Invalida todas as listas para remover usuário excluído
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.funcionarios });
     },
   });
 
-  // Desvincular funcionário de uma propriedade
   const desvincularFuncionarioMutation = useMutation({
     mutationFn: ({ idUsuario, idPropriedade }: { idUsuario: string; idPropriedade: string }) =>
       usuariosService.desvincularFuncionarioPropriedade(idUsuario, idPropriedade),
     onSuccess: (_, { idPropriedade }) => {
-      // Invalida lista de funcionários da propriedade e geral
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.funcionariosByPropriedade(idPropriedade) });
       queryClient.invalidateQueries({ queryKey: USUARIOS_QUERY_KEYS.funcionarios });
     },
   });
 
-  // ==========================================
-  // Retorno do Hook (Facade)
-  // ==========================================
-
   return {
-    // Dados e status das queries
     me: meQuery.data,
     isLoadingMe: meQuery.isLoading,
     usuarios: allQuery.data,
     isLoadingUsuarios: allQuery.isLoading,
     funcionarios: funcionariosQuery.data,
     isLoadingFuncionarios: funcionariosQuery.isLoading,
-    getById,
     getFuncionariosByPropriedade,
 
-    // Ações de mutação
     updateUsuario: updateMutation.mutateAsync,
     isUpdatingUsuario: updateMutation.isPending,
     updateCargo: updateCargoMutation.mutateAsync,
@@ -134,4 +98,17 @@ export function useUsuarios() {
     desvincularFuncionario: desvincularFuncionarioMutation.mutateAsync,
     isDesvinculandoFuncionario: desvincularFuncionarioMutation.isPending,
   };
+}
+
+// ==========================================
+// Hook Exclusivo para Busca por ID
+// ==========================================
+
+export function useUsuario(id?: string) {
+  return useQuery({
+    queryKey: USUARIOS_QUERY_KEYS.byId(id!),
+    queryFn: () => usuariosService.getById(id!),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+  });
 }
