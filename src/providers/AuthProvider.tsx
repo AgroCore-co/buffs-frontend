@@ -10,12 +10,16 @@ import { useAuthStore } from '@/stores/auth.store';
 import { usuariosService } from '@/services/usuarios.service';
 import { USUARIOS_QUERY_KEYS } from '@/hooks/useUsuarios';
 import { useTranslations } from 'next-intl';
+import { useAuth } from '@/hooks/useAuth';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, profile, setProfile, clearAuth } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname(); // Retorna o path SEM o locale (ex: /proprietario)
   const t = useTranslations('General');
+
+  // Importa isLoggingOut para blindar o efeito de roteamento durante o logout
+  const { isLoggingOut } = useAuth();
   
   // Estado para controlar exibição da tela de não autorizado
   const [showNotAuthorized, setShowNotAuthorized] = useState(false);
@@ -38,7 +42,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: fetchedProfile, isLoading, isError } = useQuery({
     queryKey: USUARIOS_QUERY_KEYS.me,
     queryFn: usuariosService.getMe,
-    enabled: isAuthenticated && !profile, // Roda APENAS se estiver logado E sem perfil
+    // Roda APENAS se estiver logado, sem perfil, e NÃO durante o logout.
+    // Isso evita o 401: quando clearAuth() seta isAuthenticated=false durante
+    // o logout, o isLoggingOut=true impede que esta query seja re-agendada.
+    enabled: isAuthenticated && !profile && !isLoggingOut,
     retry: 0, // Se der erro (ex: token fraudado/expirado), não tenta de novo, falha logo
   });
 
@@ -48,11 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(fetchedProfile);
     }
     
-    // Se a busca falhar (API retornou 401, etc), limpamos a sessão para forçar o login
-    if (isError) {
+    // Se a busca falhar (API retornou 401, etc) E não estamos no meio de um logout,
+    // limpamos a sessão para forçar o login.
+    // Durante o logout, o erro 401 é esperado e já tratado no useAuth.ts.
+    if (isError && !isLoggingOut) {
       clearAuth();
     }
-  }, [fetchedProfile, isError, profile, setProfile, clearAuth]);
+  }, [fetchedProfile, isError, isLoggingOut, profile, setProfile, clearAuth]);
 
   // ==========================================
   // 2. REGRAS DE ROTEAMENTO E PROTEÇÃO
@@ -60,6 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     if (!isMounted) return;
+
+    // Durante o logout, o useAuth.ts já cuida do redirecionamento.
+    // Ignorar aqui evita que o AuthProvider mostre <NotAuthenticated />
+    // no breve instante entre clearAuth() e router.replace('/auth/login').
+    if (isLoggingOut) return;
 
     // O usePathname do next-intl retorna o path SEM o prefixo de locale
     // Ex: /auth/login, /proprietario, /gerente etc.
@@ -95,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setShowNotAuthenticated(false);
       }
     }
-  }, [isAuthenticated, profile, pathname, isMounted, router]);
+  }, [isAuthenticated, profile, pathname, isMounted, router, isLoggingOut]);
 
   // Previne erros de hidratação do Next.js
   if (!isMounted) return null;
@@ -116,6 +130,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+
+  // Durante o logout, não renderiza nada de especial — o redirect já está a caminho.
+  if (isLoggingOut) {
+    return <>{children}</>;
+  }
+
   if (showNotAuthenticated) {
     return <NotAuthenticated />;
   }

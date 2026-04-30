@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { usePropriedades } from '@/hooks/usePropriedades';
 import { usePropriedadeStore } from '@/stores/propriedade.store';
 import { useAuthStore } from '@/stores/auth.store';
+import { useAuth } from '@/hooks/useAuth';
 import { Propriedade } from '@/services/propriedades.service';
 import {
   HelpCircle,
@@ -29,6 +30,9 @@ export default function Header() {
   // --- STORES ---
   const profile = useAuthStore((s) => s.profile);
   const { activeId, activePropriedade, setActivePropriedade } = usePropriedadeStore();
+
+  // Auth hook para logout
+  const { logout, isLoggingOut } = useAuth();
 
   // --- PROPRIEDADES DO SERVIDOR (React Query) ---
   const { propriedades, isLoadingPropriedades } = usePropriedades();
@@ -334,10 +338,16 @@ export default function Header() {
             <div className="absolute right-0 top-full mt-3 w-48 bg-white border border-[#ce7d0a]/10 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50">
               <div className="p-1">
                 <button
-                  onClick={() => router.push('/auth/login')}
-                  className="flex items-center w-full px-3 py-2 text-sm text-[#404040] rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
+                  onClick={() => logout()}
+                  disabled={isLoggingOut}
+                  className={`flex items-center w-full px-3 py-2 text-sm rounded-lg transition-colors ${
+                    isLoggingOut
+                      ? 'opacity-60 cursor-not-allowed'
+                      : 'text-[#404040] hover:bg-red-50 hover:text-red-600'
+                  }`}
                 >
-                  <LogOut size={14} className="mr-2" /> {t('logout')}
+                  <LogOut size={14} className="mr-2" />
+                  {isLoggingOut ? t('loggingOut') ?? 'Saindo...' : t('logout')}
                 </button>
               </div>
             </div>

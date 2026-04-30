@@ -7,6 +7,7 @@ import {
   AuthSessionResponse 
 } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
+import { useRouter } from '@/i18n/routing';
 
 export const AUTH_QUERY_KEYS = {
   session: ['auth', 'session'] as const,
@@ -18,6 +19,7 @@ export const AUTH_QUERY_KEYS = {
  */
 export function useAuth() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   
   // Aceder ao estado e acções do Zustand
   const { session, profile, isAuthenticated, setSession, clearAuth } = useAuthStore();
@@ -43,13 +45,32 @@ export function useAuth() {
 
   // Mutação de Logout
   const logoutMutation = useMutation({
-    mutationFn: () => authService.signout(),
+    mutationFn: async () => {
+      // PASSO 1: Cancela TODAS as queries em voo ANTES de qualquer coisa.
+      await queryClient.cancelQueries();
+
+      // PASSO 2: Chama a API de logout (token ainda está presente).
+      try {
+        await authService.signout();
+      } catch {
+        // Ignora erros da API de signout (ex: token já expirado no servidor).
+      }
+
+      // PASSO 3: Agora sim, remove a sessão do localStorage.
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('@Buffs:session');
+        localStorage.removeItem('@Buffs:activePropriedade');
+      }
+    },
     onSettled: () => {
-      // Limpa tudo: Zustand, LocalStorage e Cache do React Query
-      authService.signout(); // Limpa local no service
+      // PASSO 4: Limpa o estado global do Zustand.
       clearAuth();
-      queryClient.setQueryData(AUTH_QUERY_KEYS.session, null);
-      queryClient.clear(); 
+
+      // PASSO 5: Limpa o cache do React Query completamente.
+      queryClient.clear();
+
+      // PASSO 6: Redireciona para o login.
+      router.replace('/auth/login');
     },
   });
 
@@ -83,7 +104,7 @@ export function useAuth() {
 
     // Métodos de Acção
     login: loginMutation.mutateAsync,
-    logout: logoutMutation.mutateAsync,
+    logout: logoutMutation.mutate, // mutate (não mutateAsync) para não propagar erro ao componente
     signupProprietario: signupProprietarioMutation.mutateAsync,
     signupFuncionario: signupFuncionarioMutation.mutateAsync,
 

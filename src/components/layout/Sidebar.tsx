@@ -165,26 +165,7 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer / Layout Options */}
-      <div className="border-t border-[#ce7d0a]/10 p-2 shrink-0 bg-[#f8fcfa]">
-        <button className="group flex h-10 w-full items-center rounded-md px-2 text-[#404040]/70 hover:bg-white hover:text-[#ce7d0a] hover:shadow-sm transition-all border border-transparent hover:border-[#ce7d0a]/10">
-          <div className="flex min-w-[24px] items-center justify-center">
-            <Columns size={18} />
-          </div>
-          <span
-            className={`
-                ml-3 whitespace-nowrap text-sm font-medium transition-all duration-300
-                ${
-                  isExpanded
-                    ? 'opacity-100 translate-x-0'
-                    : 'opacity-0 -translate-x-2 hidden'
-                }
-              `}
-          >
-            {t('layoutOptions')}
-          </span>
-        </button>
-      </div>
+      
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
