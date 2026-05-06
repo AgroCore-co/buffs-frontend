@@ -43,7 +43,7 @@ export default function MaturidadeChart({
       : null;
 
   return (
-    <Container className="p-5 flex flex-col w-full max-w-[360px] mr-auto min-h-[200px]">
+    <Container className="p-5 flex flex-col w-full h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
@@ -66,7 +66,7 @@ export default function MaturidadeChart({
       ) : emptyState ? (
         <EmptyState title={emptyState.title} description={emptyState.description} />
       ) : (
-        <DataGrid data={data} total={total} />
+        <DataList data={data} total={total} />
       )}
     </Container>
   );
@@ -74,13 +74,15 @@ export default function MaturidadeChart({
 
 function LoadingSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-2 flex-1">
+    <div className="flex flex-col justify-center gap-5 flex-1 py-2">
       {[...Array(4)].map((_, i) => (
-        <div
-          key={i}
-          className="rounded-xl bg-gray-100 animate-pulse"
-          style={{ animationDelay: `${i * 80}ms`, aspectRatio: "1 / 1" }}
-        />
+        <div key={i} className="flex flex-col gap-2 w-full">
+          <div className="flex items-center justify-between">
+            <div className="h-3.5 w-16 bg-gray-100 rounded animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+            <div className="h-3.5 w-10 bg-gray-100 rounded animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+          </div>
+          <div className="h-2 w-full bg-gray-100 rounded-full animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+        </div>
       ))}
     </div>
   );
@@ -88,7 +90,7 @@ function LoadingSkeleton() {
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
+    <div className="flex-1 flex flex-col items-center justify-center text-center py-4 min-h-[200px]">
       <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-3">
         <Layers className="text-amber-400 w-5 h-5" />
       </div>
@@ -98,43 +100,37 @@ function EmptyState({ title, description }: { title: string; description: string
   );
 }
 
-function DataGrid({ data, total }: { data: MaturidadeItem[]; total: number }) {
+function DataList({ data, total }: { data: MaturidadeItem[]; total: number }) {
   return (
-    <div className="grid grid-cols-2 gap-2 flex-1">
+    <div className="flex flex-col justify-center gap-4 flex-1 py-1">
       {data.map((item, index) => {
         const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
         const color = item.color || "#CE7D0A";
         const label = SHORT_LABELS[item.name] ?? item.name;
 
         return (
-          <div
-            key={`${item.name}-${index}`}
-            className="relative flex flex-col items-center justify-center p-3 rounded-xl border border-gray-100 bg-[#f8fcfa] hover:border-amber-200 hover:shadow-sm transition-all duration-200 overflow-hidden"
-            style={{ aspectRatio: "1 / 1" }}
-          >
-            {/* Barra de progresso no rodapé */}
-            <div className="absolute bottom-0 left-0 h-[3px] w-full bg-gray-100">
+          <div key={`${item.name}-${index}`} className="flex flex-col gap-1.5 group">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                {label}
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-sm font-bold text-gray-800">
+                  {item.value.toLocaleString("pt-BR")}
+                </span>
+                <span className="text-[11px] font-medium text-gray-400 w-8 text-right">
+                  ({pct}%)
+                </span>
+              </div>
+            </div>
+            
+            {/* Barra de Progresso Horizontal */}
+            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-500"
+                className="h-full rounded-full transition-all duration-700 ease-out"
                 style={{ width: `${pct}%`, backgroundColor: color }}
               />
             </div>
-
-            {/* Número grande centralizado */}
-            <span
-              className="text-3xl font-extrabold leading-none"
-              style={{ color }}
-            >
-              {item.value.toLocaleString("pt-BR")}
-            </span>
-
-            {/* Label e percentual */}
-            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mt-1.5">
-              {label}
-            </span>
-            <span className="text-[10px] text-gray-400 mt-0.5">
-              {pct}%
-            </span>
           </div>
         );
       })}

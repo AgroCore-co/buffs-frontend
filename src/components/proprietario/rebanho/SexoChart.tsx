@@ -27,7 +27,6 @@ function DonutChart({ femeas, machos }: { femeas: number; machos: number }) {
 
   const pctFemea = total > 0 ? femeas / total : 0;
   const pctMacho = total > 0 ? machos / total : 0;
-
   const gapFraction = total > 0 ? 3 / 360 : 0;
 
   const feaDash = Math.max(0, pctFemea - gapFraction) * circumference;
@@ -110,16 +109,17 @@ function Legend({
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 w-full">
       <span
         className="w-2.5 h-2.5 rounded-full shrink-0"
         style={{ backgroundColor: color }}
       />
       <span className="text-sm text-gray-600 w-14">{label}</span>
-      <span className="text-sm font-bold text-gray-800 w-6 text-right">
+      {/* Alterado para flex-1 para preencher o espaço e não quebrar o layout */}
+      <span className="text-sm font-bold text-gray-800 flex-1 text-right min-w-[30px]">
         {value.toLocaleString("pt-BR")}
       </span>
-      <span className="text-xs text-gray-400 ml-1">({pct}%)</span>
+      <span className="text-xs text-gray-400 ml-1 w-[40px] text-right shrink-0">({pct}%)</span>
     </div>
   );
 }
@@ -140,11 +140,8 @@ export default function SexoChart({
     : null;
 
   return (
-    <Container
-      className="p-5 flex flex-col w-full max-w-[360px] mr-auto min-h-[200px]"
-      style={{ aspectRatio: "1 / 1" }}
-    >
-      {/* Header — idêntico ao MaturidadeChart */}
+    <Container className="p-5 flex flex-col w-full h-full">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-gray-800 leading-tight">
@@ -161,14 +158,14 @@ export default function SexoChart({
         </div>
       </div>
 
-      {/* Estados */}
       {isLoading ? (
-        <div className="flex-1 flex items-center gap-6">
+        // Adicionado flex-wrap e justify-center
+        <div className="flex-1 flex flex-wrap items-center justify-center gap-6">
           <div className="w-[130px] h-[130px] rounded-full bg-gray-100 animate-pulse shrink-0" />
-          <div className="flex flex-col gap-3 flex-1">
-            <div className="h-4 w-32 rounded bg-gray-100 animate-pulse" />
+          <div className="flex flex-col gap-3 flex-1 min-w-[140px]">
+            <div className="h-4 w-full max-w-[128px] rounded bg-gray-100 animate-pulse" />
             <div
-              className="h-4 w-28 rounded bg-gray-100 animate-pulse"
+              className="h-4 w-full max-w-[112px] rounded bg-gray-100 animate-pulse"
               style={{ animationDelay: "80ms" }}
             />
           </div>
@@ -184,9 +181,10 @@ export default function SexoChart({
           </p>
         </div>
       ) : (
-        <div className="flex-1 flex items-center gap-6">
+        // Adicionado flex-wrap e justify-center
+        <div className="flex-1 flex flex-wrap items-center justify-center gap-x-8 gap-y-6">
           <DonutChart femeas={femeas} machos={machos} />
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 flex-1 min-w-[160px]">
             <Legend label="Fêmeas" value={femeas} total={total} color={COLOR_FEMEA} />
             <div className="h-px bg-gray-100 w-full" />
             <Legend label="Machos" value={machos} total={total} color={COLOR_MACHO} />
