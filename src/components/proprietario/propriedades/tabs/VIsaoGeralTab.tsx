@@ -3,6 +3,7 @@
 import React from "react";
 import MetricCard from "@/components/ui/MetricCard";
 import Badge from "@/components/ui/Badge";
+import { useDashboard } from "@/hooks/useDashboard";
 import {
   FileText,
   Tractor,
@@ -20,10 +21,6 @@ export type RacaInfo = {
   quantidade: number;
 };
 
-export type DashboardStats = {
-  bufalosPorRaca?: RacaInfo[];
-};
-
 export type IndicadoresStats = {
   femeas: number;
   machos: number;
@@ -33,9 +30,6 @@ export type IndicadoresStats = {
 
 interface VisaoGeralTabProps {
   dadosCadastrais: any;
-  dashboardStats: DashboardStats | null;
-  indicadores: IndicadoresStats;
-  loadingDashboard?: boolean;
 }
 
 // --- Subcomponentes Internos ---
@@ -83,7 +77,7 @@ function DadosCadastraisSection({ propriedade }: { propriedade: any }) {
   );
 }
 
-function ComposicaoRacialSection({ loadingDashboard, stats }: { loadingDashboard: boolean; stats?: DashboardStats | null }) {
+function ComposicaoRacialSection({ loadingDashboard, stats }: { loadingDashboard: boolean; stats?: any }) {
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col h-full">
       <h2 className="text-lg font-bold mb-4 text-[#404040] flex items-center gap-2">
@@ -102,8 +96,8 @@ function ComposicaoRacialSection({ loadingDashboard, stats }: { loadingDashboard
         </div>
       ) : (
         <div className="space-y-5 mt-2 flex-1 flex flex-col justify-center">
-          {stats.bufalosPorRaca.map((raca, idx) => {
-            const total = stats.bufalosPorRaca!.reduce((a, b) => a + b.quantidade, 0);
+          {stats.bufalosPorRaca.map((raca: RacaInfo, idx: number) => {
+            const total = stats.bufalosPorRaca!.reduce((a: number, b: RacaInfo) => a + b.quantidade, 0);
             const pct = total > 0 ? ((raca.quantidade / total) * 100).toFixed(1) : "0";
             
             return (
@@ -171,13 +165,31 @@ function IndicadoresRebanhoSection({ stats }: { stats: IndicadoresStats }) {
 
 // --- Componente Principal da Aba ---
 
-export default function VisaoGeralTab({ dadosCadastrais, dashboardStats, indicadores, loadingDashboard = false }: VisaoGeralTabProps) {
+export default function VisaoGeralTab({ dadosCadastrais }: VisaoGeralTabProps) {
+  const { getGeral } = useDashboard();
+  
+  // Extrai o ID da propriedade dos dados cadastrais (suporta camelCase ou snake_case)
+  const idPropriedade = dadosCadastrais?.idPropriedade || dadosCadastrais?.id_propriedade;
+  
+  // Busca as estatísticas gerais (rota GET /dashboard/{id_propriedade})
+  const { data: dashboardData, isLoading: loadingDashboard } = getGeral(idPropriedade, {
+    enabled: !!idPropriedade,
+  });
+
+  // Mapeia os dados da API para o formato esperado pelos cards de indicadores
+  const indicadores: IndicadoresStats = {
+    femeas: dashboardData?.qtd_femeas_ativas || 0,
+    machos: dashboardData?.qtd_macho_ativos || 0,
+    lotes: dashboardData?.qtd_lotes || 0,
+    usuarios: dashboardData?.qtd_usuarios || 0,
+  };
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {/* Grid Superior: Dados Cadastrais e Composição Racial */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         <DadosCadastraisSection propriedade={dadosCadastrais} />
-        <ComposicaoRacialSection loadingDashboard={loadingDashboard} stats={dashboardStats} />
+        <ComposicaoRacialSection loadingDashboard={loadingDashboard} stats={dashboardData} />
       </div>
 
       {/* Grid Inferior Full Width: Indicadores do Rebanho */}

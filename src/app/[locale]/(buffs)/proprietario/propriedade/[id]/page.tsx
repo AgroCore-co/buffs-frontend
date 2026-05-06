@@ -15,7 +15,7 @@ import TabNav from "@/components/ui/TabNav";
 import { ArrowLeft, MapPin, Building2, Calendar, Printer, Edit } from "lucide-react";
 
 // Importação das Abas (Tabs)
-import VisaoGeralTab, { DashboardStats, IndicadoresStats } from "@/components/proprietario/propriedades/tabs/VIsaoGeralTab";
+import VisaoGeralTab from "@/components/proprietario/propriedades/tabs/VIsaoGeralTab";
 import MapaPiquetes from "@/components/proprietario/propriedades/MapaPiquetes";
 import GruposTab from "@/components/proprietario/propriedades/tabs/GruposTab";
 import EquipeTab from "@/components/proprietario/propriedades/tabs/EquipeTab";
@@ -35,51 +35,22 @@ export default function PropriedadeDetalhesPage({ params }: { params: any }) {
   const { data: endereco } = useEndereco(propriedade?.idEndereco);
   const { data: dono } = useUsuario(propriedade?.idDono);
 
-  // --- Mocks Visuais Fallback ---
-  const mockDetalhes = {
-    nome: "TESTE PC 2",
-    manejo: "PASTAGEM / EXTENSIVO",
-    localizacao: "Cajati - SP",
-    atualizacao: "09/03/2026",
-    cnpj: "00.000.000/0001-00",
-    tipoManejo: "P",
-    nomeDono: "João Agricultor",
-    emailDono: "joao@email.com",
-    enderecoCompleto: "Estrada Rural, Km 12",
-    cep: "11950-000"
-  };
-
-  const mockDashboardStats: DashboardStats = {
-    bufalosPorRaca: [
-      { raca: "Murrah", quantidade: 120 },
-      { raca: "Mediterrâneo", quantidade: 45 },
-      { raca: "Jafarabadi", quantidade: 15 }
-    ]
-  };
-  
-  const mockIndicadores: IndicadoresStats = {
-    femeas: 1,
-    machos: 0,
-    lotes: 0,
-    usuarios: 0,
-  };
-
-  // Merge dos dados da API com o Fallback
+  // Dados vindos da API (sem fallback mock)
   const dadosCadastrais = propriedade
     ? {
         ...propriedade,
-        nome: propriedade.nome || mockDetalhes.nome,
-        manejo: propriedade.tipoManejo || mockDetalhes.manejo,
-        localizacao: endereco ? `${endereco.cidade} - ${endereco.estado}` : mockDetalhes.localizacao,
-        atualizacao: propriedade.updatedAt || mockDetalhes.atualizacao,
-        cnpj: propriedade.cnpj || mockDetalhes.cnpj,
-        tipoManejo: propriedade.tipoManejo || propriedade.tipo_manejo || mockDetalhes.tipoManejo,
-        nomeDono: dono?.nome || mockDetalhes.nomeDono,
-        emailDono: dono?.email || mockDetalhes.emailDono,
-        enderecoCompleto: endereco ? `${endereco.rua}, ${endereco.bairro}` : mockDetalhes.enderecoCompleto,
-        cep: endereco?.cep || mockDetalhes.cep,
+        nome: propriedade.nome || "",
+        manejo: propriedade.tipoManejo || "",
+        localizacao: endereco ? `${endereco.cidade} - ${endereco.estado}` : "",
+        atualizacao: propriedade.updatedAt || "",
+        cnpj: propriedade.cnpj || "",
+        tipoManejo: propriedade.tipoManejo || propriedade.tipo_manejo || "",
+        nomeDono: dono?.nome || "",
+        emailDono: dono?.email || "",
+        enderecoCompleto: endereco ? `${endereco.rua}, ${endereco.bairro}` : "",
+        cep: endereco?.cep || "",
       }
-    : mockDetalhes;
+    : {};
 
   return (
     <div className="flex flex-col gap-4">
@@ -159,12 +130,7 @@ export default function PropriedadeDetalhesPage({ params }: { params: any }) {
         {/* Renderização Condicional da Aba Ativa */}
         <div className="pt-6 pb-2">
           {activeTab === "visao-geral" && (
-            <VisaoGeralTab 
-              dadosCadastrais={dadosCadastrais}
-              dashboardStats={mockDashboardStats}
-              indicadores={mockIndicadores}
-              loadingDashboard={false}
-            />
+            <VisaoGeralTab dadosCadastrais={dadosCadastrais} />
           )}
 
           {activeTab === "grupos" && (
