@@ -46,7 +46,7 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
   } = useDataIngestion();
 
   // Polling automático do status do job (se existir um ativo)
-  const { data: jobStatus, isLoading: isJobLoading } = useJobStatus(activeJobId);
+  const { data: jobStatus } = useJobStatus(activeJobId);
 
   // ==========================================================================
   // HANDLERS DE IMPORTAÇÃO (UPLOAD)

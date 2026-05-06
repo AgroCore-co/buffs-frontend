@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { useAlimentacaoDef, useAlimentacaoRegistro } from "@/hooks/useAlimentacao";
+import { AlimentacaoRegistro, AlimentacaoDef } from "@/services/alimentacao.service";
 import { useGrupos } from "@/hooks/useGrupos";
+import { Grupo } from "@/services/grupos.service";
 import { 
   Plus, 
   Edit2, 
@@ -84,7 +86,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
   const [isTipoModalOpen, setIsTipoModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [selectedItem, setSelectedItem] = useState<AlimentacaoRegistro | AlimentacaoDef | null>(null);
 
   // Formulários
   const [formRegistro, setFormRegistro] = useState({
@@ -103,7 +105,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
   // ==========================================================================
   // HANDLERS - REGISTOS
   // ==========================================================================
-  const handleOpenRegistro = (item?: any) => {
+  const handleOpenRegistro = (item?: AlimentacaoRegistro) => {
     if (item) {
       setSelectedItem(item);
       setFormRegistro({
@@ -143,7 +145,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
   // ==========================================================================
   // HANDLERS - TIPOS DE ALIMENTO
   // ==========================================================================
-  const handleOpenTipo = (item?: any) => {
+  const handleOpenTipo = (item?: AlimentacaoDef) => {
     if (item) {
       setSelectedItem(item);
       setFormTipo({ tipo_alimentacao: item.tipoAlimentacao, descricao: item.descricao || "" });
@@ -173,7 +175,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
   // ==========================================================================
   // HANDLERS - EXCLUSÃO E UTILIDADE
   // ==========================================================================
-  const handleOpenDelete = (item: any) => {
+  const handleOpenDelete = (item: AlimentacaoRegistro | AlimentacaoDef) => {
     setSelectedItem(item);
     setIsDeleteModalOpen(true);
   };
@@ -306,7 +308,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
 
           {/* CORPO DA TABELA */}
           <TableBody>
-            {activeTab === "registros" && registros.map((reg: any) => (
+            {activeTab === "registros" && registros.map((reg: AlimentacaoRegistro) => (
               <TableRow key={reg.idRegistro}>
                 <TableCell>
                   <span className="text-sm font-semibold text-zinc-900">{reg.grupo?.nomeGrupo || "Desconhecido"}</span>
@@ -341,7 +343,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
               </TableRow>
             ))}
 
-            {activeTab === "tipos" && tipos.map((tipo: any) => (
+            {activeTab === "tipos" && tipos.map((tipo: AlimentacaoDef) => (
               <TableRow key={tipo.idAlimentDef}>
                 <TableCell>
                   <span className="text-sm font-semibold text-zinc-900">{tipo.tipoAlimentacao}</span>
@@ -397,7 +399,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
                   className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:ring-2 focus:ring-zinc-900"
                 >
                   <option value="" disabled>Selecione um grupo</option>
-                  {gruposList.map((g: any) => (
+                  {gruposList.map((g: Grupo) => (
                     <option key={g.idGrupo} value={g.idGrupo}>{g.nomeGrupo}</option>
                   ))}
                 </select>
@@ -412,7 +414,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
                   className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:ring-2 focus:ring-zinc-900"
                 >
                   <option value="" disabled>Selecione o alimento</option>
-                  {tiposSelectList.map((t: any) => (
+                  {tiposSelectList.map((t: AlimentacaoDef) => (
                     <option key={t.idAlimentDef} value={t.idAlimentDef}>{t.tipoAlimentacao}</option>
                   ))}
                 </select>

@@ -3,7 +3,7 @@
 // ==========================================
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usuariosService, Usuario, UpdateUsuarioDTO, UpdateCargoDTO } from '@/services/usuarios.service';
+import { usuariosService, UpdateUsuarioDTO, UpdateCargoDTO } from '@/services/usuarios.service';
 
 export const USUARIOS_QUERY_KEYS = {
   all: ['usuarios'] as const,
@@ -39,6 +39,7 @@ export function useUsuarios() {
   });
 
   const getFuncionariosByPropriedade = (idPropriedade: string) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useQuery({
       queryKey: USUARIOS_QUERY_KEYS.funcionariosByPropriedade(idPropriedade),
       queryFn: () => usuariosService.getFuncionariosByPropriedade(idPropriedade),

@@ -2,6 +2,8 @@
 // Página de Não Autenticado (401)
 // ==========================================
 
+import Link from 'next/link';
+
 export default function NotAuthenticatedPage() {
   return (
     <div style={{
@@ -20,7 +22,7 @@ export default function NotAuthenticatedPage() {
       <p style={{ fontSize: 20, color: '#404040', marginBottom: 32 }}>
         Not authenticated / Não autenticado
       </p>
-      <a
+      <Link
         href="/auth/login"
         style={{
           fontSize: 14,
@@ -34,7 +36,7 @@ export default function NotAuthenticatedPage() {
         }}
       >
         Login
-      </a>
+      </Link>
     </div>
   );
 }

@@ -2,6 +2,8 @@
 // Página de Não Autorizado
 // ==========================================
 
+import Link from 'next/link';
+
 export default function NotAuthorizedPage() {
   return (
     <div style={{
@@ -20,7 +22,7 @@ export default function NotAuthorizedPage() {
       <p style={{ fontSize: 20, color: '#404040', marginBottom: 32 }}>
         Not authorized / Não autorizado
       </p>
-      <a
+      <Link
         href="/"
         style={{
           fontSize: 14,
@@ -30,7 +32,7 @@ export default function NotAuthorizedPage() {
         }}
       >
         ← Home
-      </a>
+      </Link>
     </div>
   );
 }

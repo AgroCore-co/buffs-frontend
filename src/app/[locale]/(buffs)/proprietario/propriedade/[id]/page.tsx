@@ -22,12 +22,11 @@ import EquipeTab from "@/components/proprietario/propriedades/tabs/EquipeTab";
 import AlimentacaoTab from "@/components/proprietario/propriedades/tabs/AlimentacaoTab";
 import DataIngestionTab from "@/components/proprietario/propriedades/tabs/DataIngestionTab";
 
-export default function PropriedadeDetalhesPage({ params }: { params: any }) {
+export default function PropriedadeDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const t = useTranslations("Proprietario.detalhes");
   const { id } = React.use(params);
   
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("visao-geral");
 
   // Chamadas API (Em cascata usando os novos hooks separados)

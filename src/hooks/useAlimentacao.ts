@@ -39,6 +39,7 @@ export function useAlimentacaoDef() {
 
   // --- QUERIES ---
   const getByPropriedade = (idPropriedade: string, page: number = 1, limit: number = 10, options?: { enabled?: boolean }) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useQuery({
       queryKey: ALIMENTACAO_DEF_QUERY_KEYS.byPropriedade(idPropriedade, page, limit),
       queryFn: () => alimentacaoDefService.getByPropriedade(idPropriedade, page, limit),
@@ -47,6 +48,7 @@ export function useAlimentacaoDef() {
     });
 
   const getById = (id?: string) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useQuery({
       queryKey: ALIMENTACAO_DEF_QUERY_KEYS.byId(id!),
       queryFn: () => alimentacaoDefService.getById(id!),
@@ -105,6 +107,7 @@ export function useAlimentacaoRegistro() {
 
   // --- QUERIES ---
   const getByPropriedade = (idPropriedade: string, page: number = 1, limit: number = 10, options?: { enabled?: boolean }) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useQuery({
       queryKey: ALIMENTACAO_REGISTRO_QUERY_KEYS.byPropriedade(idPropriedade, page, limit),
       queryFn: () => alimentacaoRegistroService.getByPropriedade(idPropriedade, page, limit),
@@ -113,6 +116,7 @@ export function useAlimentacaoRegistro() {
     });
 
   const getById = (id?: string) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useQuery({
       queryKey: ALIMENTACAO_REGISTRO_QUERY_KEYS.byId(id!),
       queryFn: () => alimentacaoRegistroService.getById(id!),

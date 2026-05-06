@@ -1,5 +1,6 @@
 // src/components/ui/DataTable.tsx
 import React from "react";
+import { LucideIcon } from "lucide-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationProps {
@@ -62,7 +63,14 @@ export function DataTable({ isEmpty, emptyState, children, pagination }: DataTab
 // COMPONENTES DE COMPOSIÇÃO DA TABELA
 // ============================================================================
 
-export function TableEmptyState({ icon: Icon, title, description, action }: any) {
+interface TableEmptyStateProps {
+  icon?: LucideIcon;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}
+
+export function TableEmptyState({ icon: Icon, title, description, action }: TableEmptyStateProps) {
   return (
     <div className="p-12 flex flex-col items-center justify-center text-center">
       {Icon && (

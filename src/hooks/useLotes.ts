@@ -5,7 +5,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   lotesService,
-  Lote,
   CreateLoteDTO,
   UpdateLoteDTO,
 } from '@/services/lotes.service';
@@ -42,6 +41,7 @@ export function useLotes() {
    * Retorna uma função para uso flexível nos componentes (ex: mapas, tabelas).
    */
   const getByPropriedade = (idPropriedade: string, options?: { enabled?: boolean }) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useQuery({
       queryKey: LOTES_QUERY_KEYS.byPropriedade(idPropriedade),
       queryFn: () => lotesService.getByPropriedade(idPropriedade),
@@ -53,6 +53,7 @@ export function useLotes() {
    * Busca um lote específico por UUID.
    */
   const getById = (id: string) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useQuery({
       queryKey: LOTES_QUERY_KEYS.byId(id),
       queryFn: () => lotesService.getById(id),

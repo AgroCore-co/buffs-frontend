@@ -14,8 +14,14 @@ import {
 } from 'recharts';
 import { BarChart3 } from 'lucide-react';
 
+interface ProducaoData {
+  name: string;
+  producao: number;
+  [key: string]: string | number;
+}
+
 interface ProducaoLeiteChartProps {
-  data: any[];
+  data: ProducaoData[];
   ano?: number;
   onAnoChange?: (ano: number) => void;
 }
@@ -126,7 +132,7 @@ export default function ProducaoLeiteChart({ data, ano, onAnoChange }: ProducaoL
               ]}
             />
             <Bar dataKey="producao" radius={[4, 4, 0, 0]} barSize={barSize}>
-              {safeData.map((entry, index) => (
+              {safeData.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill="#CE7D0A" />
               ))}
             </Bar>

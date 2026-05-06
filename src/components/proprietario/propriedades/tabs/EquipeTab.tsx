@@ -2,14 +2,13 @@
 
 import React, { useState } from "react";
 import { useUsuarios } from "@/hooks/useUsuarios";
-import { Cargo } from "@/services/usuarios.service";
+import { Cargo, Usuario } from "@/services/usuarios.service";
 import { 
   Users, 
   UserCog, 
   UserMinus, 
   AlertCircle, 
   X,
-  Mail,
   Phone
 } from "lucide-react";
 
@@ -43,7 +42,7 @@ export default function EquipeTab({ idPropriedade }: EquipeTabProps) {
   // Estados dos Modais
   const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
   const [isUnlinkModalOpen, setIsUnlinkModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
 
   // Estado do Formulário de Edição
   const [selectedCargo, setSelectedCargo] = useState<Cargo | "">("");
@@ -51,13 +50,13 @@ export default function EquipeTab({ idPropriedade }: EquipeTabProps) {
   // ==========================================================================
   // HANDLERS
   // ==========================================================================
-  const handleOpenEditRole = (user: any) => {
+  const handleOpenEditRole = (user: Usuario) => {
     setSelectedUser(user);
     setSelectedCargo(user.cargo);
     setIsEditRoleModalOpen(true);
   };
 
-  const handleOpenUnlink = (user: any) => {
+  const handleOpenUnlink = (user: Usuario) => {
     setSelectedUser(user);
     setIsUnlinkModalOpen(true);
   };
@@ -165,7 +164,7 @@ export default function EquipeTab({ idPropriedade }: EquipeTabProps) {
           <TableHead align="right">Ações</TableHead>
         </TableHeader>
         <TableBody>
-          {funcionarios.map((user: any) => (
+          {funcionarios.map((user: Usuario) => (
             <TableRow key={user.id_usuario}>
               <TableCell>
                 <div className="flex flex-col">

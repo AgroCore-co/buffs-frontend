@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useGrupos } from "@/hooks/useGrupos";
+import { Grupo } from "@/services/grupos.service";
 import { Button, IconButton } from "@/components/ui/Button";
 import { 
   Plus, 
@@ -39,7 +40,7 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
   // Estados dos Modais
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedGrupo, setSelectedGrupo] = useState<any | null>(null);
+  const [selectedGrupo, setSelectedGrupo] = useState<Grupo | null>(null);
 
   // Estados do Formulário
   const [formData, setFormData] = useState({ nomeGrupo: "", color: "#000000" });
@@ -53,13 +54,13 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (grupo: any) => {
+  const handleOpenEdit = (grupo: Grupo) => {
     setSelectedGrupo(grupo);
     setFormData({ nomeGrupo: grupo.nomeGrupo, color: grupo.color });
     setIsModalOpen(true);
   };
 
-  const handleOpenDelete = (grupo: any) => {
+  const handleOpenDelete = (grupo: Grupo) => {
     setSelectedGrupo(grupo);
     setIsModalOpen(false); // Fecha o modal de edição antes de abrir o de exclusão
     setIsDeleteModalOpen(true);
@@ -153,7 +154,7 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
         <>
           {/* Grid de Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {grupos.map((grupo: any) => (
+            {grupos.map((grupo: Grupo) => (
               <div 
                 key={grupo.idGrupo} 
                 onClick={() => handleOpenEdit(grupo)}

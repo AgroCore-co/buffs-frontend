@@ -81,12 +81,13 @@ export default function Login() {
           router.push('/auth/login');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsRedirecting(false);
 
+      const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
       const backendMessage = 
-        error.response?.data?.message || 
-        error.response?.data?.error || 
+        axiosError.response?.data?.message || 
+        axiosError.response?.data?.error || 
         t('loginError');
         
       setError('root', {

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useLotes } from "@/hooks/useLotes";
+import { Lote } from "@/services/lotes.service";
+import L from "leaflet";
 import { 
   Map as MapIcon, 
   X, 
@@ -40,8 +42,8 @@ interface MapaPiquetesProps {
 
 export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedLote, setSelectedLote] = useState<any | null>(null); 
-  const [mapInstance, setMapInstance] = useState<any>(null);
+  const [selectedLote, setSelectedLote] = useState<Lote | null>(null); 
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   
   const [zoomLevel, setZoomLevel] = useState(15);
   
@@ -54,6 +56,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
   const { data: lotes, isLoading } = getByPropriedade(idPropriedade);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -63,7 +66,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
 
     const mapGrupos = new Map();
 
-    lotes.forEach((lote: any) => {
+    lotes.forEach((lote) => {
       if (!lote.grupo || !lote.geoMapa || lote.geoMapa.type !== "Polygon") return;
 
       const gId = lote.grupo.idGrupo;
@@ -101,7 +104,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
     let minLng = Infinity;
     let maxLng = -Infinity;
 
-    lotes.forEach((lote: any) => {
+    lotes.forEach((lote) => {
       if (!lote.geoMapa || lote.geoMapa.type !== "Polygon") return;
       lote.geoMapa.coordinates[0].forEach((coord: number[]) => {
         const lat = coord[1];
@@ -330,7 +333,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
           attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
         />
 
-        {lotes?.map((lote: any, index: number) => {
+        {lotes?.map((lote, index: number) => {
           if (!lote.geoMapa || lote.geoMapa.type !== "Polygon" || !lote.geoMapa.coordinates) return null;
 
           const positions = lote.geoMapa.coordinates[0].map(

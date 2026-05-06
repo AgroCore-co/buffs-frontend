@@ -225,7 +225,7 @@ export default function Header() {
                 <div className="p-2">
                   <button
                     onClick={() => {
-                      router.push('/suporte/documentacao' as any);
+                      router.push('/suporte/documentacao' as never);
                       setShowSupport(false);
                     }}
                     className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors group"
@@ -244,7 +244,7 @@ export default function Header() {
                   </button>
                   <button
                     onClick={() => {
-                      router.push('/suporte/chat' as any);
+                      router.push('/suporte/chat' as never);
                       setShowSupport(false);
                     }}
                     className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors group"

@@ -14,8 +14,14 @@ import {
 } from 'recharts';
 import { Droplet } from 'lucide-react';
 
+interface BufalaData {
+  name: string;
+  leite: number;
+  [key: string]: string | number;
+}
+
 interface TopBufalasChartProps {
-  data: any[];
+  data: BufalaData[];
 }
 
 export default function TopBufalasChart({ data }: TopBufalasChartProps) {
@@ -90,7 +96,7 @@ export default function TopBufalasChart({ data }: TopBufalasChartProps) {
               labelStyle={{ fontWeight: 'bold', color: '#374151' }}
             />
             <Bar dataKey="leite" radius={[0, 6, 6, 0]} barSize={32}>
-              {data.map((entry, index) => (
+              {data.map((_entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={colors[index % colors.length]}

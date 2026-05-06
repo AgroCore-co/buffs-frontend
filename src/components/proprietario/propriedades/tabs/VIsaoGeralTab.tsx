@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { LucideIcon } from "lucide-react";
 import MetricCard from "@/components/ui/MetricCard";
 import Badge from "@/components/ui/Badge";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -29,12 +30,12 @@ export type IndicadoresStats = {
 };
 
 interface VisaoGeralTabProps {
-  dadosCadastrais: any;
+  dadosCadastrais: Record<string, string | undefined>;
 }
 
 // --- Subcomponentes Internos ---
 
-function InfoItem({ icon: Icon, label, value, subValue }: { icon: any; label: string; value?: string; subValue?: string }) {
+function InfoItem({ icon: Icon, label, value, subValue }: { icon: LucideIcon; label: string; value?: string; subValue?: string }) {
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
       <div className="p-2 bg-gray-100 rounded-lg text-gray-500">
@@ -51,7 +52,7 @@ function InfoItem({ icon: Icon, label, value, subValue }: { icon: any; label: st
   );
 }
 
-function DadosCadastraisSection({ propriedade }: { propriedade: any }) {
+function DadosCadastraisSection({ propriedade }: { propriedade: Record<string, string | undefined> }) {
   const getManejoLabel = (tipo: string) => {
     const map: Record<string, string> = {
       P: "Pastagem / Extensivo",
@@ -77,7 +78,12 @@ function DadosCadastraisSection({ propriedade }: { propriedade: any }) {
   );
 }
 
-function ComposicaoRacialSection({ loadingDashboard, stats }: { loadingDashboard: boolean; stats?: any }) {
+interface DashboardStats {
+  bufalosPorRaca?: RacaInfo[];
+  [key: string]: unknown;
+}
+
+function ComposicaoRacialSection({ loadingDashboard, stats }: { loadingDashboard: boolean; stats?: DashboardStats }) {
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col h-full">
       <h2 className="text-lg font-bold mb-4 text-[#404040] flex items-center gap-2">

@@ -2,6 +2,8 @@
 // Página de Não Encontrado (404)
 // ==========================================
 
+import Link from 'next/link';
+
 export default function NotFoundPage() {
   return (
     <div style={{
@@ -20,7 +22,7 @@ export default function NotFoundPage() {
       <p style={{ fontSize: 20, color: '#404040', marginBottom: 32 }}>
         Page not found / Página não encontrada
       </p>
-      <a
+      <Link
         href="/"
         style={{
           fontSize: 14,
@@ -30,7 +32,7 @@ export default function NotFoundPage() {
         }}
       >
         ← Home
-      </a>
+      </Link>
     </div>
   );
 }

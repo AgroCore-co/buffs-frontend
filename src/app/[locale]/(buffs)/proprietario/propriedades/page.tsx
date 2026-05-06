@@ -5,7 +5,7 @@ import { useRouter } from "@/i18n/routing";
 import { useTranslations } from 'next-intl';
 import { usePropriedades } from '@/hooks/usePropriedades';
 // Importe o hook singular aqui
-import { useEnderecos, useEndereco } from '@/hooks/useEnderecos'; 
+import { useEndereco } from '@/hooks/useEnderecos'; 
 import { useUsuarios } from '@/hooks/useUsuarios';
 import Container from "@/components/ui/Container";
 import MetricCard from "@/components/ui/MetricCard";

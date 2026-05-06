@@ -25,7 +25,7 @@ export interface Lote {
   status: string;
   descricao: string;
   qtdMax: number;
-  geoMapa: Record<string, any> | null; // GeoJSON object
+  geoMapa: Record<string, unknown> | null; // GeoJSON object
   areaM2: string;
   createdAt: string;
   updatedAt: string;

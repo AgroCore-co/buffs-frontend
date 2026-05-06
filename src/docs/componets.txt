@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  Search, Mail, Bell, Check, AlertCircle, User, Star, ChevronRight, Settings, 
+  Search, Mail, Bell, AlertCircle, User, Star, ChevronRight, Settings, 
   X, ChevronDown, UploadCloud, Calendar as CalendarIcon, Clock, Copy, QrCode, 
-  Play, Volume2, Image as ImageIcon, BarChart3, Menu, MoreVertical, Loader2, 
-  Info, CheckCircle2, AlertTriangle, Eye, EyeOff, FileText, Download, Share2,
+  Play, Volume2, Image as ImageIcon, MoreVertical, Loader2, 
+  Info, CheckCircle2, AlertTriangle, Eye, EyeOff, FileText, Download,
   Lock, ArrowRight, ArrowLeft, Home
 } from 'lucide-react';
 

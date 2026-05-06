@@ -36,7 +36,7 @@ export default function LanguageSwitcher({ variant = 'icon' }: LanguageSwitcherP
   }, []);
 
   const handleLocaleChange = (newLocale: string) => {
-    router.replace(pathname, { locale: newLocale as any });
+    router.replace(pathname, { locale: newLocale as never });
     setIsOpen(false);
   };
 

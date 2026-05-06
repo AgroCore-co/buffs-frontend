@@ -5,10 +5,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   enderecosService,
-  Endereco,
   CreateEnderecoDTO,
   UpdateEnderecoDTO,
-  CreateEnderecoResponse,
 } from '@/services/enderecos.service';
 
 export const ENDERECOS_QUERY_KEYS = {

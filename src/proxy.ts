@@ -4,7 +4,7 @@ import { routing } from "./i18n/routing";
 export default createMiddleware(routing);
 
 export const config = {
-  // Aplica o middleware em todas as rotas exceto arquivos estáticos, _next e API
+  // Aplica o proxy em todas as rotas exceto arquivos estáticos, _next e API
   matcher: [
     "/",
     "/(pt|en)/:path*",

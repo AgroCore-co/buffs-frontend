@@ -29,7 +29,6 @@ export default function CreatePropriedadeModal({ isOpen, onClose }) {
     ponto_referencia: "",
   });
   
-  const [idEndereco, setIdEndereco] = useState("");
   const [step, setStep] = useState(0);
   const steps = [
     { label: 'Dados' },

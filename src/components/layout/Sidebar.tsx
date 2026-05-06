@@ -10,7 +10,6 @@ import {
   Milk,
   CalendarCheck2,
   Factory,
-  Columns,
   LucideIcon,
 } from 'lucide-react';
 

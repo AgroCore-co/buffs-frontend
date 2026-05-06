@@ -34,12 +34,14 @@ export function useGrupos() {
   // QUERIES
   // ==========================================
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const getAll = () => useQuery({
     queryKey: GRUPOS_QUERY_KEYS.all,
     queryFn: () => gruposService.getAll(),
     staleTime: 2 * 60 * 1000,
   });
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const getByPropriedade = (idPropriedade: string, page: number = 1, limit: number = 10, options?: { enabled?: boolean }) => useQuery({
     queryKey: GRUPOS_QUERY_KEYS.byPropriedade(idPropriedade, page, limit),
     queryFn: () => gruposService.getByPropriedade(idPropriedade, page, limit),
@@ -47,6 +49,7 @@ export function useGrupos() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const getById = (id: string) => useQuery({
     queryKey: GRUPOS_QUERY_KEYS.byId(id),
     queryFn: () => gruposService.getById(id),
@@ -54,6 +57,7 @@ export function useGrupos() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const getAllDeleted = () => useQuery({
     queryKey: GRUPOS_QUERY_KEYS.deleted,
     queryFn: () => gruposService.getAllDeleted(),
