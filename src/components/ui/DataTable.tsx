@@ -86,12 +86,12 @@ export function TableEmptyState({ icon: Icon, title, description, action }: Tabl
 }
 
 export function TableHeader({ children }: { children: React.ReactNode }) {
-  return <thead><tr className="border-b border-zinc-200 bg-zinc-50/50">{children}</tr></thead>;
+  return <thead><tr className="border-b border-zinc-300 bg-zinc-100">{children}</tr></thead>;
 }
 
 export function TableHead({ children, align = "left" }: { children: React.ReactNode, align?: "left" | "center" | "right" }) {
   const alignClasses = { left: "text-left", center: "text-center", right: "text-right" };
-  return <th className={`py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider ${alignClasses[align]}`}>{children}</th>;
+  return <th className={`py-3 px-4 text-xs font-bold text-zinc-600 uppercase tracking-wider ${alignClasses[align]}`}>{children}</th>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {
@@ -99,7 +99,7 @@ export function TableBody({ children }: { children: React.ReactNode }) {
 }
 
 export function TableRow({ children }: { children: React.ReactNode }) {
-  return <tr className="hover:bg-zinc-50/50 transition-colors group">{children}</tr>;
+  return <tr className="odd:bg-white even:bg-zinc-50 hover:bg-zinc-100 transition-colors group">{children}</tr>;
 }
 
 export function TableCell({ children, align = "left" }: { children: React.ReactNode, align?: "left" | "center" | "right" }) {

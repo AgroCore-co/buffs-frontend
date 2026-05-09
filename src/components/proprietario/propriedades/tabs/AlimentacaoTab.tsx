@@ -331,7 +331,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
                   </span>
                 </TableCell>
                 <TableCell align="right">
-                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-end gap-2">
                     <button onClick={() => handleOpenRegistro(reg)} className="p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-md">
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -359,7 +359,7 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
                   </span>
                 </TableCell>
                 <TableCell align="right">
-                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-end gap-2">
                     <button onClick={() => handleOpenTipo(tipo)} className="p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-md">
                       <Edit2 className="w-4 h-4" />
                     </button>
