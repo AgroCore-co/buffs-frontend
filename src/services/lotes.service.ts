@@ -34,10 +34,6 @@ export interface Lote {
   grupo?: GrupoLote;
 }
 
-/**
- * Payload para criar um novo lote.
- * IMPORTANTE: geo_mapa deve ser enviado como string (JSON.stringify).
- */
 export interface CreateLoteDTO {
   nomeLote: string;
   idPropriedade: string;
@@ -45,16 +41,11 @@ export interface CreateLoteDTO {
   tipoLote?: string;
   status?: string;
   descricao?: string;
-  qtd_max?: number;
-  area_m2?: number;
-  geo_mapa?: string; 
+  qtdMax?: number;
+  areaM2?: number;
+  geoMapa?: string;
 }
 
-/**
- * Payload para atualizar um lote existente.
- * Todos os campos são opcionais. 
- * IMPORTANTE: Se for atualizar a geometria, geo_mapa deve ser string.
- */
 export interface UpdateLoteDTO {
   nomeLote?: string;
   idPropriedade?: string;
@@ -62,9 +53,9 @@ export interface UpdateLoteDTO {
   tipoLote?: string;
   status?: string;
   descricao?: string;
-  qtd_max?: number;
-  area_m2?: number;
-  geo_mapa?: string;
+  qtdMax?: number;
+  areaM2?: number;
+  geoMapa?: string;
 }
 
 // ==========================================
@@ -103,17 +94,32 @@ export const lotesService = {
    * @returns Dados do lote criado.
    */
   async create(data: CreateLoteDTO): Promise<Lote> {
-    const response = await apiClient.post<Lote>('/lotes', data);
+    const response = await apiClient.post<Lote>('/lotes', {
+      nomeLote: data.nomeLote,
+      idPropriedade: data.idPropriedade,
+      ...(data.idGrupo && { idGrupo: data.idGrupo }),
+      ...(data.tipoLote && { tipoLote: data.tipoLote }),
+      ...(data.status && { status: data.status }),
+      ...(data.descricao && { descricao: data.descricao }),
+      ...(data.qtdMax !== undefined && { qtd_max: data.qtdMax }),
+      ...(data.areaM2 !== undefined && { area_m2: data.areaM2 }),
+      ...(data.geoMapa && { geo_mapa: data.geoMapa }),
+    });
     return response.data;
   },
 
-  /**
-   * Atualiza parcialmente um lote existente.
-   * @param id UUID do lote
-   * @param data Campos a serem atualizados
-   */
   async update(id: string, data: UpdateLoteDTO): Promise<void> {
-    await apiClient.patch(`/lotes/${id}`, data);
+    await apiClient.patch(`/lotes/${id}`, {
+      ...(data.nomeLote && { nomeLote: data.nomeLote }),
+      ...(data.idPropriedade && { idPropriedade: data.idPropriedade }),
+      ...(data.idGrupo && { idGrupo: data.idGrupo }),
+      ...(data.tipoLote && { tipoLote: data.tipoLote }),
+      ...(data.status && { status: data.status }),
+      ...(data.descricao && { descricao: data.descricao }),
+      ...(data.qtdMax !== undefined && { qtd_max: data.qtdMax }),
+      ...(data.areaM2 !== undefined && { area_m2: data.areaM2 }),
+      ...(data.geoMapa && { geo_mapa: data.geoMapa }),
+    });
   },
 
   /**

@@ -15,6 +15,7 @@ export interface Propriedade {
   cnpj: string;
   pAbcb: boolean;
   tipoManejo: 'P' | 'E' | 'I';
+  status?: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -39,7 +40,7 @@ export interface CreatePropriedadeDTO {
   nome: string;
   cnpj: string;
   idEndereco: string;
-  p_abcb: boolean;
+  pAbcb: boolean;
   tipoManejo: 'P' | 'E' | 'I';
 }
 
@@ -50,10 +51,10 @@ export interface CreatePropriedadeDTO {
 export interface CreatePropriedadeResponse {
   idPropriedade: string;
   nome: string;
-  area_hectares: number;
-  id_endereco: string;
-  id_usuario: string;
-  created_at: string;
+  areaHectares: number;
+  idEndereco: string;
+  idUsuario: string;
+  createdAt: string;
   endereco: {
     logradouro: string;
     cidade: string;
@@ -67,7 +68,7 @@ export interface CreatePropriedadeResponse {
  */
 export interface UpdatePropriedadeDTO {
   nome?: string;
-  p_abcb?: boolean;
+  pAbcb?: boolean;
   tipoManejo?: 'P' | 'E' | 'I';
 }
 
@@ -109,7 +110,13 @@ export const propriedadesService = {
    * @returns Dados da propriedade criada com o endereço vinculado.
    */
   async create(data: CreatePropriedadeDTO): Promise<CreatePropriedadeResponse> {
-    const response = await apiClient.post<CreatePropriedadeResponse>('/propriedades', data);
+    const response = await apiClient.post<CreatePropriedadeResponse>('/propriedades', {
+      nome: data.nome,
+      cnpj: data.cnpj,
+      idEndereco: data.idEndereco,
+      p_abcb: data.pAbcb,
+      tipoManejo: data.tipoManejo,
+    });
     return response.data;
   },
 
@@ -121,7 +128,11 @@ export const propriedadesService = {
    * @param data Campos a serem atualizados (nome, p_abcb, tipoManejo)
    */
   async update(id: string, data: UpdatePropriedadeDTO): Promise<void> {
-    await apiClient.patch(`/propriedades/${id}`, data);
+    await apiClient.patch(`/propriedades/${id}`, {
+      ...(data.nome && { nome: data.nome }),
+      ...(data.pAbcb !== undefined && { p_abcb: data.pAbcb }),
+      ...(data.tipoManejo && { tipoManejo: data.tipoManejo }),
+    });
   },
 
   /**

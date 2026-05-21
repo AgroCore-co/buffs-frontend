@@ -25,7 +25,7 @@ export function DataTable({ isEmpty, emptyState, children, pagination }: DataTab
         emptyState
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table role="table" aria-label="Tabela de dados" className="w-full text-left border-collapse">
             {children}
           </table>
         </div>
@@ -91,7 +91,7 @@ export function TableHeader({ children }: { children: React.ReactNode }) {
 
 export function TableHead({ children, align = "left" }: { children: React.ReactNode, align?: "left" | "center" | "right" }) {
   const alignClasses = { left: "text-left", center: "text-center", right: "text-right" };
-  return <th className={`py-3 px-4 text-xs font-bold text-zinc-600 uppercase tracking-wider ${alignClasses[align]}`}>{children}</th>;
+  return <th scope="col" className={`py-3 px-4 text-xs font-bold text-zinc-600 uppercase tracking-wider ${alignClasses[align]}`}>{children}</th>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {

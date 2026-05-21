@@ -33,7 +33,7 @@ export interface CreateEnderecoDTO {
   rua?: string;
   cep: string;
   numero: string;
-  ponto_referencia?: string;
+  pontoReferencia?: string;
 }
 
 /**
@@ -48,7 +48,7 @@ export interface CreateEnderecoResponse {
   cidade: string;
   estado: string;
   cep: string;
-  created_at: string;
+  createdAt: string;
 }
 
 /**
@@ -63,7 +63,7 @@ export interface UpdateEnderecoDTO {
   rua?: string;
   cep?: string;
   numero?: string;
-  ponto_referencia?: string;
+  pontoReferencia?: string;
 }
 
 // ==========================================
@@ -103,18 +103,30 @@ export const enderecosService = {
    * @returns Dados do endereço criado.
    */
   async create(data: CreateEnderecoDTO): Promise<CreateEnderecoResponse> {
-    const response = await apiClient.post<CreateEnderecoResponse>('/enderecos', data);
+    const response = await apiClient.post<CreateEnderecoResponse>('/enderecos', {
+      pais: data.pais,
+      estado: data.estado,
+      cidade: data.cidade,
+      ...(data.bairro && { bairro: data.bairro }),
+      ...(data.rua && { rua: data.rua }),
+      cep: data.cep,
+      numero: data.numero,
+      ...(data.pontoReferencia && { ponto_referencia: data.pontoReferencia }),
+    });
     return response.data;
   },
 
-  /**
-   * Atualiza parcialmente um endereço existente.
-   * Retorna 404 se o endereço não existir.
-   * @param id UUID do endereço
-   * @param data Campos a serem atualizados
-   */
   async update(id: string, data: UpdateEnderecoDTO): Promise<void> {
-    await apiClient.patch(`/enderecos/${id}`, data);
+    await apiClient.patch(`/enderecos/${id}`, {
+      ...(data.pais && { pais: data.pais }),
+      ...(data.estado && { estado: data.estado }),
+      ...(data.cidade && { cidade: data.cidade }),
+      ...(data.bairro && { bairro: data.bairro }),
+      ...(data.rua && { rua: data.rua }),
+      ...(data.cep && { cep: data.cep }),
+      ...(data.numero && { numero: data.numero }),
+      ...(data.pontoReferencia && { ponto_referencia: data.pontoReferencia }),
+    });
   },
 
   /**

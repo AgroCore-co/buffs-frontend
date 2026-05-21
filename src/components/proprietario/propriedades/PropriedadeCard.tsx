@@ -1,10 +1,11 @@
 "use client";
 
 import { Link } from '@/i18n/routing';
-import { MouseEvent } from 'react';
+import { memo, MouseEvent } from 'react';
 import { Pencil, Trash2, MapPin, User, Calendar } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Badge from '@/components/ui/Badge';
+import { Propriedade as ServicePropriedade } from '@/services/propriedades.service';
 
 export interface Endereco {
   cidade?: string;
@@ -16,17 +17,10 @@ export interface Dono {
   nome?: string;
 }
 
-export interface Propriedade {
-  idPropriedade: string | number;
-  status?: string;
-  pAbcb?: boolean;
-  nome: string;
-  cnpj?: string;
-  tipoManejo?: 'P' | 'E' | 'I' | string;
-  updatedAt?: string;
+export type Propriedade = ServicePropriedade & {
   endereco?: Endereco;
   dono?: Dono;
-}
+};
 
 interface PropriedadeCardProps {
   propriedade: Propriedade;
@@ -34,7 +28,7 @@ interface PropriedadeCardProps {
   onDeletar?: (propriedade: Propriedade) => void;
 }
 
-export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: PropriedadeCardProps) {
+const PropriedadeCard = memo(function PropriedadeCard({ propriedade, onEditar, onDeletar }: PropriedadeCardProps) {
   const t = useTranslations('Proprietario.propriedades');
   const tGeneral = useTranslations('General');
   
@@ -158,4 +152,6 @@ export default function PropriedadeCard({ propriedade, onEditar, onDeletar }: Pr
       </div>
     </div>
   );
-}
+});
+
+export default PropriedadeCard;

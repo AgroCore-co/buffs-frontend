@@ -1,5 +1,20 @@
 import React from 'react';
 
+export interface TabItem {
+  key: string;
+  label: string;
+}
+
+interface TabNavProps {
+  tabs: TabItem[];
+  activeTab: string;
+  onTabChange: (key: string) => void;
+  className?: string;
+  tabClassName?: string;
+  activeTabClassName?: string;
+  inactiveTabClassName?: string;
+}
+
 export function TabNav({
   tabs,
   activeTab,
@@ -8,18 +23,22 @@ export function TabNav({
   tabClassName = '',
   activeTabClassName = '',
   inactiveTabClassName = '',
-}) {
+}: TabNavProps) {
   return (
-    <div 
+    <div
+      role="tablist"
       className={`relative flex w-full gap-8 overflow-x-auto overflow-y-hidden border-b border-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
     >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
-        
+
         return (
           <button
             key={tab.key}
             type="button"
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={`tabpanel-${tab.key}`}
             onClick={() => onTabChange(tab.key)}
             className={`group relative flex-shrink-0 pb-4 pt-2 text-sm font-bold tracking-wide transition-colors duration-300 ease-in-out whitespace-nowrap ${tabClassName} ${
               isActive

@@ -1,8 +1,9 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { useRouter, usePathname } from '@/i18n/routing';
-import { routing } from '@/i18n/routing';
+import { useRouter, usePathname, routing } from '@/i18n/routing';
+
+type Locale = (typeof routing.locales)[number];
 import { useState, useRef, useEffect } from 'react';
 import { Globe } from 'lucide-react';
 
@@ -36,7 +37,7 @@ export default function LanguageSwitcher({ variant = 'icon' }: LanguageSwitcherP
   }, []);
 
   const handleLocaleChange = (newLocale: string) => {
-    router.replace(pathname, { locale: newLocale as never });
+    router.replace(pathname, { locale: newLocale as Locale });
     setIsOpen(false);
   };
 

@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { usePropriedades } from "@/hooks/usePropriedades";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { toast } from "sonner";
+import { Propriedade } from "@/services/propriedades.service";
 
-export default function DeletePropriedadeModal({ isOpen, onClose, propriedade }) {
-  const [error, setError] = useState(null);
-  
+interface DeletePropriedadeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  propriedade: Propriedade | null;
+}
+
+export default function DeletePropriedadeModal({ isOpen, onClose, propriedade }: DeletePropriedadeModalProps) {
   // Pegamos a função de deletar e o status de loading do seu hook
   const { deletePropriedade, isDeletingPropriedade } = usePropriedades();
 
@@ -15,17 +20,15 @@ export default function DeletePropriedadeModal({ isOpen, onClose, propriedade })
     // Trava de segurança caso a propriedade não tenha sido passada corretamente
     if (!propriedade?.idPropriedade) return;
 
-    setError(null);
+    const toastId = toast.loading("Excluindo propriedade...");
     try {
-      // Chama a mutation passando o UUID da propriedade
       await deletePropriedade(propriedade.idPropriedade);
-      
-      // Fecha o modal após o sucesso (o hook já invalida a query e atualiza a lista na tela)
+      toast.success(`Propriedade "${propriedade.nome}" excluída.`, { id: toastId });
       onClose();
     } catch (err) {
-      // Mesmo tratamento de erro robusto do modal de criação
-      const mensagemBackend = err.response?.data?.message || err.response?.data?.error;
-      setError(mensagemBackend || err.message || "Erro desconhecido ao tentar excluir.");
+      const e = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
+      const mensagemBackend = e.response?.data?.message || e.response?.data?.error;
+      toast.error(mensagemBackend || e.message || "Erro desconhecido ao tentar excluir.", { id: toastId });
     }
   };
 
@@ -61,12 +64,6 @@ export default function DeletePropriedadeModal({ isOpen, onClose, propriedade })
       }
     >
       <div className="flex flex-col gap-4">
-        {error && (
-          <div className="p-3 bg-[var(--table-row-even)] border border-[var(--color-error)] text-[var(--color-error)] rounded-md text-sm">
-            {error}
-          </div>
-        )}
-        
         <p className="text-[var(--color-text-secondary)]">
           Tem certeza que deseja excluir a propriedade <strong className="text-[var(--color-text-primary)]">{propriedade?.nome}</strong>?
         </p>

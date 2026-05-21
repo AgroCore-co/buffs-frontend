@@ -12,7 +12,7 @@ import { useUsuario } from "@/hooks/useUsuarios";
 import Container from "@/components/ui/Container";
 import TabNav from "@/components/ui/TabNav";
 
-import { ArrowLeft, MapPin, Building2, Calendar, Printer, Edit } from "lucide-react";
+import { ArrowLeft, MapPin, Building2, Calendar, Edit } from "lucide-react";
 
 // Importação das Abas (Tabs)
 import VisaoGeralTab from "@/components/proprietario/propriedades/tabs/VIsaoGeralTab";
@@ -21,6 +21,7 @@ import GruposTab from "@/components/proprietario/propriedades/tabs/GruposTab";
 import EquipeTab from "@/components/proprietario/propriedades/tabs/EquipeTab";
 import AlimentacaoTab from "@/components/proprietario/propriedades/tabs/AlimentacaoTab";
 import DataIngestionTab from "@/components/proprietario/propriedades/tabs/DataIngestionTab";
+import EditPropriedadeModal from "@/components/proprietario/propriedades/EditPropriedadeModal";
 
 export default function PropriedadeDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -28,28 +29,26 @@ export default function PropriedadeDetalhesPage({ params }: { params: Promise<{ 
   const { id } = React.use(params);
   
   const [activeTab, setActiveTab] = useState("visao-geral");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Chamadas API (Em cascata usando os novos hooks separados)
   const { data: propriedade } = usePropriedade(id);
   const { data: endereco } = useEndereco(propriedade?.idEndereco);
   const { data: dono } = useUsuario(propriedade?.idDono);
 
-  // Dados vindos da API (sem fallback mock)
-  const dadosCadastrais = propriedade
-    ? {
-        ...propriedade,
-        nome: propriedade.nome || "",
-        manejo: propriedade.tipoManejo || "",
-        localizacao: endereco ? `${endereco.cidade} - ${endereco.estado}` : "",
-        atualizacao: propriedade.updatedAt || "",
-        cnpj: propriedade.cnpj || "",
-        tipoManejo: propriedade.tipoManejo || propriedade.tipo_manejo || "",
-        nomeDono: dono?.nome || "",
-        emailDono: dono?.email || "",
-        enderecoCompleto: endereco ? `${endereco.rua}, ${endereco.bairro}` : "",
-        cep: endereco?.cep || "",
-      }
-    : {};
+  const dadosCadastrais = {
+    idPropriedade: id,
+    nome: propriedade?.nome ?? "",
+    manejo: propriedade?.tipoManejo ?? "",
+    tipoManejo: propriedade?.tipoManejo ?? "",
+    localizacao: endereco ? `${endereco.cidade} - ${endereco.estado}` : "",
+    atualizacao: propriedade?.updatedAt ?? "",
+    cnpj: propriedade?.cnpj ?? "",
+    nomeDono: dono?.nome ?? "",
+    emailDono: dono?.email ?? "",
+    enderecoCompleto: endereco ? `${endereco.rua}, ${endereco.bairro}` : "",
+    cep: endereco?.cep ?? "",
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -88,17 +87,15 @@ export default function PropriedadeDetalhesPage({ params }: { params: Promise<{ 
                 <div className="w-1 h-1 rounded-full bg-border" />
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                   <Calendar className="w-3.5 h-3.5" />
-                  {dadosCadastrais.atualizacao}
+                  {dadosCadastrais.atualizacao
+                    ? new Date(dadosCadastrais.atualizacao).toLocaleDateString('pt-BR')
+                    : '—'}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-background border border-border rounded-lg text-foreground text-xs font-bold hover:bg-muted transition-colors shadow-sm">
-              <Printer className="w-3.5 h-3.5" />
-              {t("report")}
-            </button>
             <button
               onClick={() => setIsEditModalOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-primary-dark)] rounded-lg text-[var(--color-text-light)] text-xs font-bold hover:opacity-90 transition-opacity shadow-sm"
@@ -166,6 +163,14 @@ export default function PropriedadeDetalhesPage({ params }: { params: Promise<{ 
          
         </div>
       </Container>
+
+      {isEditModalOpen && (
+        <EditPropriedadeModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          propriedade={propriedade ? { ...propriedade, endereco } : null}
+        />
+      )}
     </div>
   );
 }

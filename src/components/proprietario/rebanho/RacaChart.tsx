@@ -74,8 +74,7 @@ export default function RacaChart({
         />
       ) : (
         <div className="flex-1 w-full min-h-[250px]">
-          {/* CORREÇÃO: Alterado min-h-0 para min-h-[250px] para o Recharts não colapsar */}
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart
               data={data}
               margin={{ top: 8, right: 4, bottom: 0, left: -20 }}
@@ -107,8 +106,8 @@ export default function RacaChart({
                   fontSize: 12,
                   color: "#374151",
                 }}
-                formatter={(value: number) => [
-                  value.toLocaleString("pt-BR"),
+                formatter={(value) => [
+                  typeof value === "number" ? value.toLocaleString("pt-BR") : "0",
                   "Animais",
                 ]}
               />

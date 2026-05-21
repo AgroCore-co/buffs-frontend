@@ -78,7 +78,7 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     } catch (error) {
-      console.error("Erro ao importar planilha:", error);
+      void error;
     }
   };
 
@@ -111,7 +111,7 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
         window.URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error("Erro ao exportar planilha:", error);
+      void error;
     }
   };
 
@@ -249,7 +249,7 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
 
           <button
             onClick={handleImport}
-            disabled={!selectedFile || isImporting || (activeJobId && jobStatus?.status !== 'completed' && jobStatus?.status !== 'failed')}
+            disabled={!selectedFile || isImporting || !!(activeJobId && jobStatus?.status !== 'completed' && jobStatus?.status !== 'failed')}
             className="w-full mt-4 py-2.5 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-zinc-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             {isImporting && <RefreshCw className="w-4 h-4 animate-spin" />}

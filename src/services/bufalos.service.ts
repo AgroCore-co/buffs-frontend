@@ -1,4 +1,5 @@
 import apiClient from '@/lib/apiClient';
+import { toCamelCase } from '@/lib/toCamelCase';
 
 // ==========================================
 // DTOs (Data Transfer Objects) - Comuns
@@ -69,11 +70,11 @@ export interface CreateBufaloDTO {
   status?: boolean;
   categoria?: CategoriaBufalo;
   origem?: string;
-  brinco_original?: string;
-  registro_prov?: string;
-  registro_def?: string;
-  id_pai_semen?: string;
-  id_mae_ovulo?: string;
+  brincoOriginal?: string;
+  registroProv?: string;
+  registroDef?: string;
+  idPaiSemen?: string;
+  idMaeOvulo?: string;
 }
 
 export interface UpdateBufaloDTO {
@@ -91,11 +92,11 @@ export interface UpdateBufaloDTO {
   status?: boolean;
   categoria?: CategoriaBufalo;
   origem?: string;
-  brinco_original?: string;
-  registro_prov?: string;
-  registro_def?: string;
-  id_pai_semen?: string;
-  id_mae_ovulo?: string;
+  brincoOriginal?: string;
+  registroProv?: string;
+  registroDef?: string;
+  idPaiSemen?: string;
+  idMaeOvulo?: string;
 }
 
 // ==========================================
@@ -103,9 +104,9 @@ export interface UpdateBufaloDTO {
 // ==========================================
 
 export interface FiltroAvancadoParams {
-  id_raca?: string;
+  idRaca?: string;
   sexo?: SexoBufalo;
-  nivel_maturidade?: NivelMaturidade;
+  nivelMaturidade?: NivelMaturidade;
   status?: boolean;
   brinco?: string;
   page?: number;
@@ -123,16 +124,16 @@ export interface MoverGrupoDTO {
 }
 
 export interface MoverGrupoAnimal {
-  id_bufalo: string;
+  idBufalo: string;
   nome: string;
-  grupo_anterior: string;
-  grupo_novo: string;
+  grupoAnterior: string;
+  grupoNovo: string;
 }
 
 export interface MoverGrupoResponse {
   message: string;
-  grupo_destino: string;
-  total_processados: number;
+  grupoDestino: string;
+  totalProcessados: number;
   motivo: string;
   animais: MoverGrupoAnimal[];
 }
@@ -147,13 +148,13 @@ export interface InativarBufaloDTO {
 }
 
 export interface InativarBufaloResponseData {
-  id_bufalo: string;
+  idBufalo: string;
   nome: string;
   brinco: string;
   status: false;
-  data_baixa: string;
-  motivo_inativo: string;
-  dt_nascimento: string;
+  dataBaixa: string;
+  motivoInativo: string;
+  dtNascimento: string;
   sexo: SexoBufalo;
 }
 
@@ -163,13 +164,13 @@ export interface InativarBufaloResponse {
 }
 
 export interface ReativarBufaloResponseData {
-  id_bufalo: string;
+  idBufalo: string;
   nome: string;
   brinco: string;
   status: true;
-  data_baixa: null;
-  motivo_inativo: null;
-  dt_nascimento: string;
+  dataBaixa: null;
+  motivoInativo: null;
+  dtNascimento: string;
   sexo: SexoBufalo;
 }
 
@@ -183,7 +184,7 @@ export interface ReativarBufaloResponse {
 // ==========================================
 
 export interface ProcessarCategoriaDetalhe {
-  id_bufalo: string;
+  idBufalo: string;
   nome: string;
   categoriaAntes: string;
   categoriaDepois: string;
@@ -209,18 +210,32 @@ export const bufalosService = {
   // CRUD BÁSICO
   // ------------------------------------------
 
-  /**
-   * Registra um novo búfalo para o usuário logado.
-   */
   async create(data: CreateBufaloDTO): Promise<Bufalo> {
-    const response = await apiClient.post<Bufalo>('/bufalos', data);
+    const payload = {
+      nome: data.nome,
+      brinco: data.brinco,
+      ...(data.microchip && { microchip: data.microchip }),
+      dtNascimento: data.dtNascimento,
+      nivelMaturidade: data.nivelMaturidade,
+      sexo: data.sexo,
+      idRaca: data.idRaca,
+      idPropriedade: data.idPropriedade,
+      ...(data.idGrupo && { idGrupo: data.idGrupo }),
+      ...(data.idPai && { idPai: data.idPai }),
+      ...(data.idMae && { idMae: data.idMae }),
+      ...(data.status !== undefined && { status: data.status }),
+      ...(data.categoria && { categoria: data.categoria }),
+      ...(data.origem && { origem: data.origem }),
+      ...(data.brincoOriginal && { brinco_original: data.brincoOriginal }),
+      ...(data.registroProv && { registro_prov: data.registroProv }),
+      ...(data.registroDef && { registro_def: data.registroDef }),
+      ...(data.idPaiSemen && { id_pai_semen: data.idPaiSemen }),
+      ...(data.idMaeOvulo && { id_mae_ovulo: data.idMaeOvulo }),
+    };
+    const response = await apiClient.post<Bufalo>('/bufalos', payload);
     return response.data;
   },
 
-  /**
-   * Lista todos os búfalos do usuário logado com paginação.
-   * Ordenado por data de nascimento (mais antigos primeiro), priorizando status = true.
-   */
   async getAll(page: number = 1, limit: number = 10): Promise<BufaloPaginatedResponse> {
     const response = await apiClient.get<BufaloPaginatedResponse>('/bufalos', {
       params: { page, limit },
@@ -228,39 +243,44 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Busca um búfalo específico pelo UUID.
-   */
   async getById(id: string): Promise<Bufalo> {
     const response = await apiClient.get<Bufalo>(`/bufalos/${id}`);
     return response.data;
   },
 
-  /**
-   * Atualiza os dados de um búfalo.
-   */
   async update(id: string, data: UpdateBufaloDTO): Promise<void> {
-    await apiClient.patch(`/bufalos/${id}`, data);
+    const payload = {
+      ...(data.nome && { nome: data.nome }),
+      ...(data.brinco && { brinco: data.brinco }),
+      ...(data.microchip && { microchip: data.microchip }),
+      ...(data.dtNascimento && { dtNascimento: data.dtNascimento }),
+      ...(data.nivelMaturidade && { nivelMaturidade: data.nivelMaturidade }),
+      ...(data.sexo && { sexo: data.sexo }),
+      ...(data.idRaca && { idRaca: data.idRaca }),
+      ...(data.idPropriedade && { idPropriedade: data.idPropriedade }),
+      ...(data.idGrupo && { idGrupo: data.idGrupo }),
+      ...(data.idPai && { idPai: data.idPai }),
+      ...(data.idMae && { idMae: data.idMae }),
+      ...(data.status !== undefined && { status: data.status }),
+      ...(data.categoria && { categoria: data.categoria }),
+      ...(data.origem && { origem: data.origem }),
+      ...(data.brincoOriginal && { brinco_original: data.brincoOriginal }),
+      ...(data.registroProv && { registro_prov: data.registroProv }),
+      ...(data.registroDef && { registro_def: data.registroDef }),
+      ...(data.idPaiSemen && { id_pai_semen: data.idPaiSemen }),
+      ...(data.idMaeOvulo && { id_mae_ovulo: data.idMaeOvulo }),
+    };
+    await apiClient.patch(`/bufalos/${id}`, payload);
   },
 
-  /**
-   * Remove um búfalo do rebanho (soft delete).
-   * Use restore() para recuperar.
-   */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`/bufalos/${id}`);
   },
 
-  /**
-   * Restaura um búfalo removido via soft delete.
-   */
   async restore(id: string): Promise<void> {
     await apiClient.post(`/bufalos/${id}/restore`);
   },
 
-  /**
-   * Lista todos os búfalos, incluindo os removidos (soft delete).
-   */
   async getAllDeleted(): Promise<Bufalo[]> {
     const response = await apiClient.get<Bufalo[]>('/bufalos/deleted/all');
     return response.data;
@@ -270,18 +290,11 @@ export const bufalosService = {
   // BUSCAS ESPECÍFICAS
   // ------------------------------------------
 
-  /**
-   * Busca um búfalo pelo número de microchip.
-   */
   async getByMicrochip(microchip: string): Promise<Bufalo> {
     const response = await apiClient.get<Bufalo>(`/bufalos/microchip/${microchip}`);
     return response.data;
   },
 
-  /**
-   * Lista todos os búfalos de uma propriedade específica com paginação.
-   * Ordenado por status (ativos primeiro) e data de nascimento.
-   */
   async getByPropriedade(
     idPropriedade: string,
     page: number = 1,
@@ -294,10 +307,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Lista todos os búfalos de um grupo de manejo específico com paginação.
-   * Retorna apenas animais ativos, ordenados por data de nascimento.
-   */
   async getByGrupo(
     idGrupo: string,
     page: number = 1,
@@ -310,9 +319,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Lista búfalos por categoria ABCB.
-   */
   async getByCategoria(categoria: CategoriaBufalo): Promise<Bufalo[]> {
     const response = await apiClient.get<Bufalo[]>(`/bufalos/categoria/${categoria}`);
     return response.data;
@@ -322,9 +328,6 @@ export const bufalosService = {
   // FILTROS
   // ------------------------------------------
 
-  /**
-   * Filtra búfalos por raça em uma propriedade (paginado).
-   */
   async filterByRaca(
     idRaca: string,
     idPropriedade: string,
@@ -338,10 +341,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por raça e brinco (busca progressiva).
-   * Ex: "IZ" encontra "IZ-001", "IZ-002".
-   */
   async filterByRacaEBrinco(
     idRaca: string,
     idPropriedade: string,
@@ -356,9 +355,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por raça e status.
-   */
   async filterByRacaEStatus(
     idRaca: string,
     idPropriedade: string,
@@ -373,9 +369,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por sexo em uma propriedade.
-   */
   async filterBySexo(
     sexo: SexoBufalo,
     idPropriedade: string,
@@ -389,9 +382,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por sexo e brinco (busca progressiva).
-   */
   async filterBySexoEBrinco(
     sexo: SexoBufalo,
     idPropriedade: string,
@@ -406,9 +396,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por sexo e status.
-   */
   async filterBySexoEStatus(
     sexo: SexoBufalo,
     idPropriedade: string,
@@ -423,9 +410,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por maturidade em uma propriedade.
-   */
   async filterByMaturidade(
     nivelMaturidade: NivelMaturidade,
     idPropriedade: string,
@@ -439,9 +423,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por maturidade e brinco (busca progressiva).
-   */
   async filterByMaturidadeEBrinco(
     nivelMaturidade: NivelMaturidade,
     idPropriedade: string,
@@ -456,9 +437,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por maturidade e status.
-   */
   async filterByMaturidadeEStatus(
     nivelMaturidade: NivelMaturidade,
     idPropriedade: string,
@@ -473,9 +451,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por status em uma propriedade.
-   */
   async filterByStatus(
     status: boolean,
     idPropriedade: string,
@@ -489,9 +464,6 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtra búfalos por status e brinco (busca progressiva).
-   */
   async filterByStatusEBrinco(
     status: boolean,
     idPropriedade: string,
@@ -506,17 +478,22 @@ export const bufalosService = {
     return response.data;
   },
 
-  /**
-   * Filtragem avançada por múltiplos critérios combinados.
-   * Todos os filtros são opcionais.
-   */
   async filterAvancado(
     idPropriedade: string,
     params: FiltroAvancadoParams = {},
   ): Promise<BufaloPaginatedResponse> {
+    const apiParams: Record<string, unknown> = {};
+    if (params.idRaca) apiParams.id_raca = params.idRaca;
+    if (params.sexo) apiParams.sexo = params.sexo;
+    if (params.nivelMaturidade) apiParams.nivel_maturidade = params.nivelMaturidade;
+    if (params.status !== undefined) apiParams.status = params.status;
+    if (params.brinco) apiParams.brinco = params.brinco;
+    if (params.page !== undefined) apiParams.page = params.page;
+    if (params.limit !== undefined) apiParams.limit = params.limit;
+
     const response = await apiClient.get<BufaloPaginatedResponse>(
       `/bufalos/filtro/propriedade/${idPropriedade}/avancado`,
-      { params },
+      { params: apiParams },
     );
     return response.data;
   },
@@ -525,57 +502,39 @@ export const bufalosService = {
   // GESTÃO DE GRUPO
   // ------------------------------------------
 
-  /**
-   * Muda o grupo de manejo de um ou mais búfalos.
-   * Útil para transições como Lactando → Secagem, Novilhas → Reprodução, etc.
-   */
   async moverGrupo(data: MoverGrupoDTO): Promise<MoverGrupoResponse> {
     const response = await apiClient.patch<MoverGrupoResponse>('/bufalos/grupo/mover', data);
-    return response.data;
+    return toCamelCase<MoverGrupoResponse>(response.data);
   },
 
   // ------------------------------------------
   // CICLO DE VIDA (INATIVAR / REATIVAR)
   // ------------------------------------------
 
-  /**
-   * Inativa um búfalo com data e motivo formal de baixa.
-   * Registra data_baixa e motivo_inativo para rastreabilidade e auditoria.
-   */
   async inativar(id: string, data: InativarBufaloDTO): Promise<InativarBufaloResponse> {
     const response = await apiClient.post<InativarBufaloResponse>(`/bufalos/${id}/inativar`, data);
-    return response.data;
+    return toCamelCase<InativarBufaloResponse>(response.data);
   },
 
-  /**
-   * Reativa um búfalo inativado, limpando data de baixa e motivo.
-   */
   async reativar(id: string): Promise<ReativarBufaloResponse> {
     const response = await apiClient.post<ReativarBufaloResponse>(`/bufalos/${id}/reativar`);
-    return response.data;
+    return toCamelCase<ReativarBufaloResponse>(response.data);
   },
 
   // ------------------------------------------
   // CATEGORIA ABCB
   // ------------------------------------------
 
-  /**
-   * Força o processamento da categoria ABCB de um búfalo específico.
-   */
   async processarCategoria(id: string): Promise<void> {
     await apiClient.post(`/bufalos/processar-categoria/${id}`);
   },
 
-  /**
-   * Processa a categoria ABCB de todos os búfalos de uma propriedade.
-   * Retorna relatório detalhado com sucesso/erros por animal.
-   */
   async processarCategoriaPropriedade(
     idPropriedade: string,
   ): Promise<ProcessarCategoriaPropriedadeResponse> {
     const response = await apiClient.post<ProcessarCategoriaPropriedadeResponse>(
       `/bufalos/processar-categoria/propriedade/${idPropriedade}`,
     );
-    return response.data;
+    return toCamelCase<ProcessarCategoriaPropriedadeResponse>(response.data);
   },
 };

@@ -31,37 +31,70 @@ export const ALIMENTACAO_REGISTRO_QUERY_KEYS = {
 };
 
 // ==========================================================
-// HOOK 1: DEFINIÇÕES DE ALIMENTAÇÃO (Tipos de Alimentos)
+// Hooks Individuais de Query — Definições de Alimentação
+// ==========================================================
+
+export function useAlimentacaoDefByPropriedade(
+  idPropriedade?: string,
+  page: number = 1,
+  limit: number = 10,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ALIMENTACAO_DEF_QUERY_KEYS.byPropriedade(idPropriedade!, page, limit),
+    queryFn: () => alimentacaoDefService.getByPropriedade(idPropriedade!, page, limit),
+    enabled: !!idPropriedade && options?.enabled !== false,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useAlimentacaoDefById(id?: string) {
+  return useQuery({
+    queryKey: ALIMENTACAO_DEF_QUERY_KEYS.byId(id!),
+    queryFn: () => alimentacaoDefService.getById(id!),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ==========================================================
+// Hooks Individuais de Query — Registros de Alimentação
+// ==========================================================
+
+export function useAlimentacaoRegistroByPropriedade(
+  idPropriedade?: string,
+  page: number = 1,
+  limit: number = 10,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ALIMENTACAO_REGISTRO_QUERY_KEYS.byPropriedade(idPropriedade!, page, limit),
+    queryFn: () => alimentacaoRegistroService.getByPropriedade(idPropriedade!, page, limit),
+    enabled: !!idPropriedade && options?.enabled !== false,
+    staleTime: 1 * 60 * 1000,
+  });
+}
+
+export function useAlimentacaoRegistroById(id?: string) {
+  return useQuery({
+    queryKey: ALIMENTACAO_REGISTRO_QUERY_KEYS.byId(id!),
+    queryFn: () => alimentacaoRegistroService.getById(id!),
+    enabled: !!id,
+    staleTime: 1 * 60 * 1000,
+  });
+}
+
+// ==========================================================
+// HOOK 1: MUTAÇÕES DE DEFINIÇÕES DE ALIMENTAÇÃO
 // ==========================================================
 
 export function useAlimentacaoDef() {
   const queryClient = useQueryClient();
 
-  // --- QUERIES ---
-  const getByPropriedade = (idPropriedade: string, page: number = 1, limit: number = 10, options?: { enabled?: boolean }) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
-      queryKey: ALIMENTACAO_DEF_QUERY_KEYS.byPropriedade(idPropriedade, page, limit),
-      queryFn: () => alimentacaoDefService.getByPropriedade(idPropriedade, page, limit),
-      enabled: !!idPropriedade && options?.enabled !== false,
-      staleTime: 5 * 60 * 1000, // 5 minutos (definições mudam raramente)
-    });
-
-  const getById = (id?: string) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
-      queryKey: ALIMENTACAO_DEF_QUERY_KEYS.byId(id!),
-      queryFn: () => alimentacaoDefService.getById(id!),
-      enabled: !!id,
-      staleTime: 5 * 60 * 1000,
-    });
-
-  // --- MUTATIONS ---
   const createMutation = useMutation({
     mutationFn: (data: CreateAlimentacaoDefDTO) => alimentacaoDefService.create(data),
     onSuccess: (_, variables) => {
-      // Invalida a lista da propriedade para recarregar com o novo item
-      queryClient.invalidateQueries({ queryKey: [...ALIMENTACAO_DEF_QUERY_KEYS.lists(), variables.id_propriedade] });
+      queryClient.invalidateQueries({ queryKey: [...ALIMENTACAO_DEF_QUERY_KEYS.lists(), variables.idPropriedade] });
     },
   });
 
@@ -82,54 +115,28 @@ export function useAlimentacaoDef() {
   });
 
   return {
-    // Queries
-    getByPropriedade,
-    getById,
-
-    // Mutations
     createDef: createMutation.mutateAsync,
     isCreatingDef: createMutation.isPending,
-    
+
     updateDef: updateMutation.mutateAsync,
     isUpdatingDef: updateMutation.isPending,
-    
+
     deleteDef: deleteMutation.mutateAsync,
     isDeletingDef: deleteMutation.isPending,
   };
 }
 
 // ==========================================================
-// HOOK 2: REGISTROS DE ALIMENTAÇÃO (Ocorrências Diárias)
+// HOOK 2: MUTAÇÕES DE REGISTROS DE ALIMENTAÇÃO
 // ==========================================================
 
 export function useAlimentacaoRegistro() {
   const queryClient = useQueryClient();
 
-  // --- QUERIES ---
-  const getByPropriedade = (idPropriedade: string, page: number = 1, limit: number = 10, options?: { enabled?: boolean }) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
-      queryKey: ALIMENTACAO_REGISTRO_QUERY_KEYS.byPropriedade(idPropriedade, page, limit),
-      queryFn: () => alimentacaoRegistroService.getByPropriedade(idPropriedade, page, limit),
-      enabled: !!idPropriedade && options?.enabled !== false,
-      staleTime: 1 * 60 * 1000, // 1 minuto (registros são mais dinâmicos)
-    });
-
-  const getById = (id?: string) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
-      queryKey: ALIMENTACAO_REGISTRO_QUERY_KEYS.byId(id!),
-      queryFn: () => alimentacaoRegistroService.getById(id!),
-      enabled: !!id,
-      staleTime: 1 * 60 * 1000,
-    });
-
-  // --- MUTATIONS ---
   const createMutation = useMutation({
     mutationFn: (data: CreateAlimentacaoRegistroDTO) => alimentacaoRegistroService.create(data),
     onSuccess: (_, variables) => {
-      // Invalida a lista da propriedade para exibir o novo registro imediatamente
-      queryClient.invalidateQueries({ queryKey: [...ALIMENTACAO_REGISTRO_QUERY_KEYS.lists(), variables.id_propriedade] });
+      queryClient.invalidateQueries({ queryKey: [...ALIMENTACAO_REGISTRO_QUERY_KEYS.lists(), variables.idPropriedade] });
     },
   });
 
@@ -150,17 +157,12 @@ export function useAlimentacaoRegistro() {
   });
 
   return {
-    // Queries
-    getByPropriedade,
-    getById,
-
-    // Mutations
     createRegistro: createMutation.mutateAsync,
     isCreatingRegistro: createMutation.isPending,
-    
+
     updateRegistro: updateMutation.mutateAsync,
     isUpdatingRegistro: updateMutation.isPending,
-    
+
     deleteRegistro: deleteMutation.mutateAsync,
     isDeletingRegistro: deleteMutation.isPending,
   };

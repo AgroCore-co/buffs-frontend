@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AuthSessionResponse, authService } from '@/services/auth.service';
 import { Usuario } from '@/services/usuarios.service';
+import { STORAGE_KEYS } from '@/constants';
 
 interface AuthState {
   // Dados
@@ -35,7 +36,7 @@ export const useAuthStore = create<AuthState>((set) => {
     clearAuth: () => {
       // Limpa também a propriedade ativa para não vazar dados entre sessões
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('@Buffs:activePropriedade');
+        localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROPRIEDADE);
       }
       set({ 
         session: null, 

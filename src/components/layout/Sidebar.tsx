@@ -3,91 +3,14 @@
 import { useState } from 'react';
 import { Link, usePathname } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import {
-  Home,
-  Building2,
-  PawPrint,
-  Milk,
-  CalendarCheck2,
-  Factory,
-  LucideIcon,
-} from 'lucide-react';
-
-// --- TIPAGENS ---
-interface MenuItem {
-  icon: LucideIcon;
-  labelKey: string;
-  href: string;
-}
-
-interface MenuSection {
-  sectionKey: string;
-  items: MenuItem[];
-}
+import { proprietarioNavigation, type NavSection } from '@/constants/navigation';
 
 export default function Sidebar() {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const pathname = usePathname(); // Já retorna sem o prefixo de locale
   const t = useTranslations('Sidebar');
 
-  // --- ESTRUTURA DE MENU (Rotas de Proprietário) ---
-  // Nota: NÃO concatenamos /${locale} — o Link do next-intl já faz isso
-  const menuItems: MenuSection[] = [
-    {
-      sectionKey: 'sections.main',
-      items: [
-        { icon: Home, labelKey: 'dashboard', href: '/proprietario' },
-      ],
-    },
-    {
-      sectionKey: 'sections.propriedades',
-      items: [
-        {
-          icon: Building2,
-          labelKey: 'propriedades',
-          href: '/proprietario/propriedades',
-        },
-      ],
-    },
-    {
-      sectionKey: 'sections.rebanho',
-      items: [
-        { icon: PawPrint, labelKey: 'rebanho', href: '/proprietario/rebanho' },
-      ],
-    },
-    {
-      sectionKey: 'sections.lactacao',
-      items: [
-        { icon: Milk, labelKey: 'lactacao', href: '/proprietario/lactacao' },
-      ],
-    },
-    {
-      sectionKey: 'sections.controle',
-      items: [
-        {
-          icon: CalendarCheck2,
-          labelKey: 'controleReproducao',
-          href: '/proprietario/controle-reproducao',
-        },
-        {
-          icon: PawPrint,
-          labelKey: 'simulacao',
-          href: '/proprietario/simulacao',
-        },
-      ],
-    },
-    {
-      sectionKey: 'sections.industria',
-      items: [
-        { icon: Milk, labelKey: 'coletas', href: '/proprietario/coleta' },
-        {
-          icon: Factory,
-          labelKey: 'industria',
-          href: '/proprietario/industria',
-        },
-      ],
-    },
-  ];
+  const menuItems: NavSection[] = proprietarioNavigation;
 
   return (
     <aside
@@ -102,7 +25,7 @@ export default function Sidebar() {
       {/* Logo / Brand Area */}
       <div className="flex h-16 items-center justify-center border-b border-[#ce7d0a]/10 shrink-0 bg-[#f8fcfa]"></div>
 
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
+      <nav role="navigation" aria-label="Menu principal" className="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
         {menuItems.map((group, groupIndex) => (
           <div key={groupIndex}>
             {groupIndex > 0 && (
@@ -121,6 +44,7 @@ export default function Sidebar() {
                   <li key={itemIndex}>
                     <Link
                       href={item.href}
+                      aria-current={isActive ? "page" : undefined}
                       className={`
                         group flex h-10 items-center rounded-md px-2 text-sm font-medium transition-all duration-200
                         ${

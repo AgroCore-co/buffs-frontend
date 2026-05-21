@@ -4,7 +4,7 @@ import React from "react";
 import { LucideIcon } from "lucide-react";
 import MetricCard from "@/components/ui/MetricCard";
 import Badge from "@/components/ui/Badge";
-import { useDashboard } from "@/hooks/useDashboard";
+import { useDashboardGeral } from "@/hooks/useDashboard";
 import {
   FileText,
   Tractor,
@@ -70,7 +70,7 @@ function DadosCadastraisSection({ propriedade }: { propriedade: Record<string, s
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 flex-1">
         <InfoItem icon={FileText} label="CNPJ / Documento" value={propriedade.cnpj} />
-        <InfoItem icon={Tractor} label="Sistema de Produção" value={getManejoLabel(propriedade.tipoManejo || propriedade.tipo_manejo)} />
+        <InfoItem icon={Tractor} label="Sistema de Produção" value={getManejoLabel(propriedade.tipoManejo ?? "")} />
         <InfoItem icon={Fingerprint} label="Proprietário" value={propriedade.nomeDono || "-"} subValue={propriedade.emailDono} />
         <InfoItem icon={MapPin} label="Endereço Completo" value={propriedade.enderecoCompleto} subValue={propriedade.cep} />
       </div>
@@ -80,7 +80,6 @@ function DadosCadastraisSection({ propriedade }: { propriedade: Record<string, s
 
 interface DashboardStats {
   bufalosPorRaca?: RacaInfo[];
-  [key: string]: unknown;
 }
 
 function ComposicaoRacialSection({ loadingDashboard, stats }: { loadingDashboard: boolean; stats?: DashboardStats }) {
@@ -172,22 +171,20 @@ function IndicadoresRebanhoSection({ stats }: { stats: IndicadoresStats }) {
 // --- Componente Principal da Aba ---
 
 export default function VisaoGeralTab({ dadosCadastrais }: VisaoGeralTabProps) {
-  const { getGeral } = useDashboard();
-  
   // Extrai o ID da propriedade dos dados cadastrais (suporta camelCase ou snake_case)
   const idPropriedade = dadosCadastrais?.idPropriedade || dadosCadastrais?.id_propriedade;
-  
+
   // Busca as estatísticas gerais (rota GET /dashboard/{id_propriedade})
-  const { data: dashboardData, isLoading: loadingDashboard } = getGeral(idPropriedade, {
+  const { data: dashboardData, isLoading: loadingDashboard } = useDashboardGeral(idPropriedade, {
     enabled: !!idPropriedade,
   });
 
   // Mapeia os dados da API para o formato esperado pelos cards de indicadores
   const indicadores: IndicadoresStats = {
-    femeas: dashboardData?.qtd_femeas_ativas || 0,
-    machos: dashboardData?.qtd_macho_ativos || 0,
-    lotes: dashboardData?.qtd_lotes || 0,
-    usuarios: dashboardData?.qtd_usuarios || 0,
+    femeas: dashboardData?.qtdFemeasAtivas || 0,
+    machos: dashboardData?.qtdMachoAtivos || 0,
+    lotes: dashboardData?.qtdLotes || 0,
+    usuarios: dashboardData?.qtdUsuarios || 0,
   };
 
   return (

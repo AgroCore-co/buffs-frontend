@@ -15,6 +15,7 @@ import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import { useAuth } from '@/hooks/useAuth';
 import { usuariosService } from '@/services/usuarios.service';
 import { USUARIOS_QUERY_KEYS } from '@/hooks/useUsuarios';
+import { CARGO_ROUTES } from '@/constants/roles';
 
 // Schema de validação do formulário
 const loginSchema = z.object({
@@ -63,23 +64,9 @@ export default function Login() {
       });
 
       // 4. Redirecionamento baseado no cargo
-      // Nota: useRouter do next-intl já injeta o locale, então NÃO precisamos de /${locale}
-      switch (userProfile.cargo) {
-        case 'PROPRIETARIO':
-          router.push('/proprietario');
-          break;
-        case 'GERENTE':
-          router.push('/gerente');
-          break;
-        case 'FUNCIONARIO':
-          router.push('/funcionario');
-          break;
-        case 'VETERINARIO':
-          router.push('/veterinario');
-          break;
-        default:
-          router.push('/auth/login');
-      }
+      // useRouter do next-intl já injeta o locale — NÃO concatenamos /${locale}
+      const destination = CARGO_ROUTES[userProfile.cargo as keyof typeof CARGO_ROUTES] ?? '/auth/login';
+      router.push(destination);
 
     } catch (error: unknown) {
       setIsRedirecting(false);

@@ -1,9 +1,11 @@
+import { memo } from 'react';
+
 interface BadgeProps {
   children: React.ReactNode;
   type?: 'active' | 'inactive' | 'info';
 }
 
-export default function Badge({ children, type = 'active' }: BadgeProps) {
+const Badge = memo(function Badge({ children, type = 'active' }: BadgeProps) {
   const styles = {
     active: 'bg-[#e6fbf2] text-[#0f766e] border-[#ccfbf1]',
     inactive: 'bg-gray-100 text-gray-500 border-gray-200',
@@ -17,4 +19,6 @@ export default function Badge({ children, type = 'active' }: BadgeProps) {
       {children}
     </span>
   );
-}
+});
+
+export default Badge;

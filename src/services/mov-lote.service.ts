@@ -1,4 +1,5 @@
 import apiClient from '@/lib/apiClient';
+import { toCamelCase } from '@/lib/toCamelCase';
 
 // ==========================================
 // DTOs (Data Transfer Objects) - Comuns
@@ -28,14 +29,14 @@ export interface MovimentacaoLote {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
-  // Joins retornados pela API
+  // Joins retornados pela API (nomes gerados pelo ORM)
   grupo?: {
     nomeGrupo: string;
   };
-  lote_idLoteAnterior?: {
+  loteIdLoteAnterior?: {
     nomeLote: string;
   } | null;
-  lote_idLoteAtual?: {
+  loteIdLoteAtual?: {
     nomeLote: string;
   };
 }
@@ -73,27 +74,27 @@ export interface UpdateMovLoteDTO {
 // ==========================================
 
 export interface MovimentoHistoricoDetalhe {
-  id_movimento: string;
-  id_lote_anterior: string | null;
-  id_lote_atual: string;
-  dt_entrada: string;
-  dt_saida: string | null;
-  dias_permanencia: number;
+  idMovimento: string;
+  idLoteAnterior: string | null;
+  idLoteAtual: string;
+  dtEntrada: string;
+  dtSaida: string | null;
+  diasPermanencia: number;
   status: string;
 }
 
 export interface HistoricoGrupoResponse {
-  grupo_id: string;
-  total_movimentacoes: number;
+  grupoId: string;
+  totalMovimentacoes: number;
   historico: MovimentoHistoricoDetalhe[];
 }
 
 export interface StatusGrupoResponse {
-  grupo_id: string;
-  localizacao_atual: {
-    id_lote: string;
+  grupoId: string;
+  localizacaoAtual: {
+    idLote: string;
     desde: string;
-    dias_no_local: number;
+    diasNoLocal: number;
   };
 }
 
@@ -102,69 +103,45 @@ export interface StatusGrupoResponse {
 // ==========================================
 
 export const movLoteService = {
-  /**
-   * Registra movimentação física de um grupo para um novo lote.
-   */
   async create(data: CreateMovLoteDTO): Promise<MovimentacaoLote> {
     const response = await apiClient.post<MovimentacaoLote>('/mov-lote', data);
-    return response.data;
+    return toCamelCase<MovimentacaoLote>(response.data);
   },
 
-  /**
-   * Lista todas as movimentações de lotes no sistema (paginado).
-   */
   async getAll(page: number = 1, limit: number = 10): Promise<MovLoteListResponse> {
     const response = await apiClient.get<MovLoteListResponse>('/mov-lote', {
       params: { page, limit },
     });
-    return response.data;
+    return toCamelCase<MovLoteListResponse>(response.data);
   },
 
-  /**
-   * Lista movimentações de lotes de uma propriedade específica com paginação.
-   */
   async getByPropriedade(idPropriedade: string, page: number = 1, limit: number = 10): Promise<MovLotePaginatedResponse> {
     const response = await apiClient.get<MovLotePaginatedResponse>(`/mov-lote/propriedade/${idPropriedade}`, {
       params: { page, limit },
     });
-    return response.data;
+    return toCamelCase<MovLotePaginatedResponse>(response.data);
   },
 
-  /**
-   * Busca uma movimentação específica pelo seu ID.
-   */
   async getById(id: string): Promise<MovimentacaoLote> {
     const response = await apiClient.get<MovimentacaoLote>(`/mov-lote/${id}`);
-    return response.data;
+    return toCamelCase<MovimentacaoLote>(response.data);
   },
 
-  /**
-   * Atualiza os dados de uma movimentação existente.
-   */
   async update(id: string, data: UpdateMovLoteDTO): Promise<void> {
     await apiClient.patch(`/mov-lote/${id}`, data);
   },
 
-  /**
-   * Remove o registro de uma movimentação.
-   */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`/mov-lote/${id}`);
   },
 
-  /**
-   * Busca o histórico completo de movimentações de um grupo.
-   */
   async getHistoricoByGrupo(idGrupo: string): Promise<HistoricoGrupoResponse> {
     const response = await apiClient.get<HistoricoGrupoResponse>(`/mov-lote/historico/grupo/${idGrupo}`);
-    return response.data;
+    return toCamelCase<HistoricoGrupoResponse>(response.data);
   },
 
-  /**
-   * Verifica o status atual de localização de um grupo.
-   */
   async getStatusByGrupo(idGrupo: string): Promise<StatusGrupoResponse> {
     const response = await apiClient.get<StatusGrupoResponse>(`/mov-lote/status/grupo/${idGrupo}`);
-    return response.data;
+    return toCamelCase<StatusGrupoResponse>(response.data);
   },
 };

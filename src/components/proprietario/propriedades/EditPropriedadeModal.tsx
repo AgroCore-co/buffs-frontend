@@ -9,8 +9,17 @@ import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
 import { Stepper } from "@/components/ui/Stepper";
+import { toast } from "sonner";
+import { Propriedade } from "@/services/propriedades.service";
+import { Endereco } from "@/services/enderecos.service";
 
-export default function EditPropriedadeModal({ isOpen, onClose, propriedade }) {
+interface EditPropriedadeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  propriedade: (Propriedade & { endereco?: Endereco }) | null;
+}
+
+export default function EditPropriedadeModal({ isOpen, onClose, propriedade }: EditPropriedadeModalProps) {
   const [formPropriedade, setFormPropriedade] = useState({
     nome: "",
     cnpj: "",
@@ -37,7 +46,6 @@ export default function EditPropriedadeModal({ isOpen, onClose, propriedade }) {
   ];
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   // Integração com hooks de propriedades e endereços
   const { updatePropriedade, isUpdatingPropriedade } = usePropriedades();
@@ -50,28 +58,27 @@ export default function EditPropriedadeModal({ isOpen, onClose, propriedade }) {
         nome: propriedade.nome || "",
         cnpj: propriedade.cnpj || "",
         // Lida com variações de nomenclatura (camelCase vs snake_case) que a API possa retornar
-        p_abcb: propriedade.pAbcb !== undefined ? propriedade.pAbcb : (propriedade.p_abcb || false),
+        p_abcb: propriedade.pAbcb ?? false,
         tipoManejo: propriedade.tipoManejo || "P",
       });
 
       if (propriedade.endereco || propriedade.idEndereco) {
         // Se a listagem não trouxer o objeto de endereço completo, adapte aqui.
         // Assumindo que "propriedade.endereco" venha populado na listagem.
-        const end = propriedade.endereco || {};
+        const end: Partial<Endereco> = propriedade.endereco || {};
         setFormEndereco({
           pais: end.pais || "",
           estado: end.estado || "",
           cidade: end.cidade || "",
           bairro: end.bairro || "",
           // Lida com a possível variação rua/logradouro
-          rua: end.rua || end.logradouro || "",
+          rua: end.rua || "",
           cep: end.cep || "",
           numero: end.numero || "",
-          ponto_referencia: end.pontoReferencia || end.ponto_referencia || "",
+          ponto_referencia: end.pontoReferencia || "",
         });
       }
       setStep(0);
-      setError(null);
     }
   }, [propriedade, isOpen]);
 
@@ -80,7 +87,7 @@ export default function EditPropriedadeModal({ isOpen, onClose, propriedade }) {
     if (!propriedade?.idPropriedade) return;
 
     setLoading(true);
-    setError(null);
+    const toastId = toast.loading("Salvando alterações...");
     try {
       // 1. Atualiza Endereço (se houver idEndereco vinculado)
       if (propriedade.idEndereco) {
@@ -97,12 +104,11 @@ export default function EditPropriedadeModal({ isOpen, onClose, propriedade }) {
           rua: formEndereco.rua,
           cep: cepFormatado,
           numero: formEndereco.numero,
-          ...(formEndereco.ponto_referencia && formEndereco.ponto_referencia.trim() !== "" 
-                ? { ponto_referencia: formEndereco.ponto_referencia } 
+          ...(formEndereco.ponto_referencia && formEndereco.ponto_referencia.trim() !== ""
+                ? { pontoReferencia: formEndereco.ponto_referencia }
                 : {})
         };
 
-        console.log('Payload enviado para PATCH /enderecos:', payloadEndereco);
         await updateEndereco({ id: propriedade.idEndereco, data: payloadEndereco });
       }
 
@@ -111,23 +117,24 @@ export default function EditPropriedadeModal({ isOpen, onClose, propriedade }) {
       // O backend não aceita atualização de CNPJ, então não envie esse campo
       const payloadPropriedade = {
         nome: formPropriedade.nome,
-        p_abcb: formPropriedade.p_abcb,
-        tipoManejo: formPropriedade.tipoManejo,
+        pAbcb: formPropriedade.p_abcb,
+        tipoManejo: formPropriedade.tipoManejo as 'P' | 'E' | 'I',
       };
 
-      console.log('Payload enviado para PATCH /propriedades:', payloadPropriedade);
       await updatePropriedade({ id: propriedade.idPropriedade, data: payloadPropriedade });
-      
+
+      toast.success("Propriedade atualizada com sucesso!", { id: toastId });
       onClose();
     } catch (err) {
-      const mensagemBackend = err.response?.data?.message || err.response?.data?.error;
-      setError(mensagemBackend || err.message || "Erro desconhecido ao tentar atualizar.");
+      const e = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
+      const mensagemBackend = e.response?.data?.message || e.response?.data?.error;
+      toast.error(mensagemBackend || e.message || "Erro desconhecido ao tentar atualizar.", { id: toastId });
     } finally {
       setLoading(false);
     }
   };
 
-  function handleNext(e) {
+  function handleNext(e?: React.FormEvent | React.MouseEvent) {
     if (e) e.preventDefault();
     if (step < steps.length - 1) setStep(s => s + 1);
   }
@@ -182,7 +189,6 @@ export default function EditPropriedadeModal({ isOpen, onClose, propriedade }) {
         className="flex flex-col gap-4"
       >
         <Stepper steps={steps} current={step} className="mb-6" />
-        {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
         
         {step === 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

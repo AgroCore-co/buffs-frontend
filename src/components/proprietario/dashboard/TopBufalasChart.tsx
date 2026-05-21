@@ -54,11 +54,8 @@ export default function TopBufalasChart({ data }: TopBufalasChartProps) {
       <h2 className="text-lg font-semibold text-gray-800 mb-4 shrink-0">
         Top 5 Búfalas Produtoras
       </h2>
-      <div
-        className="flex-1 w-full"
-        style={{ minHeight: '300px', height: '100%' }}
-      >
-        <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+      <div className="flex-1 w-full min-h-[300px]">
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart
             data={data}
             layout="vertical"

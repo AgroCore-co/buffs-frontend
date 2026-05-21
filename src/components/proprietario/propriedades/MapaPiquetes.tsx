@@ -1,25 +1,45 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useLotes } from "@/hooks/useLotes";
+import { DetalhesLoteModal } from "@/components/proprietario/propriedades/DetalhesLoteModal";
+import { useLotesByPropriedade } from "@/hooks/useLotes";
 import { Lote } from "@/services/lotes.service";
-import L from "leaflet";
-import { 
-  Map as MapIcon, 
-  X, 
-  Maximize, 
-  Hash, 
-  Users, 
-  Activity, 
+import dynamic from "next/dynamic";
+import type { Map as LeafletMap } from "leaflet";
+import {
+  Map as MapIcon,
+  X,
+  Maximize,
+  Hash,
+  Users,
+  Activity,
   Info,
   Plus,
   Minus,
   Focus
 } from "lucide-react";
+import { useMapEvents } from "react-leaflet";
 
-// Importações do Leaflet
-import { MapContainer, TileLayer, Polygon, Tooltip, useMapEvents, CircleMarker } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((m) => m.MapContainer),
+  { ssr: false }
+);
+const TileLayer = dynamic(
+  () => import("react-leaflet").then((m) => m.TileLayer),
+  { ssr: false }
+);
+const Polygon = dynamic(
+  () => import("react-leaflet").then((m) => m.Polygon),
+  { ssr: false }
+);
+const Tooltip = dynamic(
+  () => import("react-leaflet").then((m) => m.Tooltip),
+  { ssr: false }
+);
+const CircleMarker = dynamic(
+  () => import("react-leaflet").then((m) => m.CircleMarker),
+  { ssr: false }
+);
 
 // Componente auxiliar para escutar os eventos de zoom do mapa
 function MapEventsHandler({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
@@ -43,7 +63,7 @@ interface MapaPiquetesProps {
 export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [selectedLote, setSelectedLote] = useState<Lote | null>(null); 
-  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
   
   const [zoomLevel, setZoomLevel] = useState(15);
   
@@ -52,10 +72,11 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
   const ZOOM_MOSTRAR_GRUPOS = 15;   // Até o 15, mostra o nome do Grupo
   const ZOOM_ESCONDER_TUDO = 14;    // No 13 e abaixo (ou seja, < 14), esconde os grupos
 
-  const { getByPropriedade } = useLotes();
-  const { data: lotes, isLoading } = getByPropriedade(idPropriedade);
+  const { data: lotes, isLoading } = useLotesByPropriedade(idPropriedade);
+  const [isDetalhesModalOpen, setIsDetalhesModalOpen] = useState(false);
 
   useEffect(() => {
+    void import("leaflet/dist/leaflet.css");
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
@@ -81,7 +102,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
       }
 
       const gData = mapGrupos.get(gId);
-      lote.geoMapa.coordinates[0].forEach((coord: number[]) => {
+      (lote.geoMapa.coordinates as number[][][])[0].forEach((coord: number[]) => {
         gData.latSum += coord[1];
         gData.lngSum += coord[0];
         gData.pointsCount += 1;
@@ -106,7 +127,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
 
     lotes.forEach((lote) => {
       if (!lote.geoMapa || lote.geoMapa.type !== "Polygon") return;
-      lote.geoMapa.coordinates[0].forEach((coord: number[]) => {
+      (lote.geoMapa.coordinates as number[][][])[0].forEach((coord: number[]) => {
         const lat = coord[1];
         const lng = coord[0];
         if (lat < minLat) minLat = lat;
@@ -269,7 +290,10 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
               </div>
             )}
             
-            <button className="w-full mt-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow-sm">
+            <button
+              onClick={() => setIsDetalhesModalOpen(true)}
+              className="w-full mt-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow-sm"
+            >
               Ver Ficha Completa
             </button>
           </div>
@@ -336,7 +360,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
         {lotes?.map((lote, index: number) => {
           if (!lote.geoMapa || lote.geoMapa.type !== "Polygon" || !lote.geoMapa.coordinates) return null;
 
-          const positions = lote.geoMapa.coordinates[0].map(
+          const positions = (lote.geoMapa.coordinates as number[][][])[0].map(
             (coord: number[]) => [coord[1], coord[0]] as [number, number]
           );
 
@@ -390,6 +414,12 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
         ))}
 
       </MapContainer>
+
+      <DetalhesLoteModal
+        isOpen={isDetalhesModalOpen}
+        onClose={() => setIsDetalhesModalOpen(false)}
+        lote={selectedLote}
+      />
     </div>
   );
 }

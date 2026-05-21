@@ -1,11 +1,14 @@
 "use client";
 
+
 import { useTranslations } from 'next-intl';
 import ProducaoLeiteChart from "@/components/proprietario/dashboard/ProducaoLeiteChart";
 import TopBufalasChart from "@/components/proprietario/dashboard/TopBufalasChart";
 import Container from "@/components/ui/Container";
 import MetricCard from "@/components/ui/MetricCard";
 import { Layers, Target, Heart, Users, Truck, CheckCircle, XCircle } from "lucide-react";
+import { useDashboardGeral } from "@/hooks/useDashboard";
+import { usePropriedadeStore } from "@/stores/propriedade.store";
 
 // Mock de dados para o gráfico de top búfalas
 const mockTopBufalas = [
@@ -48,6 +51,17 @@ const mockColetas = [
 
 export default function DashboardPageProprietario() {
   const t = useTranslations('Dashboard');
+  const { activeId } = usePropriedadeStore();
+  const { data: geralData, isLoading } = useDashboardGeral(activeId ?? undefined, { enabled: !!activeId });
+
+  const machos = geralData?.qtdMachoAtivos ?? 0;
+  const femeas = geralData?.qtdFemeasAtivas ?? 0;
+  const total = machos + femeas;
+  const equipe = geralData?.qtdUsuarios ?? 0;
+  const pctMachos = total > 0 ? Math.round((machos / total) * 100) : 0;
+  const pctFemeas = total > 0 ? Math.round((femeas / total) * 100) : 0;
+
+  const fmt = (v: number) => (!activeId ? '—' : isLoading ? '...' : v.toString());
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -62,25 +76,25 @@ export default function DashboardPageProprietario() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
             title={t('totalBuffalos')}
-            value="117"
+            value={fmt(total)}
             subtitle={t('totalBuffalosDesc')}
             icon={<Layers className="w-4 h-4" />}
           />
           <MetricCard
             title={t('males')}
-            value="37"
-            subtitle={t('malesDesc', { percent: '27' })}
+            value={fmt(machos)}
+            subtitle={t('malesDesc', { percent: String(pctMachos) })}
             icon={<Target className="w-4 h-4" />}
           />
           <MetricCard
             title={t('females')}
-            value="80"
-            subtitle={t('femalesDesc', { percent: '59' })}
+            value={fmt(femeas)}
+            subtitle={t('femalesDesc', { percent: String(pctFemeas) })}
             icon={<Heart className="w-4 h-4" />}
           />
           <MetricCard
             title={t('team')}
-            value="1"
+            value={fmt(equipe)}
             subtitle={t('teamDesc')}
             icon={<Users className="w-4 h-4" />}
           />

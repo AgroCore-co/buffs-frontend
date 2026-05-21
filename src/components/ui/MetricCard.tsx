@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface MetricCardProps {
   title: string;
   value: string;
@@ -5,7 +7,7 @@ interface MetricCardProps {
   icon: React.ReactNode;
 }
 
-export default function MetricCard({ title, value, subtitle, icon }: MetricCardProps) {
+const MetricCard = memo(function MetricCard({ title, value, subtitle, icon }: MetricCardProps) {
   return (
     <div className="bg-[#f8fcfa] p-3 rounded-xl border border-[#ce7d0a]/10 hover:border-[#ffcf78] transition-all hover:shadow-sm group">
       <div className="flex items-center justify-between mb-2">
@@ -16,16 +18,18 @@ export default function MetricCard({ title, value, subtitle, icon }: MetricCardP
           {icon}
         </div>
       </div>
-      
+
       <div className="flex items-end gap-2">
         <p className="text-2xl font-extrabold text-[#404040] leading-none">
           {value}
         </p>
       </div>
-      
+
       <p className="text-[10px] text-[#404040]/50 mt-1.5 font-medium">
         {subtitle}
       </p>
     </div>
   );
-}
+});
+
+export default MetricCard;

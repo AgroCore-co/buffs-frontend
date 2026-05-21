@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import FocusTrap from 'focus-trap-react';
 import { Button } from './Button';
 
 // 1. Tipagem dos tamanhos aceitos
@@ -77,11 +78,19 @@ export function Modal({
       />
 
       {/* Painel do Modal */}
+      <FocusTrap
+        focusTrapOptions={{
+          returnFocusOnDeactivate: true,
+          escapeDeactivates: false,
+          fallbackFocus: () => modalRef.current!,
+        }}
+      >
       <div
         ref={modalRef}
+        tabIndex={-1}
         className={`
           relative w-full ${sizes[size] || sizes.md}
-          bg-white rounded-xl shadow-2xl 
+          bg-white rounded-xl shadow-2xl
           border border-slate-200
           flex flex-col max-h-[90vh]
           transform transition-all animate-in fade-in zoom-in-95 duration-200 slide-in-from-bottom-4
@@ -126,6 +135,7 @@ export function Modal({
           </div>
         )}
       </div>
+      </FocusTrap>
     </div>
   );
 

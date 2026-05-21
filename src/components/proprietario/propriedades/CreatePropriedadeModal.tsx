@@ -9,8 +9,14 @@ import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
 import { Stepper } from "@/components/ui/Stepper";
+import { toast } from "sonner";
 
-export default function CreatePropriedadeModal({ isOpen, onClose }) {
+interface CreatePropriedadeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function CreatePropriedadeModal({ isOpen, onClose }: CreatePropriedadeModalProps) {
   const [formPropriedade, setFormPropriedade] = useState({
     nome: "",
     cnpj: "",
@@ -37,7 +43,6 @@ export default function CreatePropriedadeModal({ isOpen, onClose }) {
   ];
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   // Integração com hooks de propriedades e endereços
   const { createPropriedade, isCreatingPropriedade } = usePropriedades();
@@ -46,7 +51,7 @@ export default function CreatePropriedadeModal({ isOpen, onClose }) {
   // POST endereço e propriedade em sequência
   const handleSubmitAll = async () => {
     setLoading(true);
-    setError(null);
+    const toastId = toast.loading("Criando propriedade...");
     try {
 
       // 1. Mapeia campos para o formato esperado pelo backend (pontoReferencia)
@@ -66,25 +71,21 @@ export default function CreatePropriedadeModal({ isOpen, onClose }) {
         rua: formEndereco.rua,
         cep: cepFormatado,
         numero: formEndereco.numero,
-        ...(formEndereco.ponto_referencia && formEndereco.ponto_referencia.trim() !== "" ? { ponto_referencia: formEndereco.ponto_referencia } : {})
+        ...(formEndereco.ponto_referencia && formEndereco.ponto_referencia.trim() !== "" ? { pontoReferencia: formEndereco.ponto_referencia } : {})
       };
 
 
-      // Loga o payload do endereço para depuração
-      console.log('Payload enviado para /enderecos:', payloadEndereco);
 
       // 2. Cria endereço enviando apenas os dados preenchidos e com nomes corretos
       const enderecoData = await createEndereco(payloadEndereco);
       
       // O Swagger confirmou que o retorno é exatamente "idEndereco"
-      const novoIdEndereco = enderecoData?.idEndereco || enderecoData?.id;
+      const novoIdEndereco = enderecoData?.idEndereco;
 
       if (!novoIdEndereco) {
         throw new Error("Falha ao obter o ID do endereço recém-criado.");
       }
 
-      setIdEndereco(novoIdEndereco);
-      
 
       // Formata o CNPJ para 00.000.000/0000-00
       let cnpjFormatado = formPropriedade.cnpj.replace(/\D/g, "");
@@ -98,27 +99,26 @@ export default function CreatePropriedadeModal({ isOpen, onClose }) {
       const payloadPropriedade = {
         nome: formPropriedade.nome,
         cnpj: cnpjFormatado,
-        p_abcb: formPropriedade.p_abcb,
-        tipoManejo: formPropriedade.tipoManejo,
+        pAbcb: formPropriedade.p_abcb,
+        tipoManejo: formPropriedade.tipoManejo as 'P' | 'E' | 'I',
         idEndereco: novoIdEndereco
       };
-      // Loga o payload da propriedade para depuração
-      console.log('Payload enviado para /propriedades:', payloadPropriedade);
 
       // 3. Cria propriedade enviando a chave idEndereco
       await createPropriedade(payloadPropriedade);
-      
+
+      toast.success("Propriedade criada com sucesso!", { id: toastId });
       onClose();
     } catch (err) {
-      // Tenta extrair a mensagem exata de erro do backend (muito comum usando Axios)
-      const mensagemBackend = err.response?.data?.message || err.response?.data?.error;
-      setError(mensagemBackend || err.message || "Erro desconhecido ao tentar salvar.");
+      const e = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
+      const mensagemBackend = e.response?.data?.message || e.response?.data?.error;
+      toast.error(mensagemBackend || e.message || "Erro desconhecido ao tentar salvar.", { id: toastId });
     } finally {
       setLoading(false);
     }
   };
 
-  function handleNext(e) {
+  function handleNext(e?: React.FormEvent | React.MouseEvent) {
     if (e) e.preventDefault();
     if (step < steps.length - 1) setStep(s => s + 1);
   }
@@ -173,7 +173,6 @@ export default function CreatePropriedadeModal({ isOpen, onClose }) {
         className="flex flex-col gap-4"
       >
         <Stepper steps={steps} current={step} className="mb-6" />
-        {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
         
         {step === 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

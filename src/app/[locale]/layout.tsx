@@ -8,8 +8,10 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
 // Imports dos providers
-import { QueryProvider } from "@/providers/QueryProvider"; 
+import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -35,15 +37,18 @@ export default async function RootLayout(
     <html lang={locale}>
       <body className={inter.className}>
         {/* Provedor de idiomas que distribui as traduções para os Client Components */}
-        <NextIntlClientProvider messages={messages}>
-          {/* O QueryProvider inicializa o cache do TanStack Query */}
-          <QueryProvider>
-            {/* O AuthProvider intercepta rotas e gerencia a sessão */}
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </QueryProvider>
-        </NextIntlClientProvider>
+        <ErrorBoundary>
+          <NextIntlClientProvider messages={messages}>
+            {/* O QueryProvider inicializa o cache do TanStack Query */}
+            <QueryProvider>
+              {/* O AuthProvider intercepta rotas e gerencia a sessão */}
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+              <Toaster richColors position="top-right" />
+            </QueryProvider>
+          </NextIntlClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

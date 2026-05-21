@@ -4,6 +4,7 @@ import React from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { GrupoMoveData } from "./types";
+import { Lote } from "@/services/lotes.service";
 
 interface TransferirLoteModalProps {
   isOpen: boolean;
@@ -12,7 +13,7 @@ interface TransferirLoteModalProps {
   isLoading: boolean;
   moveData: GrupoMoveData;
   onMoveDataChange: (data: GrupoMoveData) => void;
-  lotes: any[];
+  lotes: Lote[];
   grupoNome?: string;
   currentLoteName?: string;
 }
@@ -64,7 +65,7 @@ export function TransferirLoteModal({
             <option value="" disabled>
               Selecione um lote
             </option>
-            {lotes?.map((lote: any) => (
+            {lotes?.map((lote: Lote) => (
               <option key={lote.idLote} value={lote.idLote}>
                 {lote.nomeLote}
               </option>

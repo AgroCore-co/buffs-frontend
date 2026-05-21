@@ -38,15 +38,6 @@ export function useUsuarios() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const getFuncionariosByPropriedade = (idPropriedade: string) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
-      queryKey: USUARIOS_QUERY_KEYS.funcionariosByPropriedade(idPropriedade),
-      queryFn: () => usuariosService.getFuncionariosByPropriedade(idPropriedade),
-      enabled: !!idPropriedade,
-      staleTime: 2 * 60 * 1000,
-    });
-
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUsuarioDTO }) => usuariosService.update(id, data),
     onSuccess: (_, { id }) => {
@@ -88,8 +79,6 @@ export function useUsuarios() {
     isLoadingUsuarios: allQuery.isLoading,
     funcionarios: funcionariosQuery.data,
     isLoadingFuncionarios: funcionariosQuery.isLoading,
-    getFuncionariosByPropriedade,
-
     updateUsuario: updateMutation.mutateAsync,
     isUpdatingUsuario: updateMutation.isPending,
     updateCargo: updateCargoMutation.mutateAsync,
@@ -102,8 +91,17 @@ export function useUsuarios() {
 }
 
 // ==========================================
-// Hook Exclusivo para Busca por ID
+// Hooks Individuais de Query
 // ==========================================
+
+export function useFuncionariosByPropriedade(idPropriedade?: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: USUARIOS_QUERY_KEYS.funcionariosByPropriedade(idPropriedade!),
+    queryFn: () => usuariosService.getFuncionariosByPropriedade(idPropriedade!),
+    enabled: !!idPropriedade && options?.enabled !== false,
+    staleTime: 2 * 60 * 1000,
+  });
+}
 
 export function useUsuario(id?: string) {
   return useQuery({

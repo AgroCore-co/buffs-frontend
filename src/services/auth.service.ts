@@ -1,4 +1,5 @@
 import apiClient from '@/lib/apiClient';
+import { STORAGE_KEYS } from '@/constants';
 
 // ==========================================
 // DTOs (Data Transfer Objects)
@@ -116,9 +117,9 @@ export const authService = {
    */
   async signout() {
     const response = await apiClient.post('/auth/signout');
-    // Remove sessão local para garantir segurança
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('@Buffs:session');
+      localStorage.removeItem(STORAGE_KEYS.SESSION);
+      document.cookie = 'buffs_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
     return response.data;
   },
@@ -133,7 +134,10 @@ export const authService = {
    */
   setSession(sessionData: AuthSessionResponse) {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('@Buffs:session', JSON.stringify(sessionData));
+      localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
+      // Cookie read by server-side middleware to gate private routes
+      const expires = new Date(sessionData.expires_at * 1000).toUTCString();
+      document.cookie = `buffs_auth_token=1; path=/; SameSite=Lax; expires=${expires}`;
     }
   },
 
@@ -143,7 +147,7 @@ export const authService = {
    */
   getSession(): AuthSessionResponse | null {
     if (typeof window !== 'undefined') {
-      const data = localStorage.getItem('@Buffs:session');
+      const data = localStorage.getItem(STORAGE_KEYS.SESSION);
       return data ? JSON.parse(data) : null;
     }
     return null;

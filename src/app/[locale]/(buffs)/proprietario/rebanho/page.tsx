@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
 import MaturidadeChart from "@/components/proprietario/rebanho/MaturidadeChart";
 import RacaChart from "@/components/proprietario/rebanho/RacaChart";
 import SexoChart from "@/components/proprietario/rebanho/SexoChart";
+import { BufalosFilterBar } from "@/components/proprietario/rebanho/BufalosFilterBar";
 import {
   DataTable,
   TableBody,
@@ -17,17 +18,12 @@ import {
   TableRow,
 } from "@/components/ui/DataTable";
 import MetricCard from "@/components/ui/MetricCard";
-import { useBufalos } from "@/hooks/useBufalos";
-import { useDashboard } from "@/hooks/useDashboard";
-import { Bufalo } from "@/services/bufalos.service";
+import { useBufalosbyPropriedade, useBufalosFilterAvancado } from "@/hooks/useBufalos";
+import { useDashboardGeral } from "@/hooks/useDashboard";
+import { Bufalo, FiltroAvancadoParams } from "@/services/bufalos.service";
 import { usePropriedadeStore } from "@/stores/propriedade.store";
 
-import {
-  Database,
-  Venus,
-  Mars,
-  Droplets,
-} from "lucide-react";
+import { Database, Venus, Mars, Droplets } from "lucide-react";
 
 interface BufaloListItem extends Bufalo {
   raca?: { nome?: string | null } | null;
@@ -37,49 +33,67 @@ interface BufaloListItem extends Bufalo {
 
 export default function RebanhoPage() {
   const { activeId, activePropriedade } = usePropriedadeStore();
-  const { getGeral } = useDashboard();
-  const { getByPropriedade } = useBufalos();
   const [page, setPage] = useState(1);
+  const [prevActiveId, setPrevActiveId] = useState(activeId);
+  const [filtroParams, setFiltroParams] = useState<FiltroAvancadoParams>({});
+  const [hasFilters, setHasFilters] = useState(false);
   const limit = 10;
 
-  useEffect(() => {
+  if (prevActiveId !== activeId) {
+    setPrevActiveId(activeId);
     setPage(1);
-  }, [activeId]);
+  }
 
-  const { data: dashboardData, isLoading: isLoadingDashboard } = getGeral(activeId ?? "", {
+  const handleFilterChange = useCallback((params: FiltroAvancadoParams, active: boolean) => {
+    setFiltroParams(params);
+    setHasFilters(active);
+    setPage(1);
+  }, []);
+
+  const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboardGeral(activeId ?? "", {
     enabled: !!activeId,
   });
-  const { data: bufalosResponse, isLoading: isLoadingBufalos } = getByPropriedade(
+
+  const { data: allBufalos, isLoading: isLoadingAll } = useBufalosbyPropriedade(
     activeId ?? "",
     page,
     limit,
-    { enabled: !!activeId },
+    { enabled: !!activeId && !hasFilters },
   );
 
-  const totalFemeas = dashboardData?.qtd_femeas_ativas ?? 0;
-  const totalMachos = dashboardData?.qtd_macho_ativos ?? 0;
+  const { data: filteredBufalos, isLoading: isLoadingFiltered } = useBufalosFilterAvancado(
+    activeId ?? "",
+    { ...filtroParams, page, limit },
+    { enabled: !!activeId && hasFilters },
+  );
+
+  const bufalosResponse = hasFilters ? filteredBufalos : allBufalos;
+  const isLoadingBufalos = hasFilters ? isLoadingFiltered : isLoadingAll;
+
+  const totalFemeas = dashboardData?.qtdFemeasAtivas ?? 0;
+  const totalMachos = dashboardData?.qtdMachoAtivos ?? 0;
   const totalAtivos = totalFemeas + totalMachos;
-  const totalLactando = dashboardData?.qtd_bufalas_lactando ?? 0;
+  const totalLactando = dashboardData?.qtdBufalasLactando ?? 0;
   const hasActivePropriedade = !!activeId;
   const maturidadeData = [
     {
       name: "Bezerros",
-      value: dashboardData?.qtd_bufalos_bezerro ?? 0,
+      value: dashboardData?.qtdBufalosBezerro ?? 0,
       color: "#CE7D0A",
     },
     {
       name: "Novilhas",
-      value: dashboardData?.qtd_bufalos_novilha ?? 0,
+      value: dashboardData?.qtdBufalosNovilha ?? 0,
       color: "#F2B84D",
     },
     {
       name: "Vacas",
-      value: dashboardData?.qtd_bufalos_vaca ?? 0,
+      value: dashboardData?.qtdBufalosVaca ?? 0,
       color: "#FFCF78",
     },
     {
       name: "Touros",
-      value: dashboardData?.qtd_bufalos_touro ?? 0,
+      value: dashboardData?.qtdBufalosTouro ?? 0,
       color: "#A16207",
     },
   ];
@@ -210,6 +224,8 @@ export default function RebanhoPage() {
             )}
           </div>
         </div>
+
+        <BufalosFilterBar onFilterChange={handleFilterChange} className="mb-4" />
 
         {isLoadingBufalos ? (
           <div className="w-full min-h-[240px] flex items-center justify-center border border-zinc-200 rounded-xl bg-zinc-50/50">

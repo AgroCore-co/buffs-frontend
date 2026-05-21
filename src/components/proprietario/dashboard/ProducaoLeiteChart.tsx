@@ -86,14 +86,10 @@ export default function ProducaoLeiteChart({ data, ano, onAnoChange }: ProducaoL
   return (
     <Container className="p-6 flex flex-col h-full min-h-[400px]">
       {header}
-      <div
-        className="flex-1 w-full"
-        style={{ minHeight: '300px', height: '100%' }}
-      >
+      <div className="flex-1 w-full min-h-[380px]">
         <ResponsiveContainer
           width="100%"
-          height="100%"
-          minHeight={chartMinHeight}
+          height={chartMinHeight}
         >
           <BarChart
             data={safeData}

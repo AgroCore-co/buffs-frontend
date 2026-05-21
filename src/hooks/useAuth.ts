@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  authService, 
-  SigninDTO, 
-  SignupProprietarioDTO, 
+import {
+  authService,
+  SigninDTO,
+  SignupProprietarioDTO,
   SignupFuncionarioDTO,
-  AuthSessionResponse 
+  AuthSessionResponse
 } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRouter } from '@/i18n/routing';
+import { STORAGE_KEYS } from '@/constants';
 
 export const AUTH_QUERY_KEYS = {
   session: ['auth', 'session'] as const,
@@ -56,10 +57,11 @@ export function useAuth() {
         // Ignora erros da API de signout (ex: token já expirado no servidor).
       }
 
-      // PASSO 3: Agora sim, remove a sessão do localStorage.
+      // PASSO 3: Agora sim, remove a sessão do localStorage e o cookie de autenticação.
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('@Buffs:session');
-        localStorage.removeItem('@Buffs:activePropriedade');
+        localStorage.removeItem(STORAGE_KEYS.SESSION);
+        localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROPRIEDADE);
+        document.cookie = 'buffs_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
     },
     onSettled: () => {

@@ -13,7 +13,7 @@ export interface StepperProps {
 
 export function Stepper({ steps, current, className = "" }: StepperProps) {
   return (
-    <div className={`flex items-center ${className}`}>
+    <div role="list" className={`flex items-center ${className}`}>
       {steps.map((step, idx) => {
         const isCompleted = idx < current;
         const isActive = idx === current;
@@ -59,7 +59,7 @@ export function Stepper({ steps, current, className = "" }: StepperProps) {
 
         return (
           <React.Fragment key={step.label}>
-            <div className="flex items-center">
+            <div role="listitem" aria-current={isActive ? "step" : undefined} className="flex items-center">
               <div className={`${circleBase} ${circleState}`}>
                 {idx + 1}
               </div>

@@ -11,6 +11,7 @@ import { usuariosService } from '@/services/usuarios.service';
 import { USUARIOS_QUERY_KEYS } from '@/hooks/useUsuarios';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
+import { CARGO_ROUTES } from '@/constants';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, profile, setProfile, clearAuth } = useAuthStore();
@@ -90,14 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } 
     else if (isAuthenticated && profile) {
       // Protege para que o usuário só acesse a página do seu cargo
-      const cargoToPath: Record<string, string> = {
-        PROPRIETARIO: '/proprietario',
-        GERENTE: '/gerente',
-        FUNCIONARIO: '/funcionario',
-        VETERINARIO: '/veterinario',
-      };
-
-      const expectedPath = cargoToPath[profile.cargo];
+      const expectedPath = CARGO_ROUTES[profile.cargo];
 
       // Se está em rota de login/cadastro, sempre redireciona para a rota do cargo
       if (isAuthRoute) {

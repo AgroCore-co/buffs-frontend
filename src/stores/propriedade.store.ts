@@ -1,18 +1,17 @@
 import { create } from 'zustand';
 import { Propriedade } from '@/services/propriedades.service';
+import { STORAGE_KEYS } from '@/constants';
 
 // ==========================================
 // Estado Global da Propriedade Ativa
 // ==========================================
-// 
+//
 // Este store armazena a propriedade que o usuário está "operando" no momento.
 // Todos os módulos (rebanho, lactação, coletas, etc.) devem consultar
 // usePropriedadeStore(s => s.activeId) para saber qual propriedade filtrar.
 //
 // Persiste no localStorage para sobreviver a F5 e troca de abas.
 // É limpo automaticamente no logout via auth.store.clearAuth().
-
-const STORAGE_KEY = '@Buffs:activePropriedade';
 
 interface PropriedadeStoreState {
   // A propriedade atualmente selecionada pelo usuário
@@ -31,7 +30,7 @@ export const usePropriedadeStore = create<PropriedadeStoreState>((set) => {
 
   if (typeof window !== 'undefined') {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEYS.ACTIVE_PROPRIEDADE);
       if (saved) {
         const parsed = JSON.parse(saved);
         initialId = parsed.activeId ?? null;
@@ -39,7 +38,7 @@ export const usePropriedadeStore = create<PropriedadeStoreState>((set) => {
       }
     } catch {
       // Se o JSON estiver corrompido, ignora silenciosamente
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROPRIEDADE);
     }
   }
 
@@ -55,7 +54,7 @@ export const usePropriedadeStore = create<PropriedadeStoreState>((set) => {
       };
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(STORAGE_KEYS.ACTIVE_PROPRIEDADE, JSON.stringify(state));
       }
 
       set(state);
@@ -64,7 +63,7 @@ export const usePropriedadeStore = create<PropriedadeStoreState>((set) => {
     // Limpa a propriedade ativa (usado no logout)
     clearActivePropriedade: () => {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROPRIEDADE);
       }
 
       set({ activeId: null, activePropriedade: null });

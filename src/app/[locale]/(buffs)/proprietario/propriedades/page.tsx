@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useTranslations } from 'next-intl';
 import { usePropriedades } from '@/hooks/usePropriedades';
-// Importe o hook singular aqui
-import { useEndereco } from '@/hooks/useEnderecos'; 
+import { useEndereco } from '@/hooks/useEnderecos';
 import { useUsuarios } from '@/hooks/useUsuarios';
+import { Propriedade } from '@/services/propriedades.service';
+import { Usuario } from '@/services/usuarios.service';
 import Container from "@/components/ui/Container";
 import MetricCard from "@/components/ui/MetricCard";
 import PropriedadeCard from "@/components/proprietario/propriedades/PropriedadeCard";
@@ -19,7 +20,14 @@ import { Map, CheckCircle, Tractor, Award, Building2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/Button";
 
 
-function PropriedadeCardWithEndereco({ propriedade, me, onEditar, onDeletar }) {
+interface PropriedadeCardWithEnderecoProps {
+  propriedade: Propriedade;
+  me: Usuario | null | undefined;
+  onEditar: (e: React.MouseEvent<HTMLButtonElement>, propriedade: Propriedade) => void;
+  onDeletar: (propriedade: Propriedade) => void;
+}
+
+function PropriedadeCardWithEndereco({ propriedade, me, onEditar, onDeletar }: PropriedadeCardWithEnderecoProps) {
   const router = useRouter();
   // Usa o hook específico passando o ID diretamente
   const { data: endereco, isLoading: isLoadingEndereco } = useEndereco(propriedade.idEndereco);
@@ -33,10 +41,9 @@ function PropriedadeCardWithEndereco({ propriedade, me, onEditar, onDeletar }) {
       <PropriedadeCard
         propriedade={{
           ...propriedade,
-          endereco: endereco || null,
+          endereco: endereco || undefined,
           dono: { nome: me?.nome },
         }}
-        isLoadingEndereco={isLoadingEndereco}
         onEditar={onEditar}
         onDeletar={onDeletar}
       />
@@ -54,7 +61,7 @@ export default function PropriedadesPageProprietario() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [propriedadeSelecionada, setPropriedadeSelecionada] = useState(null);
+  const [propriedadeSelecionada, setPropriedadeSelecionada] = useState<Propriedade | null>(null);
 
   // Busca as propriedades
   const {
@@ -183,13 +190,12 @@ export default function PropriedadesPageProprietario() {
                 propriedade={propriedade}
                 me={me}
                 onEditar={(e, prop) => {
-                  if (e && e.stopPropagation) e.stopPropagation();
-                  setPropriedadeSelecionada(prop || e);
+                  e.stopPropagation();
+                  setPropriedadeSelecionada(prop);
                   setIsEditModalOpen(true);
                 }}
-                onDeletar={(e, prop) => {
-                  if (e && e.stopPropagation) e.stopPropagation();
-                  setPropriedadeSelecionada(prop || e); 
+                onDeletar={(prop) => {
+                  setPropriedadeSelecionada(prop);
                   setIsDeleteModalOpen(true);
                 }}
               />

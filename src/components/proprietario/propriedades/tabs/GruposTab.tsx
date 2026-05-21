@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { useGrupos } from "@/hooks/useGrupos";
-import { useLotes } from "@/hooks/useLotes";
-import { useMovLote } from "@/hooks/useMovLote";
-import { useBufalos } from "@/hooks/useBufalos";
+import { useGrupos, useGruposByPropriedade } from "@/hooks/useGrupos";
+import { useLotesByPropriedade } from "@/hooks/useLotes";
+import { Lote } from "@/services/lotes.service";
+import { useMovLote, useMovLoteStatusByGrupo, useMovLoteHistoricoByGrupo } from "@/hooks/useMovLote";
+import { useBufalosbyGrupo } from "@/hooks/useBufalos";
 import { Button, IconButton } from "@/components/ui/Button";
 
 // Icones
@@ -31,9 +32,8 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
   const [page, setPage] = useState(1);
   const limit = 12;
 
-  // Hooks Principais
+  // Hooks de Mutações
   const {
-    getByPropriedade,
     createGrupo,
     isCreatingGrupo,
     updateGrupo,
@@ -42,20 +42,14 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
     isDeletingGrupo,
   } = useGrupos();
 
-  const { getByPropriedade: getLotesByPropriedade } = useLotes();
-  const { data: lotes, isLoading: isLoadingLotes } =
-    getLotesByPropriedade(idPropriedade);
-
-  const { getStatusByGrupo, getHistoricoByGrupo, createMovLote, isCreatingMovLote } =
-    useMovLote();
-
-  // Hook de Búfalos
-  const { getByGrupo } = useBufalos();
+  const { createMovLote, isCreatingMovLote } = useMovLote();
 
   // Queries
-  const { data: response, isLoading } = getByPropriedade(idPropriedade, page, limit);
+  const { data: response, isLoading } = useGruposByPropriedade(idPropriedade, page, limit);
   const grupos = response?.data || [];
   const meta = response?.meta || { totalPages: 1, hasNextPage: false, hasPrevPage: false };
+
+  const { data: lotes, isLoading: isLoadingLotes } = useLotesByPropriedade(idPropriedade);
 
   // Estados dos Modais
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -81,16 +75,16 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
   const [bufalosPage, setBufalosPage] = useState(1);
 
   // Consultas dinâmicas baseadas no grupo selecionado
-  const { data: statusGrupo, isLoading: isLoadingStatus } = getStatusByGrupo(
+  const { data: statusGrupo, isLoading: isLoadingStatus } = useMovLoteStatusByGrupo(
     selectedGrupo?.idGrupo,
     { enabled: !!selectedGrupo }
   );
   const { data: historicoGrupo, isLoading: isLoadingHistorico } =
-    getHistoricoByGrupo(selectedGrupo?.idGrupo, { enabled: !!isDetailsModalOpen });
+    useMovLoteHistoricoByGrupo(selectedGrupo?.idGrupo, { enabled: !!isDetailsModalOpen });
 
   // Consulta dos búfalos do grupo selecionado
-  const { data: bufalosData, isLoading: isLoadingBufalos } = getByGrupo(
-    selectedGrupo?.idGrupo || "",
+  const { data: bufalosData, isLoading: isLoadingBufalos } = useBufalosbyGrupo(
+    selectedGrupo?.idGrupo,
     bufalosPage,
     10,
     { enabled: !!selectedGrupo }
@@ -158,7 +152,7 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
       }
       handleCloseModals();
     } catch (error) {
-      console.error("Erro ao salvar grupo:", error);
+      void error;
     }
   };
 
@@ -168,7 +162,7 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
       await deleteGrupo(selectedGrupo.idGrupo);
       handleCloseModals();
     } catch (error) {
-      console.error("Erro ao excluir grupo:", error);
+      void error;
     }
   };
 
@@ -181,14 +175,14 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
       await createMovLote({
         idPropriedade,
         idGrupo: selectedGrupo.idGrupo,
-        idLoteAnterior: statusGrupo?.localizacao_atual?.id_lote || null,
+        idLoteAnterior: statusGrupo?.localizacaoAtual?.idLote || null,
         idLoteAtual: moveData.idLoteAtual,
         dtEntrada: new Date(moveData.dtEntrada).toISOString(),
       });
       setIsMoveModalOpen(false);
       setIsDetailsModalOpen(true);
     } catch (error) {
-      console.error("Erro ao transferir grupo:", error);
+      void error;
     }
   };
 
@@ -323,9 +317,9 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
         isOpen={isDetailsModalOpen}
         onClose={handleCloseModals}
         grupo={selectedGrupo}
-        statusGrupo={statusGrupo}
-        historicoGrupo={historicoGrupo}
-        bufalosData={bufalosData}
+        statusGrupo={statusGrupo ?? null}
+        historicoGrupo={historicoGrupo ?? null}
+        bufalosData={bufalosData ?? null}
         bufalosPage={bufalosPage}
         onBufalosPageChange={setBufalosPage}
         lotes={lotes || []}
@@ -359,10 +353,10 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
         lotes={lotes || []}
         grupoNome={selectedGrupo?.nomeGrupo}
         currentLoteName={
-          statusGrupo?.localizacao_atual
+          statusGrupo?.localizacaoAtual
             ? lotes?.find(
-                (l: any) =>
-                  l.idLote === statusGrupo.localizacao_atual.id_lote
+                (l: Lote) =>
+                  l.idLote === statusGrupo.localizacaoAtual.idLote
               )?.nomeLote || "Desconhecido"
             : "Sem alocação prévia"
         }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useUsuarios } from "@/hooks/useUsuarios";
+import { useUsuarios, useFuncionariosByPropriedade } from "@/hooks/useUsuarios";
 import { Cargo, Usuario } from "@/services/usuarios.service";
 import { 
   Users, 
@@ -30,14 +30,13 @@ export default function EquipeTab({ idPropriedade }: EquipeTabProps) {
   // ==========================================================================
   // ESTADOS E HOOKS
   // ==========================================================================
-  const { 
-    getFuncionariosByPropriedade, 
+  const {
     updateCargo, isUpdatingCargo,
-    desvincularFuncionario, isDesvinculandoFuncionario 
+    desvincularFuncionario, isDesvinculandoFuncionario
   } = useUsuarios();
 
   // A API retorna diretamente a lista de usuários, sem paginação neste endpoint
-  const { data: funcionarios = [], isLoading } = getFuncionariosByPropriedade(idPropriedade);
+  const { data: funcionarios = [], isLoading } = useFuncionariosByPropriedade(idPropriedade);
 
   // Estados dos Modais
   const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
@@ -74,12 +73,12 @@ export default function EquipeTab({ idPropriedade }: EquipeTabProps) {
     
     try {
       await updateCargo({ 
-        id: selectedUser.id_usuario, 
+        id: selectedUser.idUsuario, 
         data: { cargo: selectedCargo as Exclude<Cargo, 'PROPRIETARIO'> } 
       });
       handleCloseModals();
     } catch (error) {
-      console.error("Erro ao atualizar cargo:", error);
+      void error;
     }
   };
 
@@ -87,12 +86,12 @@ export default function EquipeTab({ idPropriedade }: EquipeTabProps) {
     if (!selectedUser) return;
     try {
       await desvincularFuncionario({ 
-        idUsuario: selectedUser.id_usuario, 
+        idUsuario: selectedUser.idUsuario, 
         idPropriedade 
       });
       handleCloseModals();
     } catch (error) {
-      console.error("Erro ao desvincular funcionário:", error);
+      void error;
     }
   };
 
@@ -139,11 +138,6 @@ export default function EquipeTab({ idPropriedade }: EquipeTabProps) {
           <h2 className="text-lg font-semibold text-zinc-900 tracking-tight">Equipe da Propriedade</h2>
           <p className="text-sm text-zinc-500 mt-1">Gerencie os funcionários, gerentes e veterinários com acesso a esta fazenda.</p>
         </div>
-        {/* Placeholder para uma futura feature de convidar usuários, já que o endpoint de vincular não existe no swagger no momento */}
-        {/* <button className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
-          <Plus className="w-4 h-4" />
-          Convidar Membro
-        </button> */}
       </div>
 
       {/* COMPONENTE DA TABELA GENÉRICA */}
@@ -165,7 +159,7 @@ export default function EquipeTab({ idPropriedade }: EquipeTabProps) {
         </TableHeader>
         <TableBody>
           {funcionarios.map((user: Usuario) => (
-            <TableRow key={user.id_usuario}>
+            <TableRow key={user.idUsuario}>
               <TableCell>
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-zinc-900">{user.nome}</span>
