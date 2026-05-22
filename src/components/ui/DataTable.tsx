@@ -1,15 +1,8 @@
 // src/components/ui/DataTable.tsx
 import React from "react";
 import { LucideIcon } from "lucide-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-interface PaginationProps {
-  page: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-  onPageChange: (page: number) => void;
-}
+import { Pagination } from "@/components/ui/Pagination";
+import type { PaginationProps } from "@/components/ui/Pagination";
 
 interface DataTableProps {
   isEmpty: boolean;
@@ -31,29 +24,11 @@ export function DataTable({ isEmpty, emptyState, children, pagination }: DataTab
         </div>
       )}
 
-      {/* Paginação Integrada */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="border-t border-zinc-200 p-4 flex items-center justify-between bg-zinc-50/30">
-          <span className="text-xs font-medium text-zinc-500">
-            Página {pagination.page} de {pagination.totalPages}
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => pagination.onPageChange(Math.max(1, pagination.page - 1))}
-              disabled={!pagination.hasPrevPage}
-              className="p-1.5 rounded-md text-zinc-500 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => pagination.onPageChange(pagination.page + 1)}
-              disabled={!pagination.hasNextPage}
-              className="p-1.5 rounded-md text-zinc-500 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          {...pagination}
+          className="border-t border-zinc-200 p-4 bg-zinc-50/30"
+        />
       )}
     </div>
   );
@@ -98,8 +73,15 @@ export function TableBody({ children }: { children: React.ReactNode }) {
   return <tbody className="divide-y divide-zinc-100">{children}</tbody>;
 }
 
-export function TableRow({ children }: { children: React.ReactNode }) {
-  return <tr className="odd:bg-white even:bg-zinc-50 hover:bg-zinc-100 transition-colors group">{children}</tr>;
+export function TableRow({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <tr
+      className={`odd:bg-white even:bg-zinc-50 hover:bg-zinc-100 transition-colors group ${onClick ? "cursor-pointer" : ""}`}
+      onClick={onClick}
+    >
+      {children}
+    </tr>
+  );
 }
 
 export function TableCell({ children, align = "left" }: { children: React.ReactNode, align?: "left" | "center" | "right" }) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "@/i18n/routing";
 
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
@@ -32,6 +33,7 @@ interface BufaloListItem extends Bufalo {
 }
 
 export default function RebanhoPage() {
+  const router = useRouter();
   const { activeId, activePropriedade } = usePropriedadeStore();
   const [page, setPage] = useState(1);
   const [prevActiveId, setPrevActiveId] = useState(activeId);
@@ -272,7 +274,7 @@ export default function RebanhoPage() {
             </TableHeader>
             <TableBody>
               {bufalos.map((bufalo) => (
-                <TableRow key={bufalo.idBufalo}>
+                <TableRow key={bufalo.idBufalo} onClick={() => router.push(`/proprietario/rebanho/${bufalo.idBufalo}`)}>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-zinc-900">{bufalo.nome}</span>

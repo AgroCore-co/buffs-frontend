@@ -6,16 +6,11 @@ import { useLotesByPropriedade } from "@/hooks/useLotes";
 import { Lote } from "@/services/lotes.service";
 import { useMovLote, useMovLoteStatusByGrupo, useMovLoteHistoricoByGrupo } from "@/hooks/useMovLote";
 import { useBufalosbyGrupo } from "@/hooks/useBufalos";
-import { Button, IconButton } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 // Icones
-import {
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Hash,
-  Calendar,
-} from "lucide-react";
+import { Plus, Hash, Calendar } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 
 // Modais externos
 import { CreateEditGrupoModal } from "./grupos/CreateEditGrupoModal";
@@ -273,31 +268,14 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
           </div>
 
           {meta.totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-zinc-200">
-              <span className="text-sm text-zinc-500">
-                Página{" "}
-                <span className="font-medium text-zinc-900">{page}</span> de{" "}
-                <span className="font-medium text-zinc-900">
-                  {meta.totalPages}
-                </span>
-              </span>
-              <div className="flex items-center gap-2">
-                <IconButton
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={!meta.hasPrevPage}
-                  variant="outline"
-                  icon={ChevronLeft}
-                  aria-label="Página anterior"
-                />
-                <IconButton
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={!meta.hasNextPage}
-                  variant="outline"
-                  icon={ChevronRight}
-                  aria-label="Próxima página"
-                />
-              </div>
-            </div>
+            <Pagination
+              page={page}
+              totalPages={meta.totalPages}
+              onPageChange={setPage}
+              hasPrevPage={meta.hasPrevPage}
+              hasNextPage={meta.hasNextPage}
+              className="pt-4 border-t border-zinc-200"
+            />
           )}
         </>
       )}

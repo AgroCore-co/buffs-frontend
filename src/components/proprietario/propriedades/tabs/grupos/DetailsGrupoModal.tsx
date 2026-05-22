@@ -22,7 +22,7 @@ const Tooltip = dynamic(
   { ssr: false }
 );
 import { Modal } from "@/components/ui/Modal";
-import { Button, IconButton } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import {
   Plus,
   Minus,
@@ -31,9 +31,8 @@ import {
   History,
   ArrowRightLeft,
   Search,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 import { Grupo } from "./types";
 import { Lote } from "@/services/lotes.service";
 import { Bufalo, BufaloPaginatedResponse } from "@/services/bufalos.service";
@@ -155,30 +154,14 @@ function AnimaisTab({
             </div>
 
             {bufalosData?.meta && bufalosData.meta.totalPages > 1 && (
-              <div className="flex items-center justify-between p-4 border-t border-zinc-200 bg-zinc-50">
-                <span className="text-sm text-zinc-500">
-                  Página{" "}
-                  <span className="font-medium text-zinc-900">{bufalosPage}</span>{" "}
-                  de{" "}
-                  <span className="font-medium text-zinc-900">{bufalosData.meta.totalPages}</span>
-                </span>
-                <div className="flex items-center gap-2">
-                  <IconButton
-                    onClick={() => onBufalosPageChange(Math.max(1, bufalosPage - 1))}
-                    disabled={!bufalosData.meta.hasPrevPage}
-                    variant="outline"
-                    icon={ChevronLeft}
-                    aria-label="Página anterior"
-                  />
-                  <IconButton
-                    onClick={() => onBufalosPageChange(bufalosPage + 1)}
-                    disabled={!bufalosData.meta.hasNextPage}
-                    variant="outline"
-                    icon={ChevronRight}
-                    aria-label="Próxima página"
-                  />
-                </div>
-              </div>
+              <Pagination
+                page={bufalosPage}
+                totalPages={bufalosData.meta.totalPages}
+                onPageChange={onBufalosPageChange}
+                hasPrevPage={bufalosData.meta.hasPrevPage}
+                hasNextPage={bufalosData.meta.hasNextPage}
+                className="p-4 border-t border-zinc-200 bg-zinc-50"
+              />
             )}
           </>
         )}
