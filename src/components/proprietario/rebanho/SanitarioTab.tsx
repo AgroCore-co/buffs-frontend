@@ -3,90 +3,18 @@
 import React, { useState } from "react";
 import {
   Syringe, CheckCircle2, History, Calendar,
-  Link2, Flame, AlertCircle,
+  Link2, Flame, AlertCircle, Trash2,
 } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
+import { Button } from "@/components/ui/Button";
+import { useDadosSanitariosByBufalo } from "@/hooks/useDadosSanitarios";
+import { DadoSanitarioDetailsModal } from "./sanitario/DadoSanitarioDetailsModal";
+import { DeletedRegistrosModal } from "./sanitario/DeletedRegistrosModal";
+import type { DadoSanitario } from "@/services/dados-sanitarios.service";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
-export type TipoTratamento = "suplementacao" | "parasita" | "doenca" | "vacina";
-
-export interface RegistroSanitario {
-  id: string;
-  dataAplicacao: string;
-  nomeTratamento: string;
-  tipo: TipoTratamento;
-  dosagem: string;
-  unidade: string;
-  dataRetorno?: string | null;
-}
-
-interface SanitarioTabProps {
-  bufaloId: string;
-  // Quando o endpoint existir, receba os dados aqui ou adicione o hook internamente
-  registros?: RegistroSanitario[];
-  total?: number;
-  isLoading?: boolean;
-}
-
-// ─── Mock ─────────────────────────────────────────────────────────────────────
-
-const MOCK_REGISTROS: RegistroSanitario[] = [
-  {
-    id: "1",
-    dataAplicacao: "2025-03-10",
-    nomeTratamento: "Vacina Aftosa",
-    tipo: "vacina",
-    dosagem: "2",
-    unidade: "ml",
-    dataRetorno: "2025-09-10",
-  },
-  {
-    id: "2",
-    dataAplicacao: "2025-02-15",
-    nomeTratamento: "Ivermectina",
-    tipo: "parasita",
-    dosagem: "5",
-    unidade: "ml",
-    dataRetorno: null,
-  },
-  {
-    id: "3",
-    dataAplicacao: "2025-01-20",
-    nomeTratamento: "Complexo Vitamínico B12",
-    tipo: "suplementacao",
-    dosagem: "10",
-    unidade: "ml",
-    dataRetorno: null,
-  },
-  {
-    id: "4",
-    dataAplicacao: "2024-12-05",
-    nomeTratamento: "Vacina Brucelose",
-    tipo: "vacina",
-    dosagem: "2",
-    unidade: "ml",
-    dataRetorno: null,
-  },
-  {
-    id: "5",
-    dataAplicacao: "2024-11-18",
-    nomeTratamento: "Tristeza Parasitária",
-    tipo: "doenca",
-    dosagem: "15",
-    unidade: "ml",
-    dataRetorno: "2024-12-18",
-  },
-  {
-    id: "6",
-    dataAplicacao: "2024-10-02",
-    nomeTratamento: "Clostridiose",
-    tipo: "vacina",
-    dosagem: "5",
-    unidade: "ml",
-    dataRetorno: null,
-  },
-];
+type TipoTratamento = "suplementacao" | "parasita" | "doenca" | "vacina";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -96,16 +24,25 @@ function formatDate(value?: string | null) {
   return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
 }
 
-const TIPO_CONFIG: Record<TipoTratamento, { icon: React.ReactNode; label: string }> = {
-  suplementacao: { icon: <Link2    className="w-3.5 h-3.5 text-blue-500"   />, label: "Suplementação" },
-  parasita:      { icon: <Flame    className="w-3.5 h-3.5 text-orange-500" />, label: "Parasitas"     },
-  doenca:        { icon: <AlertCircle className="w-3.5 h-3.5 text-red-500" />, label: "Doença"        },
-  vacina:        { icon: <Syringe  className="w-3.5 h-3.5 text-blue-500"   />, label: "Vacina"        },
-};
+function mapTipoTratamento(tipoTratamento?: string): TipoTratamento {
+  const v = tipoTratamento?.toLowerCase() ?? "";
+  if (v.includes("vacinação") || v.includes("vacinacao")) return "vacina";
+  if (v.includes("suplementação") || v.includes("suplementacao")) return "suplementacao";
+  if (v.includes("vermifugação") || v.includes("vermifugacao") || v.includes("parasita")) return "parasita";
+  return "doenca";
+}
 
-function getSituacao(registros: RegistroSanitario[]): string {
+function getMedicacao(reg: DadoSanitario) {
+  return reg.medicacoe ?? reg.medicacoes;
+}
+
+function getTipo(reg: DadoSanitario): TipoTratamento {
+  return mapTipoTratamento(getMedicacao(reg)?.tipoTratamento);
+}
+
+function getSituacao(registros: DadoSanitario[]): string {
   if (!registros.length) return "—";
-  return registros.some(r => r.tipo === "doenca") ? "Atenção" : "Regular";
+  return registros.some(r => getTipo(r) === "doenca") ? "Atenção" : "Regular";
 }
 
 function getSituacaoColor(situacao: string) {
@@ -113,6 +50,13 @@ function getSituacaoColor(situacao: string) {
   if (situacao === "Regular") return "text-zinc-800";
   return "text-zinc-400";
 }
+
+const TIPO_CONFIG: Record<TipoTratamento, { icon: React.ReactNode; label: string }> = {
+  suplementacao: { icon: <Link2       className="w-3.5 h-3.5 text-blue-500"   />, label: "Suplementação"        },
+  parasita:      { icon: <Flame       className="w-3.5 h-3.5 text-orange-500" />, label: "Parasitas/Vermifugação" },
+  doenca:        { icon: <AlertCircle className="w-3.5 h-3.5 text-red-500"    />, label: "Doença/Tratamento"     },
+  vacina:        { icon: <Syringe     className="w-3.5 h-3.5 text-green-500"  />, label: "Vacinação"            },
+};
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
@@ -132,20 +76,30 @@ function MetricCard({
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export function SanitarioTab({
-  bufaloId: _bufaloId,
-  registros = MOCK_REGISTROS,
-  total,
-  isLoading = false,
-}: SanitarioTabProps) {
-  const totalEfetivo = total ?? registros.length;
+const LIMIT = 10;
+
+interface SanitarioTabProps {
+  bufaloId: string;
+}
+
+export function SanitarioTab({ bufaloId }: SanitarioTabProps) {
   const [page, setPage] = useState(1);
-  const limit = 5;
-  const totalPages = Math.max(1, Math.ceil(totalEfetivo / limit));
+  const [selectedRegistro, setSelectedRegistro] = useState<DadoSanitario | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
-  const situacao = getSituacao(registros);
-  const ultimaAplicacao = registros[0]?.dataAplicacao ?? null;
+  const { data, isLoading } = useDadosSanitariosByBufalo(bufaloId, { page, limit: LIMIT });
 
+  const registros = data?.data ?? [];
+  const meta      = data?.meta;
+  const total     = meta?.total ?? 0;
+  const totalPages = meta?.totalPages ?? 1;
+
+  const situacao         = getSituacao(registros);
+  const ultimaAplicacao  = registros[0]?.dtAplicacao ?? null;
+
+  const handleMutated = () => {
+    setSelectedRegistro(null);
+  };
 
   return (
     <div className="animate-in fade-in duration-300 flex flex-col gap-5">
@@ -153,30 +107,18 @@ export function SanitarioTab({
       {/* ── Métricas superiores ──────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
-          icon={
-            <div className="p-2.5 bg-blue-50 rounded-xl">
-              <Syringe className="w-5 h-5 text-blue-500" />
-            </div>
-          }
+          icon={<div className="p-2.5 bg-blue-50 rounded-xl"><Syringe className="w-5 h-5 text-blue-500" /></div>}
           label="Total de Registros"
-          value={isLoading ? "..." : String(totalEfetivo)}
+          value={isLoading ? "..." : String(total)}
         />
         <MetricCard
-          icon={
-            <div className="p-2.5 bg-green-50 rounded-xl">
-              <CheckCircle2 className="w-5 h-5 text-green-500" />
-            </div>
-          }
+          icon={<div className="p-2.5 bg-green-50 rounded-xl"><CheckCircle2 className="w-5 h-5 text-green-500" /></div>}
           label="Situação Sanitária"
           value={isLoading ? "..." : situacao}
           valueClass={getSituacaoColor(situacao)}
         />
         <MetricCard
-          icon={
-            <div className="p-2.5 bg-amber-50 rounded-xl">
-              <History className="w-5 h-5 text-amber-500" />
-            </div>
-          }
+          icon={<div className="p-2.5 bg-amber-50 rounded-xl"><History className="w-5 h-5 text-amber-500" /></div>}
           label="Última Aplicação"
           value={isLoading ? "..." : formatDate(ultimaAplicacao)}
         />
@@ -184,11 +126,22 @@ export function SanitarioTab({
 
       {/* ── Tabela ───────────────────────────────────────────── */}
       <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-zinc-100">
+
+        {/* Header da tabela com botão de removidos */}
+        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-zinc-800">Histórico de Vacinas e Tratamentos</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDeleted(true)}
+            className="text-zinc-400 hover:text-zinc-700"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+            Ver removidos
+          </Button>
         </div>
 
-        {/* Estado de carregamento */}
+        {/* Loading */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center h-52 gap-2 text-zinc-400">
             <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin" />
@@ -196,7 +149,7 @@ export function SanitarioTab({
           </div>
         )}
 
-        {/* Estado vazio */}
+        {/* Vazio */}
         {!isLoading && registros.length === 0 && (
           <div className="flex flex-col items-center justify-center h-52 gap-2">
             <Syringe className="w-8 h-8 text-zinc-200" />
@@ -205,7 +158,7 @@ export function SanitarioTab({
           </div>
         )}
 
-        {/* Tabela com dados */}
+        {/* Tabela */}
         {!isLoading && registros.length > 0 && (
           <>
             <table className="w-full">
@@ -217,6 +170,9 @@ export function SanitarioTab({
                   <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 w-full">
                     Tratamento / Vacina
                   </th>
+                  <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 whitespace-nowrap">
+                    Doença
+                  </th>
                   <th className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 whitespace-nowrap">
                     Dosagem
                   </th>
@@ -227,34 +183,55 @@ export function SanitarioTab({
               </thead>
 
               <tbody className="divide-y divide-zinc-50">
-                {registros.slice((page - 1) * limit, page * limit).map((reg) => {
-                  const cfg = TIPO_CONFIG[reg.tipo] ?? TIPO_CONFIG.vacina;
+                {registros.map((reg) => {
+                  const tipo = getTipo(reg);
+                  const cfg  = TIPO_CONFIG[tipo];
+                  const med  = getMedicacao(reg);
                   return (
-                    <tr key={reg.id} className="hover:bg-zinc-50/60 transition-colors">
+                    <tr
+                      key={reg.idSanit}
+                      onClick={() => setSelectedRegistro(reg)}
+                      className="hover:bg-zinc-50/80 transition-colors cursor-pointer"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2 text-sm text-zinc-600">
                           <Calendar className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
-                          {formatDate(reg.dataAplicacao)}
+                          {formatDate(reg.dtAplicacao)}
                         </div>
                       </td>
 
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
                           {cfg.icon}
-                          <span className="text-sm text-zinc-700 font-medium">{reg.nomeTratamento}</span>
+                          <div>
+                            <p className="text-sm text-zinc-700 font-medium leading-tight">
+                              {med?.medicacao ?? "—"}
+                            </p>
+                            <p className="text-[11px] text-zinc-400">{cfg.label}</p>
+                          </div>
                         </div>
+                      </td>
+
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className="text-sm text-zinc-500 capitalize">{reg.doenca}</span>
                       </td>
 
                       <td className="px-4 py-4 text-right whitespace-nowrap">
                         <span className="text-sm font-mono text-zinc-600">
-                          {reg.dosagem} {reg.unidade}
+                          {reg.dosagem} {reg.unidadeMedida}
                         </span>
                       </td>
 
                       <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <span className="text-sm text-zinc-400">
-                          {reg.dataRetorno ? formatDate(reg.dataRetorno) : "—"}
-                        </span>
+                        {reg.necessitaRetorno ? (
+                          <div className="text-right">
+                            <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                              {reg.dtRetorno ? formatDate(reg.dtRetorno) : "A definir"}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-zinc-300">—</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -266,13 +243,30 @@ export function SanitarioTab({
               page={page}
               totalPages={totalPages}
               onPageChange={setPage}
-              total={totalEfetivo}
-              limit={limit}
+              hasPrevPage={meta?.hasPrevPage}
+              hasNextPage={meta?.hasNextPage}
+              total={total}
+              limit={LIMIT}
               className="px-6 py-4 border-t border-zinc-100"
             />
           </>
         )}
       </div>
+
+      {/* ── Modais ───────────────────────────────────────────── */}
+      <DadoSanitarioDetailsModal
+        isOpen={!!selectedRegistro}
+        onClose={() => setSelectedRegistro(null)}
+        registro={selectedRegistro}
+        onMutated={handleMutated}
+      />
+
+      <DeletedRegistrosModal
+        isOpen={showDeleted}
+        onClose={() => setShowDeleted(false)}
+        idBufalo={bufaloId}
+        onMutated={() => setShowDeleted(false)}
+      />
     </div>
   );
 }
