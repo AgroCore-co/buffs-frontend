@@ -39,7 +39,7 @@ jobs:
           cp -r public deploy-package/
           cp package.json deploy-package/
           cp package-lock.json deploy-package/
-          cp next.config.mjs deploy-package/
+          cp next.config.ts deploy-package/
           cp ecosystem.config.js deploy-package/
           cp .env.production deploy-package/
           tar -czf /tmp/deploy.tar.gz -C deploy-package .
@@ -94,7 +94,7 @@ jobs:
             echo "─── Verificando arquivos ───"
             [ ! -f .env.production ] && echo "❌ ERRO: .env.production não encontrado" && exit 1
             [ ! -d .next ] && echo "❌ ERRO: .next não encontrado" && exit 1
-            [ ! -f next.config.mjs ] && echo "❌ ERRO: next.config.mjs não encontrado" && exit 1
+            [ ! -f next.config.ts ] && echo "❌ ERRO: next.config.ts não encontrado" && exit 1
             echo "✅ Arquivos OK"
 
             echo "─── Criando diretório de logs ───"
