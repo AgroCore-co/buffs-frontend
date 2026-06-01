@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import Container from '@/components/ui/Container';
 import {
   ResponsiveContainer,
@@ -27,7 +28,7 @@ interface ProducaoLeiteChartProps {
 }
 
 export default function ProducaoLeiteChart({ data, ano, onAnoChange }: ProducaoLeiteChartProps) {
-  // Gerar lista de anos (últimos 5 anos)
+  const t = useTranslations("Dashboard");
   const anoAtual = new Date().getFullYear();
   const anos = Array.from({ length: 5 }, (_, i) => anoAtual - i);
 
@@ -35,7 +36,7 @@ export default function ProducaoLeiteChart({ data, ano, onAnoChange }: ProducaoL
   const header = (
     <div className="flex items-center justify-between mb-4 shrink-0">
       <h2 className="text-lg font-semibold text-gray-800">
-        Produção de Leite Mensal
+        {t("milkProduction")}
       </h2>
       {onAnoChange && (
         <select
@@ -63,10 +64,10 @@ export default function ProducaoLeiteChart({ data, ano, onAnoChange }: ProducaoL
             <BarChart3 className="text-amber-400 w-8 h-8" />
           </div>
           <p className="text-gray-500 text-sm font-medium">
-            Nenhuma produção registrada
+            {t("noProduction")}
           </p>
           <p className="text-gray-400 text-xs mt-1">
-            Registre ordenhas para ver a produção mensal
+            {t("noProductionDesc")}
           </p>
         </div>
       </Container>
@@ -124,7 +125,7 @@ export default function ProducaoLeiteChart({ data, ano, onAnoChange }: ProducaoL
               }}
               formatter={(value) => [
                 `${Number(value).toLocaleString('pt-BR')} L`,
-                'Produção',
+                t("production"),
               ]}
             />
             <Bar dataKey="producao" radius={[4, 4, 0, 0]} barSize={barSize}>

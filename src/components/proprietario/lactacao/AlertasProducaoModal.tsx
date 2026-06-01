@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { AlertCircle, Check, Eye, EyeOff, Filter } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -10,10 +11,6 @@ import { useAlertasByPropriedade, useAlertasMutations } from "@/hooks/useAlertas
 import type { Alerta, NichoAlerta, PrioridadeAlerta } from "@/services/alertas.service";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const NICHO_LABEL: Record<string, string> = {
-  CLINICO: "Clínico", PRODUCAO: "Produção", REPRODUCAO: "Reprodução", SANITARIO: "Sanitário", MANEJO: "Manejo",
-};
 
 function formatDate(value?: string | null) {
   if (!value) return "—";
@@ -40,6 +37,7 @@ interface Props {
 }
 
 export function AlertasProducaoModal({ isOpen, onClose, idPropriedade, nichos = ["CLINICO", "PRODUCAO"] }: Props) {
+  const t = useTranslations("Proprietario.lactacao.alerts.modal");
   const [page, setPage] = useState(1);
   const [prioridade, setPrioridade] = useState<PrioridadeAlerta | "">("");
   const [incluirVistos, setIncluirVistos] = useState(true);
@@ -62,7 +60,7 @@ export function AlertasProducaoModal({ isOpen, onClose, idPropriedade, nichos = 
     try {
       await marcarVisto({ id: a.idAlerta, status: !a.visto });
     } catch {
-      toast.error("Erro ao atualizar o alerta.");
+      toast.error(t("errorUpdate"));
     } finally {
       setTogglingId(null);
     }
@@ -72,12 +70,12 @@ export function AlertasProducaoModal({ isOpen, onClose, idPropriedade, nichos = 
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Todos os Alertas"
+      title={t("title")}
       size="3xl"
       footer={
         <div className="flex justify-between items-center w-full">
-          <span className="text-sm text-zinc-500">{total} alerta{total !== 1 ? "s" : ""}</span>
-          <Button variant="ghost" onClick={onClose}>Fechar</Button>
+          <span className="text-sm text-zinc-500">{t("total", { count: total })}</span>
+          <Button variant="ghost" onClick={onClose}>{t("close")}</Button>
         </div>
       }
     >
@@ -86,17 +84,17 @@ export function AlertasProducaoModal({ isOpen, onClose, idPropriedade, nichos = 
         <div className="flex flex-wrap items-center gap-3 p-3 bg-zinc-50 rounded-lg border border-zinc-100">
           <div className="flex items-center gap-2 text-sm text-zinc-500">
             <Filter className="w-4 h-4 text-zinc-400" />
-            <span className="font-medium">Filtros:</span>
+            <span className="font-medium">{t("filters")}</span>
           </div>
           <select
             value={prioridade}
             onChange={(e) => { setPrioridade(e.target.value as PrioridadeAlerta | ""); setPage(1); }}
             className={inputClass}
           >
-            <option value="">Todas prioridades</option>
-            <option value="ALTA">Alta</option>
-            <option value="MEDIA">Média</option>
-            <option value="BAIXA">Baixa</option>
+            <option value="">{t("allPriorities")}</option>
+            <option value="ALTA">{t("high")}</option>
+            <option value="MEDIA">{t("medium")}</option>
+            <option value="BAIXA">{t("low")}</option>
           </select>
           <button
             onClick={() => { setIncluirVistos(v => !v); setPage(1); }}
@@ -105,7 +103,7 @@ export function AlertasProducaoModal({ isOpen, onClose, idPropriedade, nichos = 
             }`}
           >
             {incluirVistos ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            {incluirVistos ? "Incluindo vistos" : "Apenas pendentes"}
+            {incluirVistos ? t("includingSeen") : t("onlyPending")}
           </button>
         </div>
 
@@ -114,16 +112,16 @@ export function AlertasProducaoModal({ isOpen, onClose, idPropriedade, nichos = 
           {isLoading ? (
             <div className="flex items-center justify-center h-[300px] gap-2 text-zinc-400">
               <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin" />
-              <span className="text-sm font-medium">Carregando alertas...</span>
+              <span className="text-sm font-medium">{t("loading")}</span>
             </div>
           ) : alertas.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[300px] gap-2 text-center">
               <AlertCircle className="w-8 h-8 text-zinc-200" />
               <p className="text-sm font-semibold text-zinc-400">
-                {isError ? "Erro ao carregar alertas" : "Nenhum alerta encontrado"}
+                {isError ? t("error") : t("empty")}
               </p>
               <p className="text-xs text-zinc-300">
-                {isError ? "Tente novamente." : "Não há alertas com os filtros selecionados."}
+                {isError ? t("errorDesc") : t("emptyDesc")}
               </p>
             </div>
           ) : (
@@ -136,15 +134,15 @@ export function AlertasProducaoModal({ isOpen, onClose, idPropriedade, nichos = 
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                           {!a.visto && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-500 text-white">Pendente</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-500 text-white">{t("pending")}</span>
                           )}
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${st.badge}`}>{a.prioridade}</span>
                           <span className="text-[10px] font-medium text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">
-                            {NICHO_LABEL[a.nicho] ?? a.nicho}
+                            {t(`nicho.${a.nicho}`)}
                           </span>
                           <span className="text-xs text-zinc-400">{formatDate(a.dataAlerta)}</span>
                           {a.visto && (
-                            <span className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> Visto</span>
+                            <span className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {t("seen")}</span>
                           )}
                         </div>
 
@@ -158,7 +156,7 @@ export function AlertasProducaoModal({ isOpen, onClose, idPropriedade, nichos = 
                         <p className="text-sm font-medium text-zinc-800">{a.motivo}</p>
                         {a.observacao && <p className="text-xs text-zinc-500 italic mt-1">{a.observacao}</p>}
                         {a.tipoEventoOrigem && (
-                          <p className="text-[11px] text-zinc-400 mt-1">Origem: {a.tipoEventoOrigem.replace(/_/g, " ").toLowerCase()}</p>
+                          <p className="text-[11px] text-zinc-400 mt-1">{t("origin")} {a.tipoEventoOrigem.replace(/_/g, " ").toLowerCase()}</p>
                         )}
                       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Stethoscope } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropriedade, onCreated }: Props) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.sanitario.createModal");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [showSugestoes, setShowSugestoes] = useState(false);
 
@@ -65,7 +67,7 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.doenca.trim()) {
-      toast.error("Informe a doença/condição.");
+      toast.error(t("toast.errorDisease"));
       return;
     }
     try {
@@ -79,23 +81,23 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
         necessita_retorno: form.necessita_retorno,
         dtRetorno: form.necessita_retorno ? (form.dtRetorno || null) : null,
       });
-      toast.success("Registro sanitário criado com sucesso.");
+      toast.success(t("toast.success"));
       onCreated?.();
       onClose();
     } catch {
-      toast.error("Erro ao criar registro sanitário.");
+      toast.error(t("toast.error"));
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Novo Registro Sanitário" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("title")} size="lg">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="grid grid-cols-2 gap-4">
 
           {/* Medicação (opcional) */}
           <div className="space-y-1.5 col-span-2">
             <label className="text-sm font-medium text-zinc-700">
-              Medicação <span className="text-zinc-400 font-normal">(opcional)</span>
+              {t("fields.medication")} <span className="text-zinc-400 font-normal">{t("fields.optional")}</span>
             </label>
             <select
               value={form.idMedicao}
@@ -103,7 +105,7 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
               disabled={isLoadingMeds}
               className={inputClass}
             >
-              <option value="">{isLoadingMeds ? "Carregando medicações..." : "Sem medicação vinculada"}</option>
+              <option value="">{isLoadingMeds ? t("fields.loadingMeds") : t("fields.noMedication")}</option>
               {medicamentos.map(m => (
                 <option key={m.idMedicacao} value={m.idMedicacao}>
                   {m.medicacao}{m.tipoTratamento ? ` — ${m.tipoTratamento}` : ""}
@@ -114,7 +116,7 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
 
           {/* Data de aplicação */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Data de Aplicação</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.applicationDate")}</label>
             <input
               type="date"
               required
@@ -126,7 +128,7 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
 
           {/* Doença com autocomplete */}
           <div className="space-y-1.5 relative">
-            <label className="text-sm font-medium text-zinc-700">Doença / Condição</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.disease")}</label>
             <input
               type="text"
               required
@@ -155,7 +157,7 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
 
           {/* Dosagem */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Dosagem</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.dosage")}</label>
             <input
               type="number"
               required
@@ -169,7 +171,7 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
 
           {/* Unidade de medida */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Unidade de Medida</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.unit")}</label>
             <select
               value={form.unidade_medida}
               onChange={e => setForm(f => ({ ...f, unidade_medida: e.target.value }))}
@@ -191,13 +193,13 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
             />
             <div className="w-10 h-6 bg-zinc-200 rounded-full peer peer-checked:bg-[#ce7d0a] transition-colors duration-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-200 peer-checked:after:translate-x-4" />
           </label>
-          <span className="text-sm font-medium text-zinc-700">Necessita de retorno</span>
+          <span className="text-sm font-medium text-zinc-700">{t("fields.needsReturn")}</span>
         </div>
 
         {/* Data de retorno */}
         {form.necessita_retorno && (
           <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-            <label className="text-sm font-medium text-zinc-700">Data de Retorno</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.returnDate")}</label>
             <input
               type="date"
               min={form.dtAplicacao}
@@ -210,11 +212,11 @@ export function CreateDadoSanitarioModal({ isOpen, onClose, idBufalo, idPropried
 
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
           <Button type="button" variant="outline" onClick={onClose} disabled={isCreatingDadoSanitario}>
-            Cancelar
+            {t("actions.cancel")}
           </Button>
           <Button type="submit" variant="primary" isLoading={isCreatingDadoSanitario}>
             <Stethoscope className="w-3.5 h-3.5 mr-1.5" />
-            Registrar
+            {t("actions.register")}
           </Button>
         </div>
       </form>

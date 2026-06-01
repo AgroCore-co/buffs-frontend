@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Pill, Syringe, Layers, Plus, Trash2, Pencil } from "lucide-react";
 
 import Container from "@/components/ui/Container";
@@ -36,6 +37,7 @@ function formatDate(value?: string | null) {
 }
 
 export default function MedicamentosPage() {
+  const t = useTranslations('MedicamentosPage');
   const { activeId, activePropriedade } = usePropriedadeStore();
   const hasActive = !!activeId;
 
@@ -71,7 +73,7 @@ export default function MedicamentosPage() {
   const totalMed   = medicamentos.length;
   const totalVacinas = useMemo(() => medicamentos.filter(isVacina).length, [medicamentos]);
   const tiposDistintos = tiposPresentes.length;
-  const filtroLabel = tiposPresentes.find(t => t.key === tipoFiltro)?.label;
+  const filtroLabel = tiposPresentes.find(tp => tp.key === tipoFiltro)?.label;
 
   const openCreate = () => { setEditing(null); setFormOpen(true); };
   const openEdit = (m: Medicacao) => { setEditing(m); setFormOpen(true); };
@@ -80,10 +82,10 @@ export default function MedicamentosPage() {
     if (!toDelete) return;
     try {
       await deleteMedicamento(toDelete.idMedicacao);
-      toast.success("Medicação removida com sucesso.");
+      toast.success(t('toast.deleteSuccess'));
       setToDelete(null);
     } catch {
-      toast.error("Erro ao remover medicação.");
+      toast.error(t('toast.deleteError'));
     }
   };
 
@@ -95,21 +97,21 @@ export default function MedicamentosPage() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-2xl font-bold text-[#404040]">
-                Medicamentos{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
+                {t('title')}{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
               </h1>
               <p className="text-sm text-[#404040]/60 mt-1">
-                Cadastre vacinas, vermífugos, antibióticos e demais medicações usadas no rebanho.
+                {t('subtitle')}
               </p>
             </div>
             {hasActive && (
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setShowDeleted(true)} className="text-zinc-400 hover:text-zinc-700">
                   <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                  Ver removidos
+                  {t('viewDeleted')}
                 </Button>
                 <Button variant="primary" size="sm" onClick={openCreate}>
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
-                  Nova medicação
+                  {t('newMedication')}
                 </Button>
               </div>
             )}
@@ -117,21 +119,21 @@ export default function MedicamentosPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
             <MetricCard
-              title="Total de Medicações"
+              title={t('metrics.total')}
               value={!hasActive ? "0" : isLoading ? "..." : String(totalMed)}
-              subtitle="Cadastradas na propriedade"
+              subtitle={t('metrics.totalDesc')}
               icon={<Pill className="w-4 h-4" />}
             />
             <MetricCard
-              title="Vacinas"
+              title={t('metrics.vaccines')}
               value={!hasActive ? "0" : isLoading ? "..." : String(totalVacinas)}
-              subtitle="Disponíveis para vacinação"
+              subtitle={t('metrics.vaccinesDesc')}
               icon={<Syringe className="w-4 h-4" />}
             />
             <MetricCard
-              title="Tipos Distintos"
+              title={t('metrics.distinctTypes')}
               value={!hasActive ? "0" : isLoading ? "..." : String(tiposDistintos)}
-              subtitle="Categorias de tratamento"
+              subtitle={t('metrics.distinctTypesDesc')}
               icon={<Layers className="w-4 h-4" />}
             />
           </div>
@@ -141,10 +143,10 @@ export default function MedicamentosPage() {
       <Container className="p-5">
         <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
           <div>
-            <h2 className="text-sm font-semibold text-zinc-900">Medicações Cadastradas</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">{t('table.title')}</h2>
             {!isLoading && hasActive && (
               <p className="text-xs text-zinc-500 mt-0.5">
-                {filtrados.length} {filtrados.length === 1 ? "medicação" : "medicações"}
+                {t('table.count', { count: filtrados.length })}
                 {tipoFiltro !== "TODOS" && filtroLabel ? ` · ${filtroLabel}` : ""}
               </p>
             )}
@@ -154,11 +156,11 @@ export default function MedicamentosPage() {
           {hasActive && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <FilterChip active={tipoFiltro === "TODOS"} onClick={() => setTipoFiltro("TODOS")}>
-                Todos
+                {t('table.all')}
               </FilterChip>
-              {tiposPresentes.map(t => (
-                <FilterChip key={t.key} active={tipoFiltro === t.key} onClick={() => setTipoFiltro(t.key)}>
-                  {t.label}
+              {tiposPresentes.map(tp => (
+                <FilterChip key={tp.key} active={tipoFiltro === tp.key} onClick={() => setTipoFiltro(tp.key)}>
+                  {tp.label}
                 </FilterChip>
               ))}
             </div>
@@ -169,7 +171,7 @@ export default function MedicamentosPage() {
           <div className="w-full min-h-[240px] flex items-center justify-center border border-zinc-200 rounded-xl bg-zinc-50/50">
             <div className="flex flex-col items-center gap-2 text-zinc-400">
               <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
-              <span className="text-sm font-medium">Carregando medicações...</span>
+              <span className="text-sm font-medium">{t('table.loading')}</span>
             </div>
           </div>
         ) : (
@@ -178,21 +180,21 @@ export default function MedicamentosPage() {
             emptyState={
               <TableEmptyState
                 icon={Pill}
-                title={hasActive ? "Nenhuma medicação encontrada" : "Selecione uma propriedade"}
+                title={hasActive ? t('table.emptyTitle') : t('table.emptyTitleNoProperty')}
                 description={
                   hasActive
-                    ? "Cadastre a primeira medicação para esta propriedade."
-                    : "Escolha uma propriedade para visualizar as medicações."
+                    ? t('table.emptyDesc')
+                    : t('table.emptyDescNoProperty')
                 }
               />
             }
           >
             <TableHeader>
-              <TableHead>Medicação</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Criado em</TableHead>
-              <TableHead align="right">Ações</TableHead>
+              <TableHead>{t('table.headers.medication')}</TableHead>
+              <TableHead>{t('table.headers.type')}</TableHead>
+              <TableHead>{t('table.headers.description')}</TableHead>
+              <TableHead>{t('table.headers.createdAt')}</TableHead>
+              <TableHead align="right">{t('table.headers.actions')}</TableHead>
             </TableHeader>
             <TableBody>
               {filtrados.map((m) => {
@@ -218,14 +220,14 @@ export default function MedicamentosPage() {
                         <button
                           onClick={(e) => { e.stopPropagation(); openEdit(m); }}
                           className="p-1.5 rounded-md text-zinc-400 hover:text-[#ce7d0a] hover:bg-zinc-100 transition-colors"
-                          aria-label="Editar"
+                          aria-label={t('edit')}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setToDelete(m); }}
                           className="p-1.5 rounded-md text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                          aria-label="Remover"
+                          aria-label={t('remove')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -258,25 +260,24 @@ export default function MedicamentosPage() {
         </>
       )}
 
-      <Modal isOpen={!!toDelete} onClose={() => setToDelete(null)} title="Remover Medicação" size="sm">
+      <Modal isOpen={!!toDelete} onClose={() => setToDelete(null)} title={t('deleteModal.title')} size="sm">
         <div className="flex flex-col items-center text-center gap-5 py-2">
           <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
             <Trash2 className="w-6 h-6 text-red-600" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-base font-semibold text-zinc-900">Remover esta medicação?</h3>
+            <h3 className="text-base font-semibold text-zinc-900">{t('deleteModal.confirm')}</h3>
             <p className="text-sm text-zinc-500 leading-relaxed">
-              <span className="font-semibold text-zinc-700">{toDelete?.medicacao}</span> será removida.
-              Você pode restaurá-la depois em medicações removidas.
+              {t('deleteModal.description', { name: toDelete?.medicacao ?? '' })}
             </p>
           </div>
           <div className="flex gap-3 w-full">
             <Button variant="outline" className="flex-1" onClick={() => setToDelete(null)} disabled={isDeletingMedicamento}>
-              Cancelar
+              {t('deleteModal.cancel')}
             </Button>
             <Button variant="danger" className="flex-1" isLoading={isDeletingMedicamento} onClick={handleConfirmDelete}>
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Sim, remover
+              {t('deleteModal.yesRemove')}
             </Button>
           </div>
         </div>

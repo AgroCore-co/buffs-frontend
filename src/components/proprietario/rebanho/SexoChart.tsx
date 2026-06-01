@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Container from "@/components/ui/Container";
 import { Venus } from "lucide-react";
 
@@ -18,7 +19,7 @@ const COLOR_FEMEA = "#CE7D0A";
 const COLOR_MACHO = "#FFCF78";
 const COLOR_EMPTY = "#F3F4F6";
 
-function DonutChart({ femeas, machos }: { femeas: number; machos: number }) {
+function DonutChart({ femeas, machos, label }: { femeas: number; machos: number; label: string }) {
   const total = femeas + machos;
   const size = 130;
   const strokeWidth = 15;
@@ -88,7 +89,7 @@ function DonutChart({ femeas, machos }: { femeas: number; machos: number }) {
           {displayPct}%
         </span>
         <span className="text-[9px] font-semibold text-gray-400 uppercase tracking-widest mt-0.5">
-          Fêmeas
+          {label}
         </span>
       </div>
     </div>
@@ -129,13 +130,14 @@ export default function SexoChart({
   isLoading = false,
   hasActivePropriedade = true,
 }: SexoChartProps) {
+  const t = useTranslations('Charts.sex');
   const { femeas, machos } = data;
   const total = femeas + machos;
 
   const emptyState = !hasActivePropriedade
     ? {
-        title: "Selecione uma propriedade",
-        description: "Escolha uma propriedade para visualizar a distribuição.",
+        title: t('selectProperty'),
+        description: t('selectPropertyDesc'),
       }
     : null;
 
@@ -145,11 +147,11 @@ export default function SexoChart({
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-gray-800 leading-tight">
-            Distribuição por Sexo
+            {t('title')}
           </h2>
           {!isLoading && !emptyState && (
             <p className="text-xs text-gray-400 mt-0.5">
-              {total.toLocaleString("pt-BR")} animal{total !== 1 ? "is" : ""} no total
+              {t('totalAnimals', { count: total })}
             </p>
           )}
         </div>
@@ -183,11 +185,11 @@ export default function SexoChart({
       ) : (
         // Adicionado flex-wrap e justify-center
         <div className="flex-1 flex flex-wrap items-center justify-center gap-x-8 gap-y-6">
-          <DonutChart femeas={femeas} machos={machos} />
+          <DonutChart femeas={femeas} machos={machos} label={t('females')} />
           <div className="flex flex-col gap-3 flex-1 min-w-[160px]">
-            <Legend label="Fêmeas" value={femeas} total={total} color={COLOR_FEMEA} />
+            <Legend label={t('females')} value={femeas} total={total} color={COLOR_FEMEA} />
             <div className="h-px bg-gray-100 w-full" />
-            <Legend label="Machos" value={machos} total={total} color={COLOR_MACHO} />
+            <Legend label={t('males')} value={machos} total={total} color={COLOR_MACHO} />
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Container from "@/components/ui/Container";
 import { BarChart2 } from "lucide-react";
 import {
@@ -31,17 +32,18 @@ export default function RacaChart({
   isLoading = false,
   hasActivePropriedade = true,
 }: RacaChartProps) {
+  const t = useTranslations('Charts.breed');
   const total = data.reduce((sum, item) => sum + item.quantidade, 0);
 
   const emptyState = !hasActivePropriedade
     ? {
-        title: "Selecione uma propriedade",
-        description: "Escolha uma propriedade para visualizar a distribuição.",
+        title: t('selectProperty'),
+        description: t('selectPropertyDesc'),
       }
     : data.length === 0
       ? {
-          title: "Nenhuma raça encontrada",
-          description: "Cadastre animais para ver a distribuição por raça.",
+          title: t('emptyTitle'),
+          description: t('emptyDesc'),
         }
       : null;
 
@@ -51,12 +53,11 @@ export default function RacaChart({
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-gray-800 leading-tight">
-            Distribuição por Raça
+            {t('title')}
           </h2>
           {!isLoading && !emptyState && (
             <p className="text-xs text-gray-400 mt-0.5">
-              {total.toLocaleString("pt-BR")} animal{total !== 1 ? "is" : ""} no
-              total
+              {t('totalAnimals', { count: total })}
             </p>
           )}
         </div>
@@ -108,7 +109,7 @@ export default function RacaChart({
                 }}
                 formatter={(value) => [
                   typeof value === "number" ? value.toLocaleString("pt-BR") : "0",
-                  "Animais",
+                  t('animals'),
                 ]}
               />
               <Bar dataKey="quantidade" radius={[5, 5, 0, 0]} maxBarSize={48}>

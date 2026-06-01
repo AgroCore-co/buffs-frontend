@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import {
   Activity, Droplets, RefreshCw, TrendingUp, TrendingDown, AlertCircle,
   ChevronLeft, ChevronRight, BarChart3, Bell,
@@ -24,8 +25,6 @@ import { ResumoProducaoModal } from "@/components/proprietario/lactacao/ResumoPr
 import { AlertasProducaoModal } from "@/components/proprietario/lactacao/AlertasProducaoModal";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 const CLASSIFICACAO_COLORS: Record<string, string> = {
   "Ótima": "bg-green-100 text-green-800",
@@ -53,6 +52,7 @@ function shortDayBR(value?: string | null) {
 const TABLE_LIMIT = 10;
 
 export default function LactacaoPage() {
+  const t = useTranslations('LactacaoPage');
   const { activeId, activePropriedade } = usePropriedadeStore();
   const hasActive = !!activeId;
   const anoAtual = new Date().getFullYear();
@@ -85,6 +85,9 @@ export default function LactacaoPage() {
   const mesAnterior = producaoAtual?.mesAnteriorLitros ?? 0;
   const totalCiclos = estatisticas?.totalCiclos ?? 0;
 
+  // Month names from translations
+  const monthNames: string[] = t.raw('months') as string[];
+
   // ── Gráfico mensal ──
   const chartData = useMemo(() => {
     const serie = producaoGrafico?.serieHistorica ?? [];
@@ -96,9 +99,9 @@ export default function LactacaoPage() {
         if (ant > 0) varMes = ((item.totalLitros - ant) / ant) * 100;
         else if (item.totalLitros > 0) varMes = 100;
       }
-      return { mes: MESES[mesIdx] ?? item.mes, producao: item.totalLitros ?? 0, variacao: varMes };
+      return { mes: monthNames[mesIdx] ?? item.mes, producao: item.totalLitros ?? 0, variacao: varMes };
     });
-  }, [producaoGrafico]);
+  }, [producaoGrafico, monthNames]);
   const hasChartData = chartData.some(d => d.producao > 0);
 
   // ── Alertas (painel) ──
@@ -142,34 +145,34 @@ export default function LactacaoPage() {
         <div className="flex flex-col gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#404040]">
-              Controle de Produção{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
+              {t('title')}{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
             </h1>
             <p className="text-sm text-[#404040]/60 mt-1">
-              Gerencie a produção leiteira e os ciclos de lactação do rebanho.
+              {t('subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
             <MetricCard
-              title="Búfalas Lactando"
+              title={t('metrics.lactating')}
               value={!hasActive ? "0" : isLoadingMetrics ? "..." : String(lactando)}
-              subtitle="Dados do mês atual"
+              subtitle={t('metrics.lactatingDesc')}
               icon={<Activity className="w-4 h-4 text-[#ce7d0a]" />}
             />
             <MetricCard
-              title="Leite produzido (mês atual)"
-              value={!hasActive ? "0 L" : isLoadingMetrics ? "..." : `${leiteMes.toFixed(1)} L`}
+              title={t('metrics.milkProduced')}
+              value={!hasActive ? "0 L" : isLoadingMetrics ? "..." : t('metrics.milkProducedUnit', { value: leiteMes.toFixed(1) })}
               subtitle={
                 !hasActive
-                  ? "Selecione uma propriedade"
-                  : `${variacao > 0 ? "+" : ""}${variacao.toFixed(1)}% · ${mesAnterior.toFixed(1)} L no mês anterior`
+                  ? t('metrics.selectProperty')
+                  : t('metrics.previousMonth', { variation: `${variacao > 0 ? "+" : ""}${variacao.toFixed(1)}`, previous: mesAnterior.toFixed(1) })
               }
               icon={<Droplets className="w-4 h-4 text-[#ce7d0a]" />}
             />
             <MetricCard
-              title="Total de Ciclos"
+              title={t('metrics.totalCycles')}
               value={!hasActive ? "0" : isLoadingMetrics ? "..." : String(totalCiclos)}
-              subtitle="Ciclos reprodutivos registrados"
+              subtitle={t('metrics.totalCyclesDesc')}
               icon={<RefreshCw className="w-4 h-4 text-[#ce7d0a]" />}
             />
           </div>
@@ -182,13 +185,13 @@ export default function LactacaoPage() {
         <Container className="p-6 lg:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-zinc-800 border-l-4 border-[#ffcf78] pl-3">
-              Produção mês a mês ({selectedYear})
+              {t('chart.title', { year: String(selectedYear) })}
             </h2>
             <div className="flex items-center gap-2 bg-zinc-50 rounded-lg p-1">
               <button
                 onClick={() => setSelectedYear(y => y - 1)}
                 className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-zinc-600"
-                title="Ano anterior"
+                title={t('chart.previousYear')}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -197,7 +200,7 @@ export default function LactacaoPage() {
                 onClick={() => setSelectedYear(y => Math.min(anoAtual, y + 1))}
                 disabled={selectedYear >= anoAtual}
                 className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed"
-                title="Próximo ano"
+                title={t('chart.nextYear')}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -218,7 +221,7 @@ export default function LactacaoPage() {
                       const v = typeof value === "number" ? value : parseFloat(String(value));
                       const varMes = Number(item?.payload?.variacao ?? 0);
                       const sufixo = varMes !== 0 ? ` (${varMes > 0 ? "▲" : "▼"} ${Math.abs(varMes).toFixed(1)}%)` : "";
-                      return [`${(Number.isNaN(v) ? 0 : v).toFixed(1)} L${sufixo}`, "Produção"];
+                      return [`${(Number.isNaN(v) ? 0 : v).toFixed(1)} L${sufixo}`, t('chart.production')];
                     }}
                   />
                   <Bar dataKey="producao" radius={[4, 4, 0, 0]} barSize={64}>
@@ -231,8 +234,8 @@ export default function LactacaoPage() {
             ) : (
               <div className="h-full flex flex-col items-center justify-center gap-2 text-zinc-300">
                 <BarChart3 className="w-8 h-8" />
-                <p className="text-sm font-semibold text-zinc-400">Sem dados de produção para {selectedYear}</p>
-                <p className="text-xs text-zinc-300">Não há registros consolidados para este período.</p>
+                <p className="text-sm font-semibold text-zinc-400">{t('chart.emptyTitle', { year: String(selectedYear) })}</p>
+                <p className="text-xs text-zinc-300">{t('chart.emptyDesc')}</p>
               </div>
             )}
           </div>
@@ -241,24 +244,24 @@ export default function LactacaoPage() {
         {/* Alertas de Produção */}
         <Container className="p-6 flex flex-col min-h-[350px]">
           <div className="flex justify-between items-start mb-4">
-            <h2 className="text-lg font-semibold text-zinc-800 border-l-4 border-[#ffcf78] pl-3">Alertas de Produção</h2>
+            <h2 className="text-lg font-semibold text-zinc-800 border-l-4 border-[#ffcf78] pl-3">{t('alerts.title')}</h2>
             <button
               onClick={() => setShowAlertas(true)}
               disabled={!hasActive}
               className="bg-[#FFCF78] hover:bg-[#fca90f] text-[#404040] font-medium py-1.5 px-4 rounded text-sm transition-colors disabled:opacity-40"
             >
-              Ver Todos
+              {t('alerts.viewAll')}
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {isLoadingAlertas ? (
-              <div className="flex items-center justify-center h-full text-zinc-400 text-sm">Carregando alertas...</div>
+              <div className="flex items-center justify-center h-full text-zinc-400 text-sm">{t('alerts.loading')}</div>
             ) : alertas.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
                 <Bell className="w-7 h-7 text-zinc-200" />
-                <p className="text-sm font-semibold text-zinc-400">Nenhum alerta no momento</p>
-                <p className="text-xs text-zinc-300">Sem alertas de produção ou clínicos pendentes.</p>
+                <p className="text-sm font-semibold text-zinc-400">{t('alerts.emptyTitle')}</p>
+                <p className="text-xs text-zinc-300">{t('alerts.emptyDesc')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -290,12 +293,12 @@ export default function LactacaoPage() {
       {/* ── Tabela: Búfalas disponíveis para ordenha ──────────────── */}
       <Container className="p-5">
         <div className="mb-4">
-          <h2 className="text-2xl font-bold text-[#404040]">Búfalas Disponíveis para Ordenha</h2>
-          <p className="text-sm text-[#404040]/60 mt-1">Selecione um animal para ver o resumo de produção</p>
+          <h2 className="text-2xl font-bold text-[#404040]">{t('table.title')}</h2>
+          <p className="text-sm text-[#404040]/60 mt-1">{t('table.subtitle')}</p>
         </div>
 
         <FilterBar
-          filters={[{ type: "text", key: "busca", placeholder: "Buscar por nome ou brinco..." }]}
+          filters={[{ type: "text", key: "busca", placeholder: t('table.searchPlaceholder') }]}
           onFilterChange={handleFilter}
           className="mb-4"
         />
@@ -304,7 +307,7 @@ export default function LactacaoPage() {
           <div className="w-full min-h-[240px] flex items-center justify-center border border-zinc-200 rounded-xl bg-zinc-50/50">
             <div className="flex flex-col items-center gap-2 text-zinc-400">
               <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
-              <span className="text-sm font-medium">Carregando animais...</span>
+              <span className="text-sm font-medium">{t('table.loading')}</span>
             </div>
           </div>
         ) : (
@@ -318,23 +321,23 @@ export default function LactacaoPage() {
             emptyState={
               <TableEmptyState
                 icon={Droplets}
-                title={hasActive ? "Nenhuma búfala em lactação" : "Selecione uma propriedade"}
+                title={hasActive ? t('table.emptyTitle') : t('table.emptyTitleNoProperty')}
                 description={
                   hasActive
-                    ? "Não há fêmeas com ciclo de lactação ativo nesta propriedade."
-                    : "Escolha uma propriedade para visualizar as búfalas disponíveis para ordenha."
+                    ? t('table.emptyDesc')
+                    : t('table.emptyDescNoProperty')
                 }
               />
             }
           >
             <TableHeader>
-              <TableHead>Tag</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Raça</TableHead>
-              <TableHead align="center">Dias em Lact.</TableHead>
-              <TableHead align="center">Média/Dia</TableHead>
-              <TableHead align="right">Última</TableHead>
-              <TableHead align="center">Classificação</TableHead>
+              <TableHead>{t('table.headers.tag')}</TableHead>
+              <TableHead>{t('table.headers.name')}</TableHead>
+              <TableHead>{t('table.headers.breed')}</TableHead>
+              <TableHead align="center">{t('table.headers.daysInLactation')}</TableHead>
+              <TableHead align="center">{t('table.headers.avgDay')}</TableHead>
+              <TableHead align="right">{t('table.headers.last')}</TableHead>
+              <TableHead align="center">{t('table.headers.classification')}</TableHead>
             </TableHeader>
             <TableBody>
               {paginadas.map((f: FemeaEmLactacao) => {
@@ -345,14 +348,14 @@ export default function LactacaoPage() {
                       <span className="text-sm font-medium text-zinc-900">{f.brinco || "—"}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm font-bold text-zinc-900">{f.nome || "Sem nome"}</span>
+                      <span className="text-sm font-bold text-zinc-900">{f.nome || t('table.noName')}</span>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-zinc-600">{f.raca || "—"}</span>
                     </TableCell>
                     <TableCell align="center">
                       <span className="text-sm text-zinc-700">
-                        {f.cicloAtual?.diasEmLactacao != null ? `${f.cicloAtual.diasEmLactacao} dias` : "—"}
+                        {f.cicloAtual?.diasEmLactacao != null ? t('table.days', { count: f.cicloAtual.diasEmLactacao }) : "—"}
                       </span>
                     </TableCell>
                     <TableCell align="center">
@@ -365,7 +368,7 @@ export default function LactacaoPage() {
                         <div className="flex flex-col items-end">
                           <span className="text-sm font-bold text-zinc-900">{Number(ult.quantidade).toFixed(2)} L</span>
                           {ult.data && (
-                            <span className="text-[10px] text-zinc-500">em {shortDayBR(ult.data)} ({ult.periodo})</span>
+                            <span className="text-[10px] text-zinc-500">{t('table.at', { date: shortDayBR(ult.data), period: ult.periodo })}</span>
                           )}
                         </div>
                       ) : (
@@ -385,7 +388,7 @@ export default function LactacaoPage() {
         )}
 
         {hasActive && !isLoadingFemeas && (
-          <p className="text-sm text-zinc-500 mt-4">Mostrando {total} {total === 1 ? "animal" : "animais"}</p>
+          <p className="text-sm text-zinc-500 mt-4">{t('table.showing', { count: total })}</p>
         )}
       </Container>
 

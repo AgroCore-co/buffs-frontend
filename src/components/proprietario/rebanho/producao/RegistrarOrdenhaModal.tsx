@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Droplets } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -11,11 +12,7 @@ import type { PeriodoOrdenha } from "@/services/ordenhas.service";
 const inputClass =
   "w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ce7d0a] focus:border-transparent";
 
-const PERIODOS: { value: PeriodoOrdenha; label: string }[] = [
-  { value: "M", label: "Manhã" },
-  { value: "T", label: "Tarde" },
-  { value: "N", label: "Noite" },
-];
+const PERIODOS: PeriodoOrdenha[] = ["M", "T", "N"];
 
 /** Valor para <input type="datetime-local"> com a data/hora atual (sem segundos). */
 function nowLocalInput(): string {
@@ -43,6 +40,7 @@ interface Props {
 export function RegistrarOrdenhaModal({
   isOpen, onClose, idBufala, idPropriedade, idCicloLactacao, onCreated,
 }: Props) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.producao.milkingModal");
   const { createOrdenha, isCreatingOrdenha } = useOrdenhas();
   const [form, setForm] = useState<FormState>({
     qtOrdenha: "", periodo: "M", dtOrdenha: nowLocalInput(), ocorrencia: "",
@@ -58,7 +56,7 @@ export function RegistrarOrdenhaModal({
     e.preventDefault();
     const qt = parseFloat(form.qtOrdenha);
     if (!qt || qt <= 0) {
-      toast.error("Informe uma quantidade válida (litros).");
+      toast.error(t("toast.errorQty"));
       return;
     }
     try {
@@ -71,21 +69,21 @@ export function RegistrarOrdenhaModal({
         dtOrdenha: new Date(form.dtOrdenha).toISOString(),
         ...(form.ocorrencia.trim() && { ocorrencia: form.ocorrencia.trim() }),
       });
-      toast.success("Ordenha registrada com sucesso.");
+      toast.success(t("toast.success"));
       onCreated?.();
       onClose();
     } catch {
-      toast.error("Erro ao registrar ordenha.");
+      toast.error(t("toast.error"));
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Registrar Ordenha" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("title")} size="md">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="grid grid-cols-2 gap-4">
           {/* Quantidade */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Quantidade (L)</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.quantity")}</label>
             <input
               type="number"
               required
@@ -99,19 +97,21 @@ export function RegistrarOrdenhaModal({
 
           {/* Período */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Período</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.period")}</label>
             <select
               value={form.periodo}
               onChange={e => setForm(f => ({ ...f, periodo: e.target.value as PeriodoOrdenha }))}
               className={inputClass}
             >
-              {PERIODOS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+              {PERIODOS.map(p => (
+                <option key={p} value={p}>{t(`periods.${p}`)}</option>
+              ))}
             </select>
           </div>
 
           {/* Data/hora */}
           <div className="space-y-1.5 col-span-2">
-            <label className="text-sm font-medium text-zinc-700">Data e hora da ordenha</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.dateTime")}</label>
             <input
               type="datetime-local"
               required
@@ -125,14 +125,13 @@ export function RegistrarOrdenhaModal({
           {/* Ocorrência */}
           <div className="space-y-1.5 col-span-2">
             <label className="text-sm font-medium text-zinc-700">
-              Ocorrência <span className="text-zinc-400 font-normal">(opcional)</span>
+              {t("fields.occurrence")} <span className="text-zinc-400 font-normal">{t("fields.optional")}</span>
             </label>
             <input
               type="text"
               maxLength={255}
               value={form.ocorrencia}
               onChange={e => setForm(f => ({ ...f, ocorrencia: e.target.value }))}
-              placeholder="Ex: Mastite leve..."
               className={inputClass}
             />
           </div>
@@ -140,11 +139,11 @@ export function RegistrarOrdenhaModal({
 
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
           <Button type="button" variant="outline" onClick={onClose} disabled={isCreatingOrdenha}>
-            Cancelar
+            {t("actions.cancel")}
           </Button>
           <Button type="submit" variant="primary" isLoading={isCreatingOrdenha}>
             <Droplets className="w-3.5 h-3.5 mr-1.5" />
-            Registrar
+            {t("actions.register")}
           </Button>
         </div>
       </form>

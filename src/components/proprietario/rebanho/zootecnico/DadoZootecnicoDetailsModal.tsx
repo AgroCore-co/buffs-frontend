@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -112,6 +113,7 @@ interface Props {
 }
 
 export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutated }: Props) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.zootecnico");
   const queryClient = useQueryClient();
   const [view, setView] = useState<View>("details");
   const [form, setForm] = useState<FormState>({
@@ -145,31 +147,31 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
     mutationFn: ({ id, data }: { id: string; data: UpdateDadoZootecnicoDTO }) =>
       dadosZootecnicosService.update(id, data),
     onSuccess: () => {
-      toast.success("Registro atualizado com sucesso.");
+      toast.success(t("modal.toast.updated"));
       invalidar();
       setView("details");
     },
-    onError: () => toast.error("Erro ao atualizar registro."),
+    onError: () => toast.error(t("modal.toast.errorUpdate")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => dadosZootecnicosService.delete(id),
     onSuccess: () => {
-      toast.success("Registro removido com sucesso.");
+      toast.success(t("modal.toast.removed"));
       invalidar();
       onClose();
     },
-    onError: () => toast.error("Erro ao remover registro."),
+    onError: () => toast.error(t("modal.toast.errorRemove")),
   });
 
   const restoreMutation = useMutation({
     mutationFn: (id: string) => dadosZootecnicosService.restore(id),
     onSuccess: () => {
-      toast.success("Registro restaurado com sucesso.");
+      toast.success(t("modal.toast.restored"));
       invalidar();
       onClose();
     },
-    onError: () => toast.error("Erro ao restaurar registro."),
+    onError: () => toast.error(t("modal.toast.errorRestore")),
   });
 
   if (!registro) return null;
@@ -195,9 +197,9 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
   };
 
   const titles: Record<View, string> = {
-    details:          "Registro Zootécnico",
-    edit:             "Editar Registro",
-    "confirm-delete": "Remover Registro",
+    details:          t("modal.detailsTitle"),
+    edit:             t("modal.editTitle"),
+    "confirm-delete": t("modal.removeTitle"),
   };
 
   // ─── View: Detalhes ──────────────────────────────────────────────────────────
@@ -209,51 +211,51 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
       <div className="flex items-center flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
           <Scale className="w-3.5 h-3.5" />
-          {registro.tipoPesagem || "Pesagem"}
+          {registro.tipoPesagem || t("modal.fields.weighingType")}
         </span>
         {isDeleted && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 text-zinc-500 rounded-full text-xs font-semibold">
             <XCircle className="w-3.5 h-3.5" />
-            Removido
+            {t("modal.status.removed")}
           </span>
         )}
       </div>
 
       {/* Peso em destaque */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Peso</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">{t("modal.fields.weight")}</p>
         <p className="text-2xl font-bold text-zinc-900">{toNumber(registro.peso).toFixed(2)} kg</p>
       </div>
 
       {/* Grid de informações */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-        <InfoField label="Escore Corporal (ECC)">
+        <InfoField label={t("modal.fields.ecc")}>
           <span className={`font-semibold ${eccStyle.text}`}>{ecc.toFixed(2)}</span>
           <span className="text-zinc-400 font-normal"> / 5.0</span>
         </InfoField>
-        <InfoField label="Data de Registro">
+        <InfoField label={t("modal.fields.registrationDate")}>
           <span className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-zinc-400" />
             {formatDate(registro.dtRegistro)}
           </span>
         </InfoField>
-        <InfoField label="Formato do Chifre">{registro.formatoChifre || "—"}</InfoField>
-        <InfoField label="Porte Corporal">
+        <InfoField label={t("modal.fields.hornFormat")}>{registro.formatoChifre || "—"}</InfoField>
+        <InfoField label={t("modal.fields.bodySize")}>
           <span className="flex items-center gap-1.5">
             <Ruler className="w-3.5 h-3.5 text-zinc-400" />
             {registro.porteCorporal || "—"}
           </span>
         </InfoField>
-        <InfoField label="Cor da Pelagem">{registro.corPelagem || "—"}</InfoField>
-        <InfoField label="Tipo de Pesagem">{registro.tipoPesagem || "—"}</InfoField>
+        <InfoField label={t("modal.fields.furColor")}>{registro.corPelagem || "—"}</InfoField>
+        <InfoField label={t("modal.fields.weighingType")}>{registro.tipoPesagem || "—"}</InfoField>
       </div>
 
       {/* Timestamps */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-4 border-t border-zinc-100">
-        <InfoField label="Criado em">{formatDate(registro.createdAt)}</InfoField>
-        <InfoField label="Atualizado em">{formatDate(registro.updatedAt)}</InfoField>
+        <InfoField label={t("modal.fields.createdAt")}>{formatDate(registro.createdAt)}</InfoField>
+        <InfoField label={t("modal.fields.updatedAt")}>{formatDate(registro.updatedAt)}</InfoField>
         {isDeleted && (
-          <InfoField label="Removido em">
+          <InfoField label={t("modal.fields.removedAt")}>
             <span className="text-red-500">{formatDate(registro.deletedAt)}</span>
           </InfoField>
         )}
@@ -269,17 +271,17 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
             onClick={() => restoreMutation.mutate(registro.idZootec)}
           >
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-            Restaurar registro
+            {t("modal.actions.restore")}
           </Button>
         ) : (
           <>
             <Button variant="danger" size="sm" onClick={() => setView("confirm-delete")}>
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Remover
+              {t("modal.actions.remove")}
             </Button>
             <Button variant="primary" size="sm" onClick={() => setView("edit")}>
               <Pencil className="w-3.5 h-3.5 mr-1.5" />
-              Editar
+              {t("modal.actions.edit")}
             </Button>
           </>
         )}
@@ -297,14 +299,14 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
         className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 transition-colors w-fit"
       >
         <ChevronLeft className="w-3.5 h-3.5" />
-        Voltar aos detalhes
+        {t("modal.actions.backToDetails")}
       </button>
 
       <div className="grid grid-cols-2 gap-4">
 
         {/* Data de registro */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Data de Registro</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.registrationDate")}</label>
           <input
             type="date"
             required
@@ -316,7 +318,7 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
 
         {/* Peso */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Peso (kg)</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.weight")} (kg)</label>
           <input
             type="number"
             required
@@ -330,7 +332,7 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
 
         {/* Escore corporal */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Escore Corporal (ECC)</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.ecc")}</label>
           <input
             type="number"
             required
@@ -345,7 +347,7 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
 
         {/* Cor da pelagem */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Cor da Pelagem</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.furColor")}</label>
           <input
             type="text"
             value={form.corPelagem}
@@ -356,7 +358,7 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
 
         {/* Formato do chifre */}
         <SuggestField
-          label="Formato do Chifre"
+          label={t("modal.fields.hornFormat")}
           value={form.formatoChifre}
           onChange={v => setForm(f => ({ ...f, formatoChifre: v }))}
           options={FORMATOS_CHIFRE}
@@ -365,7 +367,7 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
 
         {/* Porte corporal */}
         <SuggestField
-          label="Porte Corporal"
+          label={t("modal.fields.bodySize")}
           value={form.porteCorporal}
           onChange={v => setForm(f => ({ ...f, porteCorporal: v }))}
           options={PORTES}
@@ -374,7 +376,7 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
 
         {/* Tipo de pesagem */}
         <SuggestField
-          label="Tipo de Pesagem"
+          label={t("modal.fields.weighingType")}
           value={form.tipoPesagem}
           onChange={v => setForm(f => ({ ...f, tipoPesagem: v }))}
           options={TIPOS_PESAGEM}
@@ -384,10 +386,10 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
 
       <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
         <Button type="button" variant="outline" onClick={() => setView("details")} disabled={updateMutation.isPending}>
-          Cancelar
+          {t("modal.actions.cancel")}
         </Button>
         <Button type="submit" variant="primary" isLoading={updateMutation.isPending}>
-          Salvar Alterações
+          {t("modal.actions.saveChanges")}
         </Button>
       </div>
     </form>
@@ -401,13 +403,12 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
         <Trash2 className="w-6 h-6 text-red-600" />
       </div>
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-zinc-900">Remover este registro?</h3>
+        <h3 className="text-base font-semibold text-zinc-900">{t("modal.confirmRemove.title")}</h3>
         <p className="text-sm text-zinc-500 leading-relaxed">
-          O registro de{" "}
-          <span className="font-semibold text-zinc-700">{toNumber(registro.peso).toFixed(2)} kg</span>{" "}
-          de{" "}
-          <span className="font-semibold text-zinc-700">{formatDate(registro.dtRegistro)}</span>{" "}
-          será removido. Você pode restaurá-lo depois na aba de registros removidos.
+          {t("modal.confirmRemove.description", {
+            weight: toNumber(registro.peso).toFixed(2),
+            date: formatDate(registro.dtRegistro),
+          })}
         </p>
       </div>
       <div className="flex gap-3 w-full">
@@ -417,7 +418,7 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
           onClick={() => setView("details")}
           disabled={deleteMutation.isPending}
         >
-          Cancelar
+          {t("modal.actions.cancel")}
         </Button>
         <Button
           variant="danger"
@@ -426,7 +427,7 @@ export function DadoZootecnicoDetailsModal({ isOpen, onClose, registro, onMutate
           onClick={() => deleteMutation.mutate(registro.idZootec)}
         >
           <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-          Sim, remover
+          {t("modal.actions.yesRemove")}
         </Button>
       </div>
     </div>

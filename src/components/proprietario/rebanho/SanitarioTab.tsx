@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Syringe, CheckCircle2, History, Calendar,
   Link2, Flame, AlertCircle, Trash2, Plus,
@@ -41,22 +42,16 @@ function getTipo(reg: DadoSanitario): TipoTratamento {
   return mapTipoTratamento(getMedicacao(reg)?.tipoTratamento);
 }
 
-function getSituacao(registros: DadoSanitario[]): string {
-  if (!registros.length) return "—";
-  return registros.some(r => getTipo(r) === "doenca") ? "Atenção" : "Regular";
+function getSituacaoKey(registros: DadoSanitario[]): "attention" | "regular" | null {
+  if (!registros.length) return null;
+  return registros.some(r => getTipo(r) === "doenca") ? "attention" : "regular";
 }
 
-function getSituacaoColor(situacao: string) {
-  if (situacao === "Atenção") return "text-amber-600";
-  if (situacao === "Regular") return "text-zinc-800";
-  return "text-zinc-400";
-}
-
-const TIPO_CONFIG: Record<TipoTratamento, { icon: React.ReactNode; label: string }> = {
-  suplementacao: { icon: <Link2       className="w-3.5 h-3.5 text-blue-500"   />, label: "Suplementação"        },
-  parasita:      { icon: <Flame       className="w-3.5 h-3.5 text-orange-500" />, label: "Parasitas/Vermifugação" },
-  doenca:        { icon: <AlertCircle className="w-3.5 h-3.5 text-red-500"    />, label: "Doença/Tratamento"     },
-  vacina:        { icon: <Syringe     className="w-3.5 h-3.5 text-green-500"  />, label: "Vacinação"            },
+const TIPO_ICONS: Record<TipoTratamento, React.ReactNode> = {
+  suplementacao: <Link2       className="w-3.5 h-3.5 text-blue-500"   />,
+  parasita:      <Flame       className="w-3.5 h-3.5 text-orange-500" />,
+  doenca:        <AlertCircle className="w-3.5 h-3.5 text-red-500"    />,
+  vacina:        <Syringe     className="w-3.5 h-3.5 text-green-500"  />,
 };
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
@@ -85,6 +80,7 @@ interface SanitarioTabProps {
 }
 
 export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.sanitario");
   const [page, setPage] = useState(1);
   const [selectedRegistro, setSelectedRegistro] = useState<DadoSanitario | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
@@ -97,12 +93,10 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
   const total     = meta?.total ?? 0;
   const totalPages = meta?.totalPages ?? 1;
 
-  const situacao         = getSituacao(registros);
+  const situacaoKey      = getSituacaoKey(registros);
+  const situacaoDisplay  = situacaoKey ? t(`situation.${situacaoKey}`) : "—";
+  const situacaoColor    = situacaoKey === "attention" ? "text-amber-600" : situacaoKey === "regular" ? "text-zinc-800" : "text-zinc-400";
   const ultimaAplicacao  = registros[0]?.dtAplicacao ?? null;
-
-  const handleMutated = () => {
-    setSelectedRegistro(null);
-  };
 
   return (
     <div className="animate-in fade-in duration-300 flex flex-col gap-5">
@@ -111,18 +105,18 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
           icon={<div className="p-2.5 bg-blue-50 rounded-xl"><Syringe className="w-5 h-5 text-blue-500" /></div>}
-          label="Total de Registros"
+          label={t("metrics.total")}
           value={isLoading ? "..." : String(total)}
         />
         <MetricCard
           icon={<div className="p-2.5 bg-green-50 rounded-xl"><CheckCircle2 className="w-5 h-5 text-green-500" /></div>}
-          label="Situação Sanitária"
-          value={isLoading ? "..." : situacao}
-          valueClass={getSituacaoColor(situacao)}
+          label={t("metrics.situation")}
+          value={isLoading ? "..." : situacaoDisplay}
+          valueClass={situacaoColor}
         />
         <MetricCard
           icon={<div className="p-2.5 bg-amber-50 rounded-xl"><History className="w-5 h-5 text-amber-500" /></div>}
-          label="Última Aplicação"
+          label={t("metrics.lastApplication")}
           value={isLoading ? "..." : formatDate(ultimaAplicacao)}
         />
       </div>
@@ -132,7 +126,7 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
 
         {/* Header da tabela com botão de removidos */}
         <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-zinc-800">Histórico de Vacinas e Tratamentos</h2>
+          <h2 className="text-sm font-bold text-zinc-800">{t("title")}</h2>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -141,11 +135,11 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
               className="text-zinc-400 hover:text-zinc-700"
             >
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Ver removidos
+              {t("viewDeleted")}
             </Button>
             <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
               <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Registrar
+              {t("register")}
             </Button>
           </div>
         </div>
@@ -154,7 +148,7 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
         {isLoading && (
           <div className="flex flex-col items-center justify-center h-52 gap-2 text-zinc-400">
             <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin" />
-            <span className="text-sm font-medium">Carregando registros...</span>
+            <span className="text-sm font-medium">{t("loading")}</span>
           </div>
         )}
 
@@ -162,8 +156,8 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
         {!isLoading && registros.length === 0 && (
           <div className="flex flex-col items-center justify-center h-52 gap-2">
             <Syringe className="w-8 h-8 text-zinc-200" />
-            <p className="text-sm font-semibold text-zinc-400">Nenhum registro sanitário encontrado</p>
-            <p className="text-xs text-zinc-300">Vacinas e tratamentos aplicados aparecerão aqui</p>
+            <p className="text-sm font-semibold text-zinc-400">{t("empty")}</p>
+            <p className="text-xs text-zinc-300">{t("emptyDesc")}</p>
           </div>
         )}
 
@@ -174,19 +168,19 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
               <thead>
                 <tr className="border-b border-zinc-100">
                   <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-6 py-3 whitespace-nowrap">
-                    Data Aplicação
+                    {t("headers.applicationDate")}
                   </th>
                   <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 w-full">
-                    Tratamento / Vacina
+                    {t("headers.treatment")}
                   </th>
                   <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 whitespace-nowrap">
-                    Doença
+                    {t("headers.disease")}
                   </th>
                   <th className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 whitespace-nowrap">
-                    Dosagem
+                    {t("headers.dosage")}
                   </th>
                   <th className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-6 py-3 whitespace-nowrap">
-                    Retorno
+                    {t("headers.return")}
                   </th>
                 </tr>
               </thead>
@@ -194,7 +188,7 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
               <tbody className="divide-y divide-zinc-50">
                 {registros.map((reg) => {
                   const tipo = getTipo(reg);
-                  const cfg  = TIPO_CONFIG[tipo];
+                  const icon = TIPO_ICONS[tipo];
                   const med  = getMedicacao(reg);
                   return (
                     <tr
@@ -211,12 +205,12 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
 
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          {cfg.icon}
+                          {icon}
                           <div>
                             <p className="text-sm text-zinc-700 font-medium leading-tight">
                               {med?.medicacao ?? "—"}
                             </p>
-                            <p className="text-[11px] text-zinc-400">{cfg.label}</p>
+                            <p className="text-[11px] text-zinc-400">{t(`tipoConfig.${tipo}`)}</p>
                           </div>
                         </div>
                       </td>
@@ -235,7 +229,7 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
                         {reg.necessitaRetorno ? (
                           <div className="text-right">
                             <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                              {reg.dtRetorno ? formatDate(reg.dtRetorno) : "A definir"}
+                              {reg.dtRetorno ? formatDate(reg.dtRetorno) : t("undefined")}
                             </span>
                           </div>
                         ) : (
@@ -267,7 +261,7 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
         isOpen={!!selectedRegistro}
         onClose={() => setSelectedRegistro(null)}
         registro={selectedRegistro}
-        onMutated={handleMutated}
+        onMutated={() => setSelectedRegistro(null)}
       />
 
       <DeletedRegistrosModal

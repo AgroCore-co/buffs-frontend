@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import Container from '@/components/ui/Container';
 import {
   ResponsiveContainer,
@@ -25,6 +26,7 @@ interface TopBufalasChartProps {
 }
 
 export default function TopBufalasChart({ data }: TopBufalasChartProps) {
+  const t = useTranslations("Dashboard");
   const colors = ['#FCA90F', '#FFCF78', '#CE7D0A', '#F2B84D', '#E6A23C'];
 
   // Empty state quando não há dados
@@ -32,17 +34,17 @@ export default function TopBufalasChart({ data }: TopBufalasChartProps) {
     return (
       <Container className="p-6 flex flex-col h-full min-h-[400px]">
         <h2 className="text-lg font-semibold text-gray-800 mb-4 shrink-0">
-          Top 5 Búfalas Produtoras
+          {t("topBuffalos")}
         </h2>
         <div className="flex-1 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4">
             <Droplet className="text-amber-400 w-8 h-8" />
           </div>
           <p className="text-gray-500 text-sm font-medium">
-            Nenhuma búfala em lactação
+            {t("noLactation")}
           </p>
           <p className="text-gray-400 text-xs mt-1">
-            Registre ordenhas para ver as melhores produtoras
+            {t("noLactationDesc")}
           </p>
         </div>
       </Container>
@@ -52,7 +54,7 @@ export default function TopBufalasChart({ data }: TopBufalasChartProps) {
   return (
     <Container className="p-6 flex flex-col h-full min-h-[400px]">
       <h2 className="text-lg font-semibold text-gray-800 mb-4 shrink-0">
-        Top 5 Búfalas Produtoras
+        {t("topBuffalos")}
       </h2>
       <div className="flex-1 w-full min-h-[300px]">
         <ResponsiveContainer width="100%" height={300}>
@@ -89,7 +91,7 @@ export default function TopBufalasChart({ data }: TopBufalasChartProps) {
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 padding: '8px 12px',
               }}
-              formatter={(value) => [`${value} L/dia`, 'Produção Média']}
+              formatter={(value) => [`${value} L/dia`, t("averageProduction")]}
               labelStyle={{ fontWeight: 'bold', color: '#374151' }}
             />
             <Bar dataKey="leite" radius={[0, 6, 6, 0]} barSize={32}>

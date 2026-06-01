@@ -77,7 +77,8 @@
     "lastDeliveries": "Latest Deliveries",
     "approved": "Approved",
     "rejected": "Rejected",
-    "production": "Production"
+    "production": "Production",
+    "averageProduction": "Average Production"
   },
   "Proprietario": {
     "propriedades": {
@@ -99,6 +100,7 @@
       "noOwner": "No owner",
       "edit": "Edit",
       "delete": "Delete",
+      "newProperty": "New Property",
       "managementTypes": {
         "P": "Livestock",
         "E": "Extensive",
@@ -109,12 +111,1077 @@
       "errorLoading": "Error loading properties",
       "errorLoadingDesc": "Please try again later.",
       "noProperties": "No properties registered",
-      "noPropertiesDesc": "Register your first property to get started."
+      "noPropertiesDesc": "Register your first property to get started.",
+      "form": {
+        "steps": {
+          "data": "Data",
+          "address": "Address",
+          "confirmation": "Confirmation"
+        },
+        "fields": {
+          "name": "Name",
+          "cnpj": "CNPJ",
+          "managementType": "Management Type",
+          "abcbProgram": "Participates in ABCB Program",
+          "country": "Country",
+          "state": "State",
+          "city": "City",
+          "neighborhood": "Neighborhood",
+          "street": "Street",
+          "cep": "ZIP Code",
+          "number": "Number",
+          "referencePoint": "Reference Point"
+        },
+        "managementOptions": {
+          "P": "Standard",
+          "I": "Intensive",
+          "E": "Extensive"
+        },
+        "buttons": {
+          "back": "Back",
+          "cancel": "Cancel",
+          "next": "Next",
+          "save": "Save",
+          "saveChanges": "Save Changes",
+          "delete": "Delete"
+        },
+        "create": {
+          "title": "Create Property",
+          "description": "Fill in the details",
+          "loading": "Creating property...",
+          "success": "Property created successfully!",
+          "errorFallback": "Unknown error while trying to save."
+        },
+        "edit": {
+          "title": "Edit Property",
+          "description": "Update the desired details",
+          "loading": "Saving changes...",
+          "success": "Property updated successfully!",
+          "errorFallback": "Unknown error while trying to update."
+        },
+        "delete": {
+          "title": "Delete Property",
+          "description": "This action is irreversible",
+          "loading": "Deleting property...",
+          "success": "Property \"{name}\" deleted.",
+          "errorFallback": "Unknown error while trying to delete.",
+          "confirmText": "Are you sure you want to delete the property",
+          "warningText": "All data linked to this property may be lost. This action cannot be undone."
+        }
+      },
+      "map": {
+        "loading": "Loading satellite map...",
+        "title": "Property Mapping",
+        "plots": "plot(s) in",
+        "groups": "group(s)",
+        "zoom": "ZOOM",
+        "zoomLevel": "Current Zoom Level",
+        "fitAll": "Fit all plots",
+        "zoomIn": "Zoom In",
+        "zoomOut": "Zoom Out",
+        "viewDetails": "View Full Details",
+        "group": "Group",
+        "status": "Status",
+        "capacity": "Capacity",
+        "plotArea": "Plot Area",
+        "notes": "Notes",
+        "noGroup": "No group",
+        "na": "N/A"
+      },
+      "loteModal": {
+        "noGroup": "No linked group",
+        "status": "Status",
+        "capacity": "Capacity",
+        "area": "Area",
+        "notes": "Notes",
+        "bufalosGroup": "Buffalos in Group",
+        "tag": "Tag",
+        "active": "Active",
+        "inactive": "Inactive",
+        "noBuffalos": "No buffalos linked to this group.",
+        "noGroupLinked": "This plot is not linked to any group."
+      }
     },
     "detalhes": {
       "back": "Back",
       "report": "Report",
-      "edit": "Edit"
+      "edit": "Edit",
+      "tabs": {
+        "overview": "Overview",
+        "lots": "Lots & Plots",
+        "groups": "Management Groups",
+        "team": "Team",
+        "feeding": "Feeding",
+        "dataImport": "Data Import"
+      },
+      "overview": {
+        "notInformed": "Not informed",
+        "registeredData": "Registered Data",
+        "cnpj": "CNPJ / Document",
+        "productionSystem": "Production System",
+        "owner": "Owner",
+        "fullAddress": "Full Address",
+        "racialComposition": "Racial Composition",
+        "loadingComposition": "Loading composition...",
+        "noRaceData": "No breed data",
+        "overviewNumbers": "Overview in Numbers",
+        "activeAnimals": "Active animals",
+        "females": "Females",
+        "males": "Males",
+        "lots": "Lots",
+        "users": "Users",
+        "registeredInSystem": "Registered in system",
+        "propertyAccess": "With access to property",
+        "managementTypes": {
+          "E": "Pasture / Extensive",
+          "I": "Confined",
+          "P": "Semi-confined"
+        }
+      },
+      "equipe": {
+        "title": "Property Team",
+        "subtitle": "Manage employees, managers and veterinarians with access to this farm.",
+        "loading": "Loading team...",
+        "headers": {
+          "member": "Team Member",
+          "contact": "Contact",
+          "role": "Role / Access Level",
+          "actions": "Actions"
+        },
+        "empty": "No team members linked",
+        "emptyDesc": "No employees are linked to this property yet. Users can be linked from the central team management panel.",
+        "notInformed": "Not informed",
+        "roles": {
+          "PROPRIETARIO": "Owner",
+          "GERENTE": "Manager",
+          "VETERINARIO": "Veterinarian",
+          "FUNCIONARIO": "Employee"
+        },
+        "editRole": {
+          "title": "Change Role",
+          "subtitle": "Editing access for {name}",
+          "selectRole": "New Role / Access Level",
+          "selectPlaceholder": "Select a role",
+          "hint": "Managers have broad access to the property. Veterinarians access health data. Employees have restricted operational access.",
+          "save": "Save new role",
+          "cancel": "Cancel",
+          "options": {
+            "GERENTE": "Manager",
+            "VETERINARIO": "Veterinarian",
+            "FUNCIONARIO": "Employee"
+          }
+        },
+        "unlink": {
+          "title": "Unlink user?",
+          "description": "Are you sure you want to remove {name} from this property? They will immediately lose access to this farm's data.",
+          "confirm": "Yes, remove access",
+          "cancel": "Cancel"
+        },
+        "tooltips": {
+          "editRole": "Change role",
+          "unlink": "Unlink from property"
+        }
+      },
+      "grupos": {
+        "title": "Management Groups",
+        "subtitle": "Manage the herd divisions and categories on this property.",
+        "loading": "Loading groups...",
+        "newGroup": "New Group",
+        "empty": "No groups found",
+        "emptyDesc": "You have no groups registered for this property yet. Create the first group to organize your herd.",
+        "createFirst": "Create my first group",
+        "createdAt": "Created at"
+      }
+    },
+    "rebanho": {
+      "title": "Herd Management",
+      "subtitle": "View and manage all animals on the property.",
+      "metrics": {
+        "total": "Total Herd",
+        "totalDesc": "Registered animals",
+        "females": "Females",
+        "femalesDesc": "Female animals",
+        "males": "Males",
+        "malesDesc": "Male animals",
+        "producers": "Producing Cows",
+        "producersDesc": "In lactation"
+      },
+      "table": {
+        "title": "Property Buffalos",
+        "showing": "Showing {from} to {to} of {total} animals",
+        "empty": "No animals found",
+        "emptyDesc": "Register animals to view them here.",
+        "loading": "Loading..."
+      },
+      "sex": {
+        "M": "Male",
+        "F": "Female"
+      },
+      "maturity": {
+        "BEZERRO": "Calf",
+        "NOVILHA": "Heifer",
+        "VACA": "Cow",
+        "TOURO": "Bull",
+        "ADULTO": "Adult"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "selectProperty": "Select a property",
+      "filters": {
+        "search": "Search tag...",
+        "sex": "Sex",
+        "male": "Male",
+        "female": "Female",
+        "maturity": "Maturity",
+        "calf": "Calf",
+        "heifer": "Heifer",
+        "cow": "Cow",
+        "bull": "Bull",
+        "status": "Status",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "charts": {
+        "maturity": {
+          "title": "Distribution by Maturity",
+          "empty": "No animals found",
+          "emptyDesc": "Register animals to see the maturity distribution.",
+          "animal": "animal",
+          "animals": "animals",
+          "selectProperty": "Select a property",
+          "selectPropertyDesc": "Choose a property..."
+        },
+        "sex": {
+          "title": "Distribution by Sex",
+          "females": "Females",
+          "males": "Males",
+          "selectProperty": "Select a property",
+          "selectPropertyDesc": "Choose a property...",
+          "animal": "animal",
+          "animals": "animals"
+        },
+        "breed": {
+          "title": "Distribution by Breed",
+          "empty": "No breeds found",
+          "emptyDesc": "Register animals to see the breed distribution.",
+          "animals": "Animals",
+          "selectProperty": "Select a property",
+          "animal": "animal",
+          "animalsPlural": "animals"
+        }
+      },
+      "bufalo": {
+        "back": "Back",
+        "loading": "Loading record...",
+        "notFound": "Buffalo not found.",
+        "active": "Active",
+        "inactive": "Inactive",
+        "tabs": {
+          "overview": "Overview",
+          "zootecnico": "Zootechnical",
+          "reproducao": "Reproduction",
+          "producao": "Production",
+          "sanitario": "Health",
+          "movimentacoes": "Movements",
+          "desempenho": "Performance",
+          "eventos": "Events",
+          "genealogia": "Genealogy"
+        },
+        "visaoGeral": {
+          "identification": "Identification Data",
+          "management": "Management & Location",
+          "racialClass": "Racial Classification",
+          "quickGenealogy": "Quick Genealogy",
+          "fields": {
+            "visualTag": "Visual Tag",
+            "microchip": "Microchip / Electronic",
+            "birthDate": "Birth Date",
+            "sex": "Sex",
+            "provisionalReg": "Provisional Registration",
+            "definitiveReg": "Definitive Registration",
+            "origin": "Origin",
+            "originalTag": "Original Tag",
+            "property": "Property",
+            "group": "Group / Lot",
+            "category": "Category",
+            "maturityLevel": "Maturity Level"
+          },
+          "sex": {
+            "M": "Male",
+            "F": "Female"
+          },
+          "maturity": {
+            "B": "Calf",
+            "N": "Heifer",
+            "V": "Cow / Adult",
+            "T": "Bull / Adult",
+            "BEZERRO": "Calf",
+            "NOVILHA": "Heifer",
+            "VACA": "Cow",
+            "TOURO": "Bull",
+            "ADULTO": "Adult"
+          },
+          "categoria": {
+            "PO": "Pure of Origin",
+            "PC": "Pure by Crossbreeding",
+            "PA": "Pure by Evaluation",
+            "CCG": "With Genealogy Control",
+            "SRD": "No Defined Breed"
+          },
+          "notImplanted": "Not implanted",
+          "father": "Father",
+          "mother": "Mother",
+          "notInformed": "Not informed",
+          "noClassification": "No classification",
+          "viewFullTree": "View full tree →",
+          "createdAt": "Created at:",
+          "updatedAt": "Updated:",
+          "age": {
+            "months": "{months}m old",
+            "yearsMonths": "{years}y {months}m old"
+          }
+        },
+        "sanitario": {
+          "title": "Vaccine & Treatment History",
+          "metrics": {
+            "total": "Total Records",
+            "situation": "Health Status",
+            "lastApplication": "Last Application"
+          },
+          "situation": {
+            "attention": "Attention",
+            "regular": "Regular"
+          },
+          "headers": {
+            "applicationDate": "Application Date",
+            "treatment": "Treatment / Vaccine",
+            "medication": "Medication",
+            "disease": "Disease / Condition",
+            "application": "Application",
+            "dosage": "Dosage",
+            "return": "Return",
+            "actions": "Actions"
+          },
+          "undefined": "To be defined",
+          "viewDeleted": "View removed",
+          "register": "Register",
+          "loading": "Loading...",
+          "empty": "No health records",
+          "emptyDesc": "Applied vaccines and treatments will appear here.",
+          "tipoConfig": {
+            "suplementacao": "Supplementation",
+            "parasita": "Parasites / Deworming",
+            "doenca": "Disease / Treatment",
+            "vacina": "Vaccination"
+          },
+          "modal": {
+            "detailsTitle": "Health Record",
+            "editTitle": "Edit Record",
+            "removeTitle": "Remove Record",
+            "fields": {
+              "medication": "Medication",
+              "disease": "Disease / Condition",
+              "applicationDate": "Application Date",
+              "dosage": "Dosage",
+              "unit": "Unit of Measure",
+              "treatmentType": "Treatment Type",
+              "return": "Return",
+              "returnDate": "Return Date",
+              "needsReturn": "Needs return",
+              "observation": "Observation",
+              "createdAt": "Created at",
+              "updatedAt": "Updated at",
+              "removedAt": "Removed at"
+            },
+            "returnStatus": {
+              "necessary": "Required",
+              "notNecessary": "Not required",
+              "scheduledFor": "Scheduled for",
+              "dateNotDefined": "Return date not defined"
+            },
+            "status": { "removed": "Removed" },
+            "confirmRemove": {
+              "title": "Remove this record?",
+              "description": "The record for {medication} applied on {date} will be removed. You can restore it later from the removed records tab."
+            },
+            "actions": {
+              "remove": "Remove",
+              "edit": "Edit",
+              "restore": "Restore record",
+              "cancel": "Cancel",
+              "saveChanges": "Save Changes",
+              "yesRemove": "Yes, remove",
+              "backToDetails": "Back to details"
+            },
+            "toast": {
+              "updated": "Record updated successfully.",
+              "removed": "Record removed successfully.",
+              "restored": "Record restored successfully.",
+              "errorUpdate": "Error updating record.",
+              "errorRemove": "Error removing record.",
+              "errorRestore": "Error restoring record."
+            }
+          },
+          "deletedModal": {
+            "title": "Removed Records",
+            "description": "Health records removed from this buffalo. Restore any to reactivate it.",
+            "loading": "Loading records...",
+            "empty": "No removed records",
+            "emptyDesc": "This buffalo has no removed health records.",
+            "removedAt": "Removed at",
+            "restore": "Restore",
+            "count": "{count} removed record(s)",
+            "toast": {
+              "restored": "Record restored successfully.",
+              "error": "Error restoring record."
+            }
+          },
+          "createModal": {
+            "title": "New Health Record",
+            "fields": {
+              "medication": "Medication",
+              "optional": "(optional)",
+              "noMedication": "No medication linked",
+              "loadingMeds": "Loading medications...",
+              "applicationDate": "Application Date",
+              "disease": "Disease / Condition",
+              "dosage": "Dosage",
+              "unit": "Unit of Measure",
+              "needsReturn": "Needs return",
+              "returnDate": "Return Date"
+            },
+            "actions": { "cancel": "Cancel", "register": "Register" },
+            "toast": {
+              "success": "Health record created successfully.",
+              "error": "Error creating health record.",
+              "errorDisease": "Please enter the disease / condition."
+            }
+          }
+        },
+        "vacinacao": {
+          "title": "Vaccination History",
+          "metrics": {
+            "total": "Total Vaccinations",
+            "lastApplication": "Last Application",
+            "pendingReturns": "Pending Returns (page)"
+          },
+          "headers": {
+            "vaccine": "Vaccine",
+            "disease": "Disease / Prevention",
+            "application": "Application",
+            "dosage": "Dosage",
+            "return": "Return",
+            "actions": "Actions"
+          },
+          "undefined": "To be defined",
+          "viewDeleted": "View removed",
+          "register": "Register vaccination",
+          "loading": "Loading...",
+          "empty": "No vaccinations registered",
+          "emptyDesc": "Register vaccinations for this animal.",
+          "modal": {
+            "detailsTitle": "Vaccination Record",
+            "editTitle": "Edit Vaccination",
+            "removeTitle": "Remove Vaccination",
+            "vaccineBadge": "Vaccination",
+            "fields": {
+              "vaccine": "Vaccine",
+              "disease": "Disease / Prevention",
+              "applicationDate": "Application Date",
+              "dosage": "Dosage",
+              "unit": "Unit of Measure",
+              "treatmentType": "Treatment Type",
+              "booster": "Booster / Return",
+              "needsBooster": "Needs booster / return",
+              "returnDate": "Return Date",
+              "observation": "Observation",
+              "createdAt": "Created at",
+              "updatedAt": "Updated at",
+              "removedAt": "Removed at",
+              "selectVaccine": "Select vaccine"
+            },
+            "returnStatus": {
+              "necessary": "Required",
+              "notNecessary": "Not required",
+              "scheduledFor": "Scheduled for",
+              "dateNotDefined": "Return date not defined"
+            },
+            "status": { "removed": "Removed" },
+            "confirmRemove": {
+              "title": "Remove this record?",
+              "description": "The vaccination for {vaccine} applied on {date} will be removed. You can restore it later from removed records."
+            },
+            "actions": {
+              "remove": "Remove",
+              "edit": "Edit",
+              "restore": "Restore record",
+              "cancel": "Cancel",
+              "saveChanges": "Save Changes",
+              "yesRemove": "Yes, remove",
+              "backToDetails": "Back to details"
+            },
+            "toast": {
+              "updated": "Record updated successfully.",
+              "removed": "Record removed successfully.",
+              "restored": "Record restored successfully.",
+              "errorUpdate": "Error updating record.",
+              "errorRemove": "Error removing record.",
+              "errorRestore": "Error restoring record."
+            }
+          },
+          "deletedModal": {
+            "title": "Removed Vaccinations",
+            "description": "Vaccination records removed from this buffalo. Restore any to reactivate it.",
+            "loading": "Loading records...",
+            "empty": "No removed records",
+            "emptyDesc": "This buffalo has no removed vaccinations.",
+            "removedAt": "Removed at",
+            "restore": "Restore",
+            "count": "{count} removed record(s)",
+            "toast": {
+              "restored": "Record restored successfully.",
+              "error": "Error restoring record."
+            }
+          },
+          "createModal": {
+            "title": "Register Vaccination",
+            "noVaccines": "No vaccines registered for this property. Register a vaccination-type medication before logging an application.",
+            "fields": {
+              "vaccine": "Vaccine",
+              "loadingVaccines": "Loading vaccines...",
+              "selectVaccine": "Select vaccine",
+              "applicationDate": "Application Date",
+              "disease": "Disease / Prevention",
+              "dosage": "Dosage",
+              "unit": "Unit of Measure",
+              "needsBooster": "Needs booster / return",
+              "returnDate": "Return Date"
+            },
+            "actions": { "cancel": "Cancel", "register": "Register" },
+            "toast": {
+              "success": "Vaccination registered successfully.",
+              "error": "Error registering vaccination.",
+              "errorNoVaccine": "Please select the vaccine applied."
+            }
+          }
+        },
+        "zootecnico": {
+          "title": "Zootechnical History",
+          "metrics": {
+            "currentWeight": "Current Weight",
+            "ecc": "Body Condition Score (BCS)",
+            "total": "Total Records"
+          },
+          "headers": {
+            "weight": "Weight",
+            "ecc": "BCS",
+            "date": "Date",
+            "type": "Type",
+            "actions": "Actions"
+          },
+          "viewDeleted": "View removed",
+          "register": "Register",
+          "loading": "Loading...",
+          "empty": "No zootechnical records",
+          "emptyDesc": "Register weigh-ins and body scores for this animal.",
+          "modal": {
+            "detailsTitle": "Zootechnical Record",
+            "editTitle": "Edit Record",
+            "removeTitle": "Remove Record",
+            "fields": {
+              "weight": "Weight",
+              "ecc": "Body Condition Score (BCS)",
+              "registrationDate": "Registration Date",
+              "hornFormat": "Horn Format",
+              "bodySize": "Body Size",
+              "furColor": "Coat Color",
+              "weighingType": "Weighing Type",
+              "createdAt": "Created at",
+              "updatedAt": "Updated at",
+              "removedAt": "Removed at"
+            },
+            "status": { "removed": "Removed" },
+            "confirmRemove": {
+              "title": "Remove this record?",
+              "description": "The record of {weight} kg from {date} will be removed. You can restore it later from the removed records tab."
+            },
+            "actions": {
+              "remove": "Remove",
+              "edit": "Edit",
+              "restore": "Restore record",
+              "cancel": "Cancel",
+              "saveChanges": "Save Changes",
+              "yesRemove": "Yes, remove",
+              "backToDetails": "Back to details"
+            },
+            "toast": {
+              "updated": "Record updated successfully.",
+              "removed": "Record removed successfully.",
+              "restored": "Record restored successfully.",
+              "errorUpdate": "Error updating record.",
+              "errorRemove": "Error removing record.",
+              "errorRestore": "Error restoring record."
+            }
+          },
+          "deletedModal": {
+            "title": "Removed Records",
+            "description": "Zootechnical records removed from this buffalo. Restore any to reactivate it.",
+            "loading": "Loading records...",
+            "empty": "No removed records",
+            "emptyDesc": "This buffalo has no removed zootechnical records.",
+            "removedAt": "Removed at",
+            "restore": "Restore",
+            "count": "{count} removed record(s)",
+            "toast": {
+              "restored": "Record restored successfully.",
+              "error": "Error restoring record."
+            }
+          }
+        },
+        "reproducao": {
+          "title": "Reproductive History",
+          "metrics": {
+            "births": "Total Births",
+            "lastBirth": "Last Birth",
+            "offspring": "Registered Offspring"
+          },
+          "types": {
+            "PARTO": "Birth",
+            "INSEMINACAO": "Insemination",
+            "DIAGNOSTICO": "Diagnosis",
+            "COBERTURA": "Natural Cover",
+            "ABORTAMENTO": "Abortion"
+          },
+          "headers": {
+            "event": "Event",
+            "date": "Date",
+            "bull": "Bull / Semen",
+            "status": "Status",
+            "occurrence": "Occurrence",
+            "actions": "Actions"
+          },
+          "loading": "Loading...",
+          "empty": "No reproductive events",
+          "emptyDesc": "Register reproductive events for this animal.",
+          "modal": {
+            "title": "Reproduction Details",
+            "close": "Close",
+            "createdAt": "Record created at",
+            "involved": "Involved",
+            "eventDetails": "Event Details",
+            "matrix": "Dam (Buffalo)",
+            "semen": "Semen",
+            "bull": "Sire (Buffalo)",
+            "artificialInsemination": "Artificial Insemination",
+            "eventDate": "Event Date",
+            "birthType": "Birth Type",
+            "occurrence": "Occurrence / Observation",
+            "noOccurrence": "No observation recorded."
+          }
+        },
+        "movimentacoes": {
+          "title": "Movement History",
+          "metrics": {
+            "total": "Total Movements",
+            "currentLot": "Current Lot",
+            "entryDate": "Entry into Current Lot"
+          },
+          "ongoing": "ongoing",
+          "moveGroup": "Move group",
+          "headers": {
+            "entryDate": "Entry Date",
+            "movement": "Origin → Destination",
+            "group": "Group",
+            "duration": "Duration"
+          },
+          "entry": "Entry",
+          "current": "Current",
+          "inProgress": "In progress",
+          "noGroup": "Animal with no management group",
+          "assignGroup": "Assign to a group",
+          "loading": "Loading...",
+          "empty": "No movements registered",
+          "modal": {
+            "title": "Move Group",
+            "currentGroup": "Current group",
+            "noGroup": "No group",
+            "noGroupsAvailable": "No other groups available on this property. Register a management group before moving the animal.",
+            "fields": {
+              "targetGroup": "Target Group",
+              "loadingGroups": "Loading groups...",
+              "selectGroup": "Select the target group",
+              "reason": "Reason",
+              "optional": "(optional)"
+            },
+            "actions": { "cancel": "Cancel", "move": "Move" },
+            "toast": {
+              "success": "Buffalo moved to new group successfully.",
+              "error": "Error moving buffalo to new group.",
+              "errorNoGroup": "Please select the target group."
+            }
+          }
+        },
+        "producao": {
+          "title": "Production – Last 30 Days (L)",
+          "metrics": {
+            "cycleProd": "Cycle Production",
+            "avgMilking": "Average per Milking",
+            "daysInLactation": "Days in Lactation"
+          },
+          "noActiveCycle": "This buffalo has no active lactation cycle.",
+          "noMilkings": "No milkings in the last 30 days",
+          "loadingCycles": "Loading cycles...",
+          "registerMilking": "Register milking",
+          "tooltipProduction": "Production",
+          "milkingModal": {
+            "title": "Register Milking",
+            "fields": {
+              "quantity": "Quantity (L)",
+              "period": "Period",
+              "dateTime": "Date and time of milking",
+              "occurrence": "Occurrence",
+              "optional": "(optional)"
+            },
+            "periods": { "M": "Morning", "T": "Afternoon", "N": "Night" },
+            "actions": { "cancel": "Cancel", "register": "Register" },
+            "toast": {
+              "success": "Milking registered successfully.",
+              "error": "Error registering milking.",
+              "errorQty": "Please enter a valid quantity (liters)."
+            }
+          },
+          "cycles": {
+            "title": "Lactation Cycles",
+            "noCycles": "No lactation cycles registered",
+            "ongoing": "ongoing",
+            "lactating": "Lactating",
+            "closed": "Closed",
+            "totalProduced": "Total produced",
+            "cycleRecords": "Cycle Records",
+            "records": "records",
+            "loading": "Loading milkings...",
+            "empty": "No milkings in this cycle.",
+            "headers": {
+              "date": "Date",
+              "period": "Period",
+              "quantity": "Quantity",
+              "occurrence": "Occurrence"
+            },
+            "periods": { "M": "Morning", "T": "Afternoon", "N": "Night" }
+          },
+          "predicao": {
+            "title": "Production Prediction (AI)",
+            "recalculate": "Recalculate",
+            "generate": "Generate prediction",
+            "loading": "Analyzing data with AI...",
+            "empty": "No prediction generated",
+            "emptyDesc": "Estimate this female's next cycle production based on her history and characteristics.",
+            "result": {
+              "predictedProduction": "Predicted production",
+              "nextCycle": "next lactation cycle",
+              "potential": "Potential",
+              "vsAverage": "vs. property average",
+              "average": "average",
+              "variables": "Variables considered",
+              "generatedAt": "Prediction generated at"
+            },
+            "potential": {
+              "MUITO_ALTA": "Very High",
+              "ALTA": "High",
+              "MEDIA": "Medium",
+              "BAIXA": "Low",
+              "MUITO_BAIXA": "Very Low"
+            },
+            "errors": {
+              "unavailable": "AI service unavailable",
+              "unavailableDesc": "The prediction service is temporarily unavailable. Please try again later.",
+              "notFound": "Female not found",
+              "notFoundDesc": "Could not locate this female for prediction.",
+              "insufficientData": "Insufficient data",
+              "insufficientDataDesc": "Insufficient data to generate a prediction for this female.",
+              "serviceFailed": "AI service failed",
+              "serviceFailedDesc": "The prediction service encountered an internal error. Please try again shortly.",
+              "generic": "Prediction error",
+              "genericDesc": "Unable to generate the prediction. Please try again."
+            },
+            "features": {
+              "idade": "Age",
+              "numero_lactacoes": "No. of lactations",
+              "producao_anterior": "Previous production",
+              "escore_corporal": "Body condition score",
+              "raca": "Breed",
+              "peso": "Weight"
+            }
+          }
+        },
+        "desempenho": {
+          "loading": "Loading performance history...",
+          "error": "Error loading performance",
+          "noData": "No performance data",
+          "metrics": {
+            "currentWeight": "Current Weight",
+            "gainPeriod": "Gain in Period",
+            "avgWeight": "Average Weight"
+          },
+          "weightChart": "Weight Evolution",
+          "eccChart": "BCS Evolution",
+          "movingAvg": "dashed line = period average",
+          "idealRange": "Ideal range: 2.5 – 4.5",
+          "tooltip": { "weight": "Weight", "ecc": "BCS" }
+        },
+        "eventos": {
+          "title": "Animal Alerts",
+          "metrics": {
+            "total": "Total Alerts",
+            "pending": "Pending (unseen)",
+            "lastAlert": "Last Alert"
+          },
+          "nicho": {
+            "CLINICO": "Clinical",
+            "SANITARIO": "Health",
+            "REPRODUCAO": "Reproduction",
+            "MANEJO": "Management",
+            "PRODUCAO": "Production"
+          },
+          "priority": { "ALTA": "High", "MEDIA": "Medium", "BAIXA": "Low" },
+          "new": "New",
+          "markUnseen": "Mark as unseen",
+          "markSeen": "Mark as seen",
+          "loading": "Loading alerts...",
+          "empty": "No alerts registered",
+          "emptyDesc": "This animal has no alerts at the moment.",
+          "errorUpdate": "Error updating alert."
+        },
+        "genealogia": {
+          "bloodDegree": "Blood Degree",
+          "father": "Father",
+          "mother": "Mother",
+          "inbreeding": "Inbreeding",
+          "notInformed": "Not informed",
+          "building": "Building genealogy tree...",
+          "aiAnalysis": "Genetic Analysis (AI)",
+          "calcInbreeding": "Calculating inbreeding...",
+          "analysisUnavailable": "Analysis unavailable",
+          "inbreedingCoef": "Inbreeding Coef.",
+          "geneticRisk": "Genetic Risk",
+          "founder": "Founder",
+          "yes": "Yes",
+          "no": "No",
+          "roles": {
+            "ANIMAL": "Animal",
+            "FATHER": "Father",
+            "MOTHER": "Mother",
+            "GRANDFATHER": "Grandfather",
+            "GRANDMOTHER": "Grandmother",
+            "GREATGRANDFATHER": "Great-grandfather",
+            "GREATGRANDMOTHER": "Great-grandmother",
+            "ANCESTOR": "Ancestor"
+          },
+          "summary": {
+            "ancestors": "Ancestors",
+            "ascendingGen": "Generations (asc.)",
+            "descendants": "Descendants",
+            "descendingGen": "Generations (desc.)"
+          }
+        }
+      }
+    },
+    "lactacao": {
+      "title": "Production Control",
+      "metrics": {
+        "lactating": "Lactating Buffalos",
+        "lactatingDesc": "In active production",
+        "monthlyProduction": "Milk produced (current month)",
+        "monthlyProductionDesc": "Liters this month",
+        "cycles": "Total Cycles",
+        "cyclesDesc": "Registered cycles"
+      },
+      "productionChart": { "title": "Month-by-month production" },
+      "alerts": {
+        "title": "Production Alerts",
+        "viewAll": "View All",
+        "modal": {
+          "title": "All Alerts",
+          "filters": "Filters:",
+          "allPriorities": "All priorities",
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low",
+          "includingSeen": "Including seen",
+          "onlyPending": "Pending only",
+          "loading": "Loading alerts...",
+          "empty": "No alerts found",
+          "emptyDesc": "No alerts match the selected filters.",
+          "error": "Error loading alerts",
+          "errorDesc": "Please try again.",
+          "pending": "Pending",
+          "seen": "Seen",
+          "origin": "Origin:",
+          "total": "{count} alert(s)",
+          "close": "Close",
+          "nicho": {
+            "CLINICO": "Clinical",
+            "PRODUCAO": "Production",
+            "REPRODUCAO": "Reproduction",
+            "SANITARIO": "Health",
+            "MANEJO": "Management"
+          },
+          "errorUpdate": "Error updating alert."
+        }
+      },
+      "table": {
+        "title": "Buffalos Available for Milking",
+        "headers": {
+          "tag": "Tag",
+          "name": "Name",
+          "breed": "Breed",
+          "daysInLactation": "Days in Lact.",
+          "avgDay": "Avg/Day",
+          "lastMilking": "Last",
+          "classification": "Classification"
+        },
+        "showing": "Showing {count} animal(s)"
+      },
+      "resumo": {
+        "tagLabel": "Tag:",
+        "close": "Close",
+        "tabs": {
+          "current": "Current Cycle",
+          "history": "History",
+          "chart": "Chart"
+        },
+        "loading": "Loading production...",
+        "noActiveCycle": "No active lactation cycle",
+        "noActiveCycleDesc": "This female does not have an ongoing cycle.",
+        "summary": "Summary",
+        "metrics": {
+          "totalMilkings": "Total Milkings",
+          "avgMilking": "Average per Milking",
+          "maxMilking": "Highest Milking",
+          "minMilking": "Lowest Milking",
+          "totalAccumulated": "Total Accumulated"
+        },
+        "currentCycle": "Current Cycle Milkings",
+        "loadingMilkings": "Loading milkings...",
+        "noMilkings": "No milkings in this cycle.",
+        "noMilkings30": "No milkings in the last 30 days",
+        "headers": {
+          "date": "Date",
+          "period": "Period",
+          "quantity": "Quantity",
+          "occurrence": "Occurrence"
+        },
+        "tooltipProduction": "Production",
+        "periods": { "M": "Morning", "T": "Afternoon", "N": "Night" }
+      },
+      "loading": "Loading...",
+      "empty": "No buffalos in lactation",
+      "emptyDesc": "Register lactation cycles to view them here."
+    },
+    "medicamentos": {
+      "title": "Medications",
+      "metrics": {
+        "total": "Total Medications",
+        "totalDesc": "Registered",
+        "vaccines": "Vaccines",
+        "vaccinesDesc": "Registered types",
+        "treatments": "Treatments",
+        "treatmentsDesc": "Registered types"
+      },
+      "viewDeleted": "View removed",
+      "newMedication": "New medication",
+      "table": {
+        "title": "Registered Medications",
+        "all": "All",
+        "headers": {
+          "medication": "Medication",
+          "type": "Type",
+          "description": "Description",
+          "createdAt": "Created at",
+          "actions": "Actions"
+        }
+      },
+      "delete": {
+        "title": "Remove Medication",
+        "description": "Remove this medication?",
+        "confirm": "Yes, remove",
+        "cancel": "Cancel"
+      },
+      "toast": {
+        "deleteSuccess": "Medication removed successfully.",
+        "deleteError": "Error removing medication."
+      },
+      "loading": "Loading medications...",
+      "empty": "No medications registered",
+      "emptyDesc": "Register medications for this property.",
+      "deletedModal": {
+        "title": "Removed Medications",
+        "description": "Medications removed from this property. Restore any to reactivate it.",
+        "loading": "Loading medications...",
+        "empty": "No removed medications",
+        "emptyDesc": "There are no removed medications on this property.",
+        "count": "{count} removed medication(s)",
+        "restore": "Restore",
+        "toast": {
+          "success": "Medication restored successfully.",
+          "error": "Error restoring medication."
+        }
+      },
+      "formModal": {
+        "createTitle": "New Medication",
+        "editTitle": "Edit Medication",
+        "fields": {
+          "type": "Treatment Type",
+          "name": "Medication Name",
+          "namePlaceholder": "E.g.: FMD Vaccine, Ivermectin...",
+          "description": "Description",
+          "optional": "(optional)",
+          "descriptionPlaceholder": "Details about the medication..."
+        },
+        "actions": {
+          "cancel": "Cancel",
+          "save": "Save Changes",
+          "create": "Register"
+        },
+        "toast": {
+          "updated": "Medication updated successfully.",
+          "created": "Medication registered successfully.",
+          "errorUpdate": "Error updating medication.",
+          "errorCreate": "Error registering medication."
+        }
+      }
+    },
+    "controleReproducao": {
+      "title": "Reproduction Control",
+      "subtitle": "Manage your herd's reproductive cycle.",
+      "metrics": {
+        "events": "Total Events",
+        "eventsDesc": "Reproductive events registered",
+        "inseminations": "Inseminations",
+        "inseminationsDesc": "Performed",
+        "births": "Births",
+        "birthsDesc": "Registered",
+        "confirmed": "Confirmed",
+        "confirmedDesc": "Positive diagnoses"
+      },
+      "table": {
+        "headers": {
+          "eventDate": "Event Date",
+          "matrix": "Dam",
+          "bull": "Bull / Semen",
+          "type": "Type",
+          "status": "Status",
+          "birth": "Birth",
+          "occurrence": "Occurrence"
+        }
+      },
+      "types": { "AI": "Artificial Insemination" },
+      "loading": "Loading...",
+      "empty": "No reproductive events",
+      "emptyDesc": "Register reproductive events to view them here.",
+      "showing": "Showing {from} to {to} of {total} records"
     }
   },
   "Gerente": {
@@ -149,6 +1216,341 @@
     "status": {
       "active": "Active",
       "inactive": "Inactive"
+    }
+  },
+  "ErrorBoundary": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred on this page. Try again or reload the application.",
+    "tryAgain": "Try again",
+    "reloadPage": "Reload page"
+  },
+  "RebanhoPage": {
+    "title": "Herd Management",
+    "subtitle": "Manage your buffalo herd, register zootechnical and health information.",
+    "metrics": {
+      "total": "Total Herd",
+      "totalDesc": "Active buffalos (Males + Females)",
+      "females": "Females",
+      "males": "Males",
+      "producers": "Producing Cows",
+      "producersDesc": "In lactation",
+      "selectProperty": "Select a property",
+      "loading": "Loading...",
+      "percentHerd": "{percent}% of herd"
+    },
+    "table": {
+      "title": "Property Buffalos",
+      "totalAnimals": "{count} animal(s) in total",
+      "loading": "Loading buffalos...",
+      "emptyTitle": "No buffalo found",
+      "emptyTitleNoProperty": "Select a property",
+      "emptyDesc": "No buffalos registered for this property.",
+      "emptyDescNoProperty": "Choose a property to view the herd.",
+      "headers": {
+        "name": "Name",
+        "tag": "Tag",
+        "sex": "Sex",
+        "maturity": "Maturity",
+        "breed": "Breed",
+        "group": "Group",
+        "birthDate": "Birth Date",
+        "status": "Status"
+      }
+    },
+    "sex": {
+      "M": "Male",
+      "F": "Female"
+    },
+    "maturity": {
+      "B": "Calf",
+      "N": "Heifer",
+      "V": "Cow",
+      "T": "Bull"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "filterBar": {
+      "searchTag": "Search tag...",
+      "sex": "Sex",
+      "male": "Male",
+      "female": "Female",
+      "maturity": "Maturity",
+      "calf": "Calf",
+      "heifer": "Heifer",
+      "cow": "Cow",
+      "bull": "Bull",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "BufaloPage": {
+    "back": "Back",
+    "loading": "Loading record...",
+    "notFound": "Buffalo not found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "sex": {
+      "M": "Male",
+      "F": "Female"
+    },
+    "maturity": {
+      "B": "Calf",
+      "N": "Heifer",
+      "V": "Cow / Adult",
+      "T": "Bull / Adult"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "zootechnical": "Zootechnical",
+      "reproduction": "Reproduction",
+      "production": "Production",
+      "health": "Health",
+      "movements": "Movements",
+      "performance": "Performance",
+      "events": "Events",
+      "genealogy": "Genealogy"
+    }
+  },
+  "MedicamentosPage": {
+    "title": "Medications",
+    "subtitle": "Register vaccines, dewormers, antibiotics and other medications used in the herd.",
+    "metrics": {
+      "total": "Total Medications",
+      "totalDesc": "Registered on the property",
+      "vaccines": "Vaccines",
+      "vaccinesDesc": "Available for vaccination",
+      "distinctTypes": "Distinct Types",
+      "distinctTypesDesc": "Treatment categories"
+    },
+    "viewDeleted": "View removed",
+    "newMedication": "New medication",
+    "table": {
+      "title": "Registered Medications",
+      "count": "{count} medication(s)",
+      "all": "All",
+      "loading": "Loading medications...",
+      "emptyTitle": "No medication found",
+      "emptyTitleNoProperty": "Select a property",
+      "emptyDesc": "Register the first medication for this property.",
+      "emptyDescNoProperty": "Choose a property to view medications.",
+      "headers": {
+        "medication": "Medication",
+        "type": "Type",
+        "description": "Description",
+        "createdAt": "Created at",
+        "actions": "Actions"
+      }
+    },
+    "deleteModal": {
+      "title": "Remove Medication",
+      "confirm": "Remove this medication?",
+      "description": "{name} will be removed. You can restore it later from removed medications.",
+      "cancel": "Cancel",
+      "yesRemove": "Yes, remove"
+    },
+    "toast": {
+      "deleteSuccess": "Medication removed successfully.",
+      "deleteError": "Error removing medication."
+    },
+    "edit": "Edit",
+    "remove": "Remove"
+  },
+  "LactacaoPage": {
+    "title": "Production Control",
+    "subtitle": "Manage the dairy production and lactation cycles of the herd.",
+    "metrics": {
+      "lactating": "Lactating Buffalos",
+      "lactatingDesc": "Current month data",
+      "milkProduced": "Milk produced (current month)",
+      "milkProducedUnit": "{value} L",
+      "selectProperty": "Select a property",
+      "previousMonth": "{variation}% · {previous} L in previous month",
+      "totalCycles": "Total Cycles",
+      "totalCyclesDesc": "Registered reproductive cycles"
+    },
+    "chart": {
+      "title": "Month-by-month production ({year})",
+      "previousYear": "Previous year",
+      "nextYear": "Next year",
+      "production": "Production",
+      "emptyTitle": "No production data for {year}",
+      "emptyDesc": "No consolidated records for this period."
+    },
+    "alerts": {
+      "title": "Production Alerts",
+      "viewAll": "View All",
+      "loading": "Loading alerts...",
+      "emptyTitle": "No alerts at the moment",
+      "emptyDesc": "No pending production or clinical alerts."
+    },
+    "table": {
+      "title": "Buffalos Available for Milking",
+      "subtitle": "Select an animal to see the production summary",
+      "searchPlaceholder": "Search by name or tag...",
+      "loading": "Loading animals...",
+      "emptyTitle": "No female in lactation",
+      "emptyTitleNoProperty": "Select a property",
+      "emptyDesc": "No females with active lactation cycle on this property.",
+      "emptyDescNoProperty": "Choose a property to view available buffalos for milking.",
+      "headers": {
+        "tag": "Tag",
+        "name": "Name",
+        "breed": "Breed",
+        "daysInLactation": "Days in Lact.",
+        "avgDay": "Avg/Day",
+        "last": "Last",
+        "classification": "Classification"
+      },
+      "noName": "No name",
+      "days": "{count} days",
+      "at": "at {date} ({period})",
+      "showing": "Showing {count} animal(s)"
+    },
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  },
+  "ReproducaoPage": {
+    "title": "Reproduction Control",
+    "subtitle": "Manage the reproductive cycle of the herd, register inseminations and monitor pregnancies.",
+    "metrics": {
+      "ongoing": "Ongoing Reproductions",
+      "ongoingDesc": "Unfinished reproductions",
+      "confirmed": "Confirmed Reproductions",
+      "confirmedDesc": "Confirmed pregnancy",
+      "failed": "Failed Reproductions",
+      "failedDesc": "Reproduction failure",
+      "lastReproduction": "Last Reproduction",
+      "lastReproductionDesc": "Date of last reproduction"
+    },
+    "table": {
+      "title": "Reproduction Records",
+      "subtitle": "View of coverage and insemination records.",
+      "loading": "Loading records...",
+      "emptyTitle": "No reproduction record",
+      "emptyTitleNoProperty": "Select a property",
+      "emptyDesc": "Coverages and inseminations registered will appear here.",
+      "emptyDescNoProperty": "Choose a property to view reproduction records.",
+      "headers": {
+        "eventDate": "Event Date",
+        "matrix": "Dam",
+        "bull": "Bull / Semen",
+        "type": "Type",
+        "status": "Status",
+        "birth": "Birth",
+        "occurrence": "Occurrence"
+      },
+      "artificialInsemination": "Artificial Insemination",
+      "showing": "Showing {from} to {to} of {total} records"
+    },
+    "modal": {
+      "title": "Reproduction Details",
+      "close": "Close",
+      "reproduction": "Reproduction {type}",
+      "createdAt": "Record created on {date}",
+      "involved": "Involved",
+      "matrix": "Dam (Buffalo)",
+      "semen": "Semen",
+      "bull": "Sire (Buffalo)",
+      "artificialInsemination": "Artificial Insemination",
+      "eventDetails": "Event Details",
+      "eventDate": "Event Date",
+      "birthType": "Birth Type",
+      "occurrence": "Occurrence / Observation",
+      "noOccurrence": "No observation recorded."
+    }
+  },
+  "Charts": {
+    "maturity": {
+      "title": "Distribution by Maturity",
+      "totalAnimals": "{count} animal(s) in total",
+      "emptyTitle": "No animal found",
+      "emptyDesc": "Register animals to see the maturity distribution.",
+      "selectProperty": "Select a property",
+      "selectPropertyDesc": "Choose a property to view the distribution.",
+      "labels": {
+        "Bezerro": "Calves",
+        "Novilha": "Heifers",
+        "Novilho": "Young Bulls",
+        "Vaca": "Cows",
+        "Touro": "Bulls"
+      }
+    },
+    "sex": {
+      "title": "Distribution by Sex",
+      "totalAnimals": "{count} animal(s) in total",
+      "females": "Females",
+      "males": "Males",
+      "selectProperty": "Select a property",
+      "selectPropertyDesc": "Choose a property to view the distribution."
+    },
+    "breed": {
+      "title": "Distribution by Breed",
+      "totalAnimals": "{count} animal(s) in total",
+      "emptyTitle": "No breeds found",
+      "emptyDesc": "Register animals to see the breed distribution.",
+      "selectProperty": "Select a property",
+      "selectPropertyDesc": "Choose a property to view the distribution.",
+      "animals": "Animals"
+    }
+  },
+  "Alimentacao": {
+    "deleteTitle": "Confirm Deletion",
+    "deleteRecord": "Are you sure you want to delete the {type}",
+    "record": "record",
+    "food": "food",
+    "yesDelete": "Yes, delete",
+    "cancel": "Cancel"
+  },
+  "DataIngestion": {
+    "title": "Data Import and Export",
+    "subtitle": "Upload batch spreadsheets or download advanced Excel reports (.xlsx).",
+    "tabs": {
+      "milk": "Milk Production",
+      "weighing": "Animal Weighing",
+      "reproduction": "Reproduction"
+    },
+    "import": {
+      "title": "Import Spreadsheet",
+      "description": "Upload a .xlsx file up to 50MB following the platform's column standard.",
+      "selectFile": "Click to select a file",
+      "dragDrop": "or drag and drop here",
+      "startETL": "Start ETL Processing"
+    },
+    "export": {
+      "title": "Export Data",
+      "description": "Use the filters below to download a consolidated Excel report.",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "maturity": "Animal Maturity",
+      "allMaturities": "All maturities",
+      "heifer": "Heifer",
+      "primiparous": "Primiparous",
+      "multiparous": "Multiparous",
+      "sex": "Sex",
+      "bothSexes": "Both sexes",
+      "maleM": "Male (M)",
+      "femaleF": "Female (F)",
+      "inseminationType": "Insemination Type",
+      "allTypes": "All types",
+      "naturalMating": "Natural Mating (NM)",
+      "artificialInsemination": "Artificial Insemination (AI)",
+      "iatf": "IATF",
+      "embryoTransfer": "Embryo Transfer (ET)",
+      "generateDownload": "Generate and Download Spreadsheet"
+    },
+    "jobStatus": {
+      "processing": "Processing Spreadsheet...",
+      "completed": "Import Completed",
+      "failed": "Import Failed",
+      "taskId": "Task ID: {id}",
+      "totalRows": "Total Rows",
+      "imported": "Imported",
+      "skippedWarnings": "Skipped / Warnings",
+      "row": "Row {row}"
     }
   }
 }

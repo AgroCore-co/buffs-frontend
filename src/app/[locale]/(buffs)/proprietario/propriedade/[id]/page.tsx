@@ -111,13 +111,12 @@ export default function PropriedadeDetalhesPage({ params }: { params: Promise<{ 
       <Container className="pt-2 px-6 w-full min-w-0"> 
         <TabNav
           tabs={[
-            { key: "visao-geral", label: "Visão Geral" },
-            { key: "lotes", label: "Lotes e Piquetes" },
-            { key: "grupos", label: "Grupos de Manejo" },
-            { key: "equipe", label: "Equipe" },
-            { key: "alimentacao", label: "Alimentação" },
-            {key: "data-injestion", label: "Importação de dados"}
-
+            { key: "visao-geral", label: t("tabs.overview") },
+            { key: "lotes", label: t("tabs.lots") },
+            { key: "grupos", label: t("tabs.groups") },
+            { key: "equipe", label: t("tabs.team") },
+            { key: "alimentacao", label: t("tabs.feeding") },
+            { key: "data-injestion", label: t("tabs.dataImport") },
           ]}
           activeTab={activeTab}
           onTabChange={setActiveTab}

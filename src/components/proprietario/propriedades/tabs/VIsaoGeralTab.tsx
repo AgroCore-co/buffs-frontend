@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { LucideIcon } from "lucide-react";
 import MetricCard from "@/components/ui/MetricCard";
 import Badge from "@/components/ui/Badge";
@@ -35,7 +36,7 @@ interface VisaoGeralTabProps {
 
 // --- Subcomponentes Internos ---
 
-function InfoItem({ icon: Icon, label, value, subValue }: { icon: LucideIcon; label: string; value?: string; subValue?: string }) {
+function InfoItem({ icon: Icon, label, value, subValue, notInformedLabel }: { icon: LucideIcon; label: string; value?: string; subValue?: string; notInformedLabel: string }) {
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
       <div className="p-2 bg-gray-100 rounded-lg text-gray-500">
@@ -44,7 +45,7 @@ function InfoItem({ icon: Icon, label, value, subValue }: { icon: LucideIcon; la
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
         <p className="text-sm font-medium text-[#404040]">
-          {value || <span className="text-gray-300 italic">Não informado</span>}
+          {value || <span className="text-gray-300 italic">{notInformedLabel}</span>}
         </p>
         {subValue && <p className="text-xs text-gray-500 mt-0.5">{subValue}</p>}
       </div>
@@ -53,26 +54,28 @@ function InfoItem({ icon: Icon, label, value, subValue }: { icon: LucideIcon; la
 }
 
 function DadosCadastraisSection({ propriedade }: { propriedade: Record<string, string | undefined> }) {
+  const t = useTranslations("Proprietario.detalhes.overview");
+
   const getManejoLabel = (tipo: string) => {
     const map: Record<string, string> = {
-      P: "Pastagem / Extensivo",
-      C: "Confinamento",
-      S: "Semi-confinamento",
+      E: t("managementTypes.E"),
+      I: t("managementTypes.I"),
+      P: t("managementTypes.P"),
     };
-    return map[tipo] || tipo || "Não informado";
+    return map[tipo] || tipo || t("notInformed");
   };
 
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-full flex flex-col">
       <h2 className="text-lg font-bold mb-4 text-[#404040] flex items-center gap-2">
         <FileText className="w-5 h-5 text-[var(--color-primary-dark)]" />
-        Dados Cadastrais
+        {t("registeredData")}
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 flex-1">
-        <InfoItem icon={FileText} label="CNPJ / Documento" value={propriedade.cnpj} />
-        <InfoItem icon={Tractor} label="Sistema de Produção" value={getManejoLabel(propriedade.tipoManejo ?? "")} />
-        <InfoItem icon={Fingerprint} label="Proprietário" value={propriedade.nomeDono || "-"} subValue={propriedade.emailDono} />
-        <InfoItem icon={MapPin} label="Endereço Completo" value={propriedade.enderecoCompleto} subValue={propriedade.cep} />
+        <InfoItem icon={FileText} label={t("cnpj")} value={propriedade.cnpj} notInformedLabel={t("notInformed")} />
+        <InfoItem icon={Tractor} label={t("productionSystem")} value={getManejoLabel(propriedade.tipoManejo ?? "")} notInformedLabel={t("notInformed")} />
+        <InfoItem icon={Fingerprint} label={t("owner")} value={propriedade.nomeDono || "-"} subValue={propriedade.emailDono} notInformedLabel={t("notInformed")} />
+        <InfoItem icon={MapPin} label={t("fullAddress")} value={propriedade.enderecoCompleto} subValue={propriedade.cep} notInformedLabel={t("notInformed")} />
       </div>
     </div>
   );
@@ -83,21 +86,23 @@ interface DashboardStats {
 }
 
 function ComposicaoRacialSection({ loadingDashboard, stats }: { loadingDashboard: boolean; stats?: DashboardStats }) {
+  const t = useTranslations("Proprietario.detalhes.overview");
+
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col h-full">
       <h2 className="text-lg font-bold mb-4 text-[#404040] flex items-center gap-2">
         <Activity className="w-5 h-5 text-[var(--color-primary-dark)]" />
-        Composição Racial
+        {t("racialComposition")}
       </h2>
-      
+
       {loadingDashboard ? (
         <div className="h-32 bg-gray-50 rounded-xl animate-pulse flex items-center justify-center border border-gray-100 flex-1">
-          <span className="text-gray-400 text-sm">Carregando composição...</span>
+          <span className="text-gray-400 text-sm">{t("loadingComposition")}</span>
         </div>
       ) : !stats?.bufalosPorRaca?.length ? (
         <div className="h-32 flex flex-col items-center justify-center bg-gray-50 border border-gray-100 rounded-xl text-gray-400 flex-1">
           <AlertCircle className="w-6 h-6 mb-2" />
-          <span className="font-semibold text-sm">Sem dados de raças</span>
+          <span className="font-semibold text-sm">{t("noRaceData")}</span>
         </div>
       ) : (
         <div className="space-y-5 mt-2 flex-1 flex flex-col justify-center">
@@ -129,39 +134,41 @@ function ComposicaoRacialSection({ loadingDashboard, stats }: { loadingDashboard
 }
 
 function IndicadoresRebanhoSection({ stats }: { stats: IndicadoresStats }) {
+  const t = useTranslations("Proprietario.detalhes.overview");
+
   return (
     <div className="mt-2">
       <div className="flex items-center justify-between mb-4 px-1">
         <h2 className="text-lg font-bold text-[#404040] flex items-center gap-2">
           <Layers className="w-5 h-5 text-[var(--color-primary-dark)]" />
-          Visão Geral em Números
+          {t("overviewNumbers")}
         </h2>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <MetricCard 
-          title="Fêmeas" 
-          value={stats.femeas.toString()} 
-          subtitle="Animais ativos"
-          icon={<Activity className="w-3.5 h-3.5 text-[#ce7d0a]" />} 
+        <MetricCard
+          title={t("females")}
+          value={stats.femeas.toString()}
+          subtitle={t("activeAnimals")}
+          icon={<Activity className="w-3.5 h-3.5 text-[#ce7d0a]" />}
         />
-        <MetricCard 
-          title="Machos" 
-          value={stats.machos.toString()} 
-          subtitle="Animais ativos"
-          icon={<Activity className="w-3.5 h-3.5 text-[#ce7d0a]" />} 
+        <MetricCard
+          title={t("males")}
+          value={stats.machos.toString()}
+          subtitle={t("activeAnimals")}
+          icon={<Activity className="w-3.5 h-3.5 text-[#ce7d0a]" />}
         />
-        <MetricCard 
-          title="Lotes" 
-          value={stats.lotes.toString()} 
-          subtitle="Cadastrados no sistema"
-          icon={<Layers className="w-3.5 h-3.5 text-[#ce7d0a]" />} 
+        <MetricCard
+          title={t("lots")}
+          value={stats.lotes.toString()}
+          subtitle={t("registeredInSystem")}
+          icon={<Layers className="w-3.5 h-3.5 text-[#ce7d0a]" />}
         />
-        <MetricCard 
-          title="Usuários" 
-          value={stats.usuarios.toString()} 
-          subtitle="Com acesso à propriedade"
-          icon={<Users className="w-3.5 h-3.5 text-[#ce7d0a]" />} 
+        <MetricCard
+          title={t("users")}
+          value={stats.usuarios.toString()}
+          subtitle={t("propertyAccess")}
+          icon={<Users className="w-3.5 h-3.5 text-[#ce7d0a]" />}
         />
       </div>
     </div>

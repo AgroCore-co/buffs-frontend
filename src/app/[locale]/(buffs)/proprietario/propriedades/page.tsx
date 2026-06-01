@@ -146,7 +146,7 @@ export default function PropriedadesPageProprietario() {
               size="md"
               className="w-full sm:w-fit"
             >
-              Nova Propriedade
+              {t('newProperty')}
             </Button>
           </div>
         </div>

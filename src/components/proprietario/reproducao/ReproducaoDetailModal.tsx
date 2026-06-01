@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Activity, Calendar, CheckCircle2, Info, AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -51,19 +52,21 @@ interface Props {
 }
 
 export function ReproducaoDetailModal({ isOpen, onClose, registro }: Props) {
+  const t = useTranslations('ReproducaoPage.modal');
+
   if (!registro) return null;
 
   const touroValue = registro.idSemen
-    ? "Inseminação Artificial"
+    ? t('artificialInsemination')
     : animalLabel(registro.bufalo_idBufalo);
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Detalhes da Reprodução"
+      title={t('title')}
       size="lg"
-      footer={<Button variant="primary" onClick={onClose}>Fechar</Button>}
+      footer={<Button variant="primary" onClick={onClose}>{t('close')}</Button>}
     >
       <div className="flex flex-col gap-6">
         {/* Hero */}
@@ -71,9 +74,9 @@ export function ReproducaoDetailModal({ isOpen, onClose, registro }: Props) {
           <div className="min-w-0">
             <h3 className="text-lg font-bold text-zinc-800 flex items-center gap-2">
               <Activity className="w-5 h-5 text-[#ce7d0a] flex-shrink-0" />
-              Reprodução {registro.tipoInseminacao}
+              {t('reproduction', { type: registro.tipoInseminacao })}
             </h3>
-            <p className="text-sm text-zinc-500 mt-1">Registro criado em {formatDate(registro.createdAt)}</p>
+            <p className="text-sm text-zinc-500 mt-1">{t('createdAt', { date: formatDate(registro.createdAt) })}</p>
           </div>
           <span className={`px-4 py-1.5 rounded-full text-sm font-bold border flex-shrink-0 ${statusPill(registro.status)}`}>
             {registro.status}
@@ -83,15 +86,15 @@ export function ReproducaoDetailModal({ isOpen, onClose, registro }: Props) {
         {/* Grid de informações */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h4 className="text-sm font-bold text-zinc-900 border-b border-zinc-200 pb-2 mb-1">Envolvidos</h4>
-            <DetailRow icon={Info} label="Matriz (Búfala)" value={animalLabel(registro.bufalo_idBufala)} />
-            <DetailRow icon={Info} label={registro.idSemen ? "Sêmen" : "Touro (Búfalo)"} value={touroValue} />
+            <h4 className="text-sm font-bold text-zinc-900 border-b border-zinc-200 pb-2 mb-1">{t('involved')}</h4>
+            <DetailRow icon={Info} label={t('matrix')} value={animalLabel(registro.bufalo_idBufala)} />
+            <DetailRow icon={Info} label={registro.idSemen ? t('semen') : t('bull')} value={touroValue} />
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-zinc-900 border-b border-zinc-200 pb-2 mb-1">Detalhes do Evento</h4>
-            <DetailRow icon={Calendar} label="Data do Evento" value={formatDate(registro.dtEvento)} />
-            <DetailRow icon={CheckCircle2} label="Tipo de Parto" value={registro.tipoParto ?? "—"} />
+            <h4 className="text-sm font-bold text-zinc-900 border-b border-zinc-200 pb-2 mb-1">{t('eventDetails')}</h4>
+            <DetailRow icon={Calendar} label={t('eventDate')} value={formatDate(registro.dtEvento)} />
+            <DetailRow icon={CheckCircle2} label={t('birthType')} value={registro.tipoParto ?? "—"} />
           </div>
         </div>
 
@@ -100,9 +103,9 @@ export function ReproducaoDetailModal({ isOpen, onClose, registro }: Props) {
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h5 className="text-sm font-bold text-amber-800 mb-1">Ocorrência / Observação</h5>
+              <h5 className="text-sm font-bold text-amber-800 mb-1">{t('occurrence')}</h5>
               <p className="text-sm text-amber-900/80 leading-relaxed">
-                {registro.ocorrencia?.trim() || "Nenhuma observação registrada."}
+                {registro.ocorrencia?.trim() || t('noOccurrence')}
               </p>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Syringe, AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade, onCreated }: Props) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.vacinacao.createModal");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const { createVacinacao, isCreatingVacinacao } = useVacinacao();
@@ -60,7 +62,7 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.idMedicacao) {
-      toast.error("Selecione a vacina aplicada.");
+      toast.error(t("toast.errorNoVaccine"));
       return;
     }
     try {
@@ -76,16 +78,16 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
           dtRetorno:         form.necessita_retorno ? (form.dtRetorno || null) : null,
         },
       });
-      toast.success("Vacinação registrada com sucesso.");
+      toast.success(t("toast.success"));
       onCreated?.();
       onClose();
     } catch {
-      toast.error("Erro ao registrar vacinação.");
+      toast.error(t("toast.error"));
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Registrar Vacinação" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("title")} size="lg">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
         {/* Sem vacinas cadastradas */}
@@ -93,8 +95,7 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
           <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
             <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-amber-700">
-              Nenhuma vacina cadastrada para esta propriedade. Cadastre uma medicação do tipo
-              vacinação antes de registrar a aplicação.
+              {t("noVaccines")}
             </p>
           </div>
         )}
@@ -102,7 +103,7 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
         <div className="grid grid-cols-2 gap-4">
           {/* Vacina */}
           <div className="space-y-1.5 col-span-2">
-            <label className="text-sm font-medium text-zinc-700">Vacina</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.vaccine")}</label>
             <select
               required
               value={form.idMedicacao}
@@ -111,7 +112,7 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
               className={inputClass}
             >
               <option value="" disabled>
-                {isLoadingMeds ? "Carregando vacinas..." : "Selecione a vacina"}
+                {isLoadingMeds ? t("fields.loadingVaccines") : t("fields.selectVaccine")}
               </option>
               {vacinas.map(v => (
                 <option key={v.idMedicacao} value={v.idMedicacao}>
@@ -123,7 +124,7 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
 
           {/* Data de aplicação */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Data de Aplicação</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.applicationDate")}</label>
             <input
               type="date"
               required
@@ -135,7 +136,7 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
 
           {/* Doença / prevenção */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Doença / Prevenção</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.disease")}</label>
             <input
               type="text"
               value={form.doenca}
@@ -146,7 +147,7 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
 
           {/* Dosagem */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Dosagem</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.dosage")}</label>
             <input
               type="number"
               step="0.01"
@@ -159,7 +160,7 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
 
           {/* Unidade de medida */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700">Unidade de Medida</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.unit")}</label>
             <select
               value={form.unidade_medida}
               onChange={e => setForm(f => ({ ...f, unidade_medida: e.target.value }))}
@@ -181,13 +182,13 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
             />
             <div className="w-10 h-6 bg-zinc-200 rounded-full peer peer-checked:bg-[#ce7d0a] transition-colors duration-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-200 peer-checked:after:translate-x-4" />
           </label>
-          <span className="text-sm font-medium text-zinc-700">Necessita de reforço/retorno</span>
+          <span className="text-sm font-medium text-zinc-700">{t("fields.needsBooster")}</span>
         </div>
 
         {/* Data de retorno */}
         {form.necessita_retorno && (
           <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-            <label className="text-sm font-medium text-zinc-700">Data de Retorno</label>
+            <label className="text-sm font-medium text-zinc-700">{t("fields.returnDate")}</label>
             <input
               type="date"
               min={form.dtAplicacao}
@@ -200,11 +201,11 @@ export function CreateVacinacaoModal({ isOpen, onClose, idBufalo, idPropriedade,
 
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
           <Button type="button" variant="outline" onClick={onClose} disabled={isCreatingVacinacao}>
-            Cancelar
+            {t("actions.cancel")}
           </Button>
           <Button type="submit" variant="primary" isLoading={isCreatingVacinacao} disabled={vacinas.length === 0}>
             <Syringe className="w-3.5 h-3.5 mr-1.5" />
-            Registrar
+            {t("actions.register")}
           </Button>
         </div>
       </form>

@@ -2,29 +2,13 @@
 
 import Image from "next/image";
 import type { LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Clock, Tag, Cpu, Calendar, Award, Bookmark, BookmarkCheck, MapPin, UserRound, ShieldOff } from "lucide-react";
 
 import { useBufalo } from "@/hooks/useBufalos";
 import { useGruposById } from "@/hooks/useGrupos";
 import { usePropriedadeStore } from "@/stores/propriedade.store";
 import { Bufalo } from "@/services/bufalos.service";
-
-// ─── Mapeamentos ──────────────────────────────────────────────────────────────
-
-const SEXO_MAP: Record<string, string> = { M: "Macho", F: "Fêmea" };
-const MATURIDADE_MAP: Record<string, string> = {
-  B: "Bezerro",
-  N: "Novilha",
-  V: "Vaca / Adulto",
-  T: "Touro / Adulto",
-};
-const CATEGORIA_MAP: Record<string, string> = {
-  PO: "Puro de Origem",
-  PC: "Puro por Cruzamento",
-  PA: "Puro por Avaliação",
-  CCG: "Com Controle de Genealogia",
-  SRD: "Sem Raça Definida",
-};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -40,7 +24,7 @@ function formatDateTime(value?: string | null) {
   return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("pt-BR");
 }
 
-function calcularIdade(dtNascimento?: string | null) {
+function calcularIdadeData(dtNascimento?: string | null): { years: number; months: number } | null {
   if (!dtNascimento) return null;
   const now = new Date();
   const birth = new Date(dtNascimento);
@@ -48,8 +32,7 @@ function calcularIdade(dtNascimento?: string | null) {
   let years = now.getFullYear() - birth.getFullYear();
   let months = now.getMonth() - birth.getMonth();
   if (months < 0) { years--; months += 12; }
-  if (years === 0) return `${months}m de idade`;
-  return `${years}a ${months}m de idade`;
+  return { years, months };
 }
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
@@ -83,17 +66,20 @@ function ManejoCelula({ label, value }: { label: string; value?: string | null }
 const CATEGORIAS_COM_SELO = ["PO", "PC", "PA", "CCG", "SRD"] as const;
 type CategoriaComSelo = typeof CATEGORIAS_COM_SELO[number];
 
-function ClassificacaoSeal({ categoria }: { categoria: string | null | undefined }) {
+function ClassificacaoSeal({ categoria, noClass, categoriaLabel }: {
+  categoria: string | null | undefined;
+  noClass: string;
+  categoriaLabel: string;
+}) {
   const cat = (categoria ?? null) as CategoriaComSelo | null;
   const temSelo = cat && (CATEGORIAS_COM_SELO as readonly string[]).includes(cat);
-  const label = CATEGORIA_MAP[cat ?? ""] ?? "Não classificado";
 
   if (!temSelo) {
     return (
       <div className="flex flex-col items-center gap-3">
         <div className="w-40 h-40 rounded-full border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center gap-2">
           <ShieldOff className="w-8 h-8 text-zinc-300" />
-          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Sem classificação</span>
+          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">{noClass}</span>
         </div>
         <div className="text-4xl font-black text-zinc-300 tracking-tight">—</div>
       </div>
@@ -113,7 +99,7 @@ function ClassificacaoSeal({ categoria }: { categoria: string | null | undefined
       </div>
       <div className="text-4xl font-black text-zinc-800 tracking-tight">{cat}</div>
       <span className="px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-xs font-semibold text-zinc-600">
-        {label}
+        {categoriaLabel}
       </span>
     </div>
   );
@@ -127,6 +113,7 @@ interface VisaoGeralTabProps {
 }
 
 export function VisaoGeralTab({ bufalo, onNavigateToGenealogy }: VisaoGeralTabProps) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.visaoGeral");
   const { data: grupo }            = useGruposById(bufalo.idGrupo ?? undefined);
   const { data: pai }              = useBufalo(bufalo.idPai   ?? undefined);
   const { data: mae }              = useBufalo(bufalo.idMae   ?? undefined);
@@ -135,6 +122,27 @@ export function VisaoGeralTab({ bufalo, onNavigateToGenealogy }: VisaoGeralTabPr
   const idTruncado = bufalo.idBufalo.length > 10
     ? `${bufalo.idBufalo.slice(0, 8)}…`
     : bufalo.idBufalo;
+
+  const idadeData = calcularIdadeData(bufalo.dtNascimento);
+  const idadeSub = idadeData
+    ? (idadeData.years === 0
+        ? t("age.months", { months: idadeData.months })
+        : t("age.yearsMonths", { years: idadeData.years, months: idadeData.months }))
+    : null;
+
+  const sexoDisplay = bufalo.sexo ? (
+    bufalo.sexo === "M" ? t("sex.M") :
+    bufalo.sexo === "F" ? t("sex.F") :
+    bufalo.sexo
+  ) : "—";
+
+  const matDisplay = bufalo.nivelMaturidade
+    ? t(`maturity.${bufalo.nivelMaturidade}` as Parameters<typeof t>[0], { defaultValue: bufalo.nivelMaturidade } as never) ?? bufalo.nivelMaturidade
+    : "—";
+
+  const catLabel = bufalo.categoria
+    ? t(`categoria.${bufalo.categoria}` as Parameters<typeof t>[0], { defaultValue: bufalo.categoria } as never) ?? bufalo.categoria
+    : "—";
 
   return (
     <div className="animate-in fade-in duration-300 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
@@ -145,29 +153,29 @@ export function VisaoGeralTab({ bufalo, onNavigateToGenealogy }: VisaoGeralTabPr
         {/* Dados de Identificação */}
         <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex flex-col gap-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-zinc-800">Dados de Identificação</h2>
+            <h2 className="text-sm font-bold text-zinc-800">{t("identification")}</h2>
             <span className="text-[11px] text-zinc-400 font-mono">ID: {idTruncado}</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <IdentField icon={Tag}           label="Brinco Visual"          value={bufalo.brinco} />
-            <IdentField icon={Cpu}           label="Microchip / Eletrônico" value={bufalo.microchip ?? "Não implantado"} />
-            <IdentField icon={Calendar}      label="Data Nascimento"         value={formatDate(bufalo.dtNascimento)} sub={calcularIdade(bufalo.dtNascimento)} />
-            <IdentField icon={Award}         label="Sexo"                    value={SEXO_MAP[bufalo.sexo] ?? bufalo.sexo} />
-            <IdentField icon={Bookmark}      label="Registro Provisório"     value={bufalo.registroProv} />
-            <IdentField icon={BookmarkCheck} label="Registro Definitivo"     value={bufalo.registroDef} />
-            <IdentField icon={MapPin}        label="Origem"                  value={bufalo.origem} />
-            <IdentField icon={Tag}           label="Brinco Original"         value={bufalo.brincoOriginal} />
+            <IdentField icon={Tag}           label={t("fields.visualTag")}      value={bufalo.brinco} />
+            <IdentField icon={Cpu}           label={t("fields.microchip")}       value={bufalo.microchip ?? t("notImplanted")} />
+            <IdentField icon={Calendar}      label={t("fields.birthDate")}       value={formatDate(bufalo.dtNascimento)} sub={idadeSub} />
+            <IdentField icon={Award}         label={t("fields.sex")}             value={sexoDisplay} />
+            <IdentField icon={Bookmark}      label={t("fields.provisionalReg")}  value={bufalo.registroProv} />
+            <IdentField icon={BookmarkCheck} label={t("fields.definitiveReg")}   value={bufalo.registroDef} />
+            <IdentField icon={MapPin}        label={t("fields.origin")}          value={bufalo.origem} />
+            <IdentField icon={Tag}           label={t("fields.originalTag")}     value={bufalo.brincoOriginal} />
           </div>
         </div>
 
         {/* Manejo & Localização */}
         <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-          <h2 className="text-sm font-bold text-zinc-800">Manejo &amp; Localização</h2>
+          <h2 className="text-sm font-bold text-zinc-800">{t("management")}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <ManejoCelula label="Propriedade"      value={activePropriedade?.nome} />
-            <ManejoCelula label="Grupo / Lote"     value={grupo?.nomeGrupo} />
-            <ManejoCelula label="Categoria"        value={bufalo.categoria} />
-            <ManejoCelula label="Nível Maturidade" value={MATURIDADE_MAP[bufalo.nivelMaturidade] ?? bufalo.nivelMaturidade} />
+            <ManejoCelula label={t("fields.property")}      value={activePropriedade?.nome} />
+            <ManejoCelula label={t("fields.group")}         value={grupo?.nomeGrupo} />
+            <ManejoCelula label={t("fields.category")}      value={bufalo.categoria} />
+            <ManejoCelula label={t("fields.maturityLevel")} value={matDisplay} />
           </div>
         </div>
       </div>
@@ -177,21 +185,25 @@ export function VisaoGeralTab({ bufalo, onNavigateToGenealogy }: VisaoGeralTabPr
 
         {/* Classificação Racial */}
         <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex flex-col items-center gap-2">
-          <span className="text-[11px] font-black uppercase tracking-widest text-amber-600">Classificação Racial</span>
-          <ClassificacaoSeal categoria={bufalo.categoria} />
+          <span className="text-[11px] font-black uppercase tracking-widest text-amber-600">{t("racialClass")}</span>
+          <ClassificacaoSeal
+            categoria={bufalo.categoria}
+            noClass={t("noClassification")}
+            categoriaLabel={catLabel}
+          />
         </div>
 
         {/* Genealogia Rápida */}
         <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-          <h2 className="text-sm font-bold text-zinc-800">Genealogia Rápida</h2>
+          <h2 className="text-sm font-bold text-zinc-800">{t("quickGenealogy")}</h2>
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                 <UserRound className="w-3.5 h-3.5 text-blue-500" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Pai</span>
-                <span className="text-sm font-medium text-zinc-700">{pai?.nome ?? "Não informado"}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{t("father")}</span>
+                <span className="text-sm font-medium text-zinc-700">{pai?.nome ?? t("notInformed")}</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -199,8 +211,8 @@ export function VisaoGeralTab({ bufalo, onNavigateToGenealogy }: VisaoGeralTabPr
                 <UserRound className="w-3.5 h-3.5 text-pink-400" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Mãe</span>
-                <span className="text-sm font-medium text-zinc-700">{mae?.nome ?? "Não informado"}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{t("mother")}</span>
+                <span className="text-sm font-medium text-zinc-700">{mae?.nome ?? t("notInformed")}</span>
               </div>
             </div>
           </div>
@@ -208,17 +220,17 @@ export function VisaoGeralTab({ bufalo, onNavigateToGenealogy }: VisaoGeralTabPr
             onClick={onNavigateToGenealogy}
             className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors w-fit"
           >
-            Ver árvore completa →
+            {t("viewFullTree")}
           </button>
         </div>
 
         {/* Timestamps */}
         <div className="flex flex-col gap-1.5 px-1">
           <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-            <Clock className="w-3 h-3" /> Criado em: {formatDateTime(bufalo.createdAt)}
+            <Clock className="w-3 h-3" /> {t("createdAt")} {formatDateTime(bufalo.createdAt)}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-            <Clock className="w-3 h-3" /> Atualizado: {formatDateTime(bufalo.updatedAt)}
+            <Clock className="w-3 h-3" /> {t("updatedAt")} {formatDateTime(bufalo.updatedAt)}
           </div>
         </div>
       </div>

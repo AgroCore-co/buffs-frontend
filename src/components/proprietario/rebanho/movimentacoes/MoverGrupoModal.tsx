@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { ArrowRightLeft, AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function MoverGrupoModal({ isOpen, onClose, bufalo, grupoAtualNome, onMoved }: Props) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.movimentacoes.modal");
   const [idNovoGrupo, setIdNovoGrupo] = useState("");
   const [motivo, setMotivo] = useState("");
 
@@ -49,7 +51,7 @@ export function MoverGrupoModal({ isOpen, onClose, bufalo, grupoAtualNome, onMov
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!idNovoGrupo) {
-      toast.error("Selecione o grupo de destino.");
+      toast.error(t("toast.errorNoGroup"));
       return;
     }
     try {
@@ -58,16 +60,16 @@ export function MoverGrupoModal({ isOpen, onClose, bufalo, grupoAtualNome, onMov
         idNovoGrupo,
         ...(motivo.trim() && { motivo: motivo.trim() }),
       });
-      toast.success("Búfalo movido de grupo com sucesso.");
+      toast.success(t("toast.success"));
       onMoved?.();
       onClose();
     } catch {
-      toast.error("Erro ao mover o búfalo de grupo.");
+      toast.error(t("toast.error"));
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Mover de Grupo" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("title")} size="md">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
         {/* Resumo do animal / grupo atual */}
@@ -78,7 +80,7 @@ export function MoverGrupoModal({ isOpen, onClose, bufalo, grupoAtualNome, onMov
           <div className="min-w-0">
             <p className="text-sm font-semibold text-zinc-800 truncate">{bufalo.nome}</p>
             <p className="text-xs text-zinc-500">
-              Grupo atual: <span className="font-medium text-zinc-600">{grupoAtualNome ?? "Sem grupo"}</span>
+              {t("currentGroup")}: <span className="font-medium text-zinc-600">{grupoAtualNome ?? t("noGroup")}</span>
             </p>
           </div>
         </div>
@@ -88,14 +90,14 @@ export function MoverGrupoModal({ isOpen, onClose, bufalo, grupoAtualNome, onMov
           <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
             <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-amber-700">
-              Nenhum outro grupo disponível nesta propriedade. Cadastre um grupo de manejo antes de mover o animal.
+              {t("noGroupsAvailable")}
             </p>
           </div>
         )}
 
         {/* Grupo de destino */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Grupo de Destino</label>
+          <label className="text-sm font-medium text-zinc-700">{t("fields.targetGroup")}</label>
           <select
             required
             value={idNovoGrupo}
@@ -104,7 +106,7 @@ export function MoverGrupoModal({ isOpen, onClose, bufalo, grupoAtualNome, onMov
             className={inputClass}
           >
             <option value="" disabled>
-              {isLoadingGrupos ? "Carregando grupos..." : "Selecione o grupo de destino"}
+              {isLoadingGrupos ? t("fields.loadingGroups") : t("fields.selectGroup")}
             </option>
             {grupos.map(g => (
               <option key={g.idGrupo} value={g.idGrupo}>{g.nomeGrupo}</option>
@@ -115,7 +117,7 @@ export function MoverGrupoModal({ isOpen, onClose, bufalo, grupoAtualNome, onMov
         {/* Motivo (opcional) */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-zinc-700">
-            Motivo <span className="text-zinc-400 font-normal">(opcional)</span>
+            {t("fields.reason")} <span className="text-zinc-400 font-normal">{t("fields.optional")}</span>
           </label>
           <textarea
             rows={3}
@@ -128,11 +130,11 @@ export function MoverGrupoModal({ isOpen, onClose, bufalo, grupoAtualNome, onMov
 
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
           <Button type="button" variant="outline" onClick={onClose} disabled={isMovendoGrupo}>
-            Cancelar
+            {t("actions.cancel")}
           </Button>
           <Button type="submit" variant="primary" isLoading={isMovendoGrupo} disabled={grupos.length === 0}>
             <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5" />
-            Mover
+            {t("actions.move")}
           </Button>
         </div>
       </form>

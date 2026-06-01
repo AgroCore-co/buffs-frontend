@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { DetalhesLoteModal } from "@/components/proprietario/propriedades/DetalhesLoteModal";
 import { useLotesByPropriedade } from "@/hooks/useLotes";
 import { Lote } from "@/services/lotes.service";
@@ -61,6 +62,7 @@ interface MapaPiquetesProps {
 }
 
 export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
+  const t = useTranslations("Proprietario.propriedades.map");
   const [isMounted, setIsMounted] = useState(false);
   const [selectedLote, setSelectedLote] = useState<Lote | null>(null); 
   const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
@@ -156,7 +158,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
   if (!isMounted || isLoading) {
     return (
       <div className="w-full h-[calc(100vh-360px)] min-h-[300px] bg-zinc-100 rounded-xl border border-zinc-200 animate-pulse flex items-center justify-center">
-        <span className="text-zinc-400 font-medium text-sm">Carregando mapa satélite...</span>
+        <span className="text-zinc-400 font-medium text-sm">{t("loading")}</span>
       </div>
     );
   }
@@ -171,10 +173,10 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
       <div className="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur-md p-3 rounded-xl shadow-sm border border-zinc-200 pointer-events-none">
         <h3 className="text-sm font-semibold text-zinc-800 flex items-center gap-2">
           <MapIcon className="w-4 h-4 text-emerald-600" />
-          Mapeamento da Propriedade
+          {t("title")}
         </h3>
         <p className="text-xs text-zinc-500 mt-1 font-medium">
-          {lotes?.length || 0} piquete(s) em {gruposData.length} grupo(s)
+          {lotes?.length || 0} {t("plots")} {gruposData.length} {t("groups")}
         </p>
       </div>
 
@@ -183,9 +185,9 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
         {/* Badge do Zoom Atual */}
         <div 
           className="bg-zinc-900 text-zinc-100 text-[10px] font-bold px-2 py-1.5 rounded-lg text-center shadow-lg border border-zinc-800 tracking-widest cursor-default select-none"
-          title="Nível de Zoom Atual"
+          title={t("zoomLevel")}
         >
-          ZOOM {Math.round(zoomLevel)}
+          {t("zoom")} {Math.round(zoomLevel)}
         </div>
 
         {/* Botão de Centralizar (Enquadra todos os piquetes) */}
@@ -196,7 +198,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
             }
           }}
           className="w-10 h-10 bg-white flex items-center justify-center rounded-xl shadow-lg border border-zinc-200 text-zinc-600 hover:text-emerald-600 hover:bg-emerald-50 transition-all focus:outline-none"
-          title="Enquadrar todos os piquetes"
+          title={t("fitAll")}
         >
           <Focus className="w-5 h-5" />
         </button>
@@ -206,14 +208,14 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
           <button
             onClick={() => mapInstance?.zoomIn()}
             className="w-10 h-10 flex items-center justify-center text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-colors focus:outline-none"
-            title="Aproximar"
+            title={t("zoomIn")}
           >
             <Plus className="w-5 h-5" />
           </button>
           <button
             onClick={() => mapInstance?.zoomOut()}
             className="w-10 h-10 flex items-center justify-center text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-colors focus:outline-none"
-            title="Afastar"
+            title={t("zoomOut")}
           >
             <Minus className="w-5 h-5" />
           </button>
@@ -243,8 +245,8 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
             <div className="flex items-center gap-3 text-sm text-zinc-600 bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-100">
               <Hash className="w-4 h-4 text-zinc-400" />
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Grupo</span>
-                <span className="font-semibold text-zinc-700">{selectedLote.grupo?.nomeGrupo || 'Sem grupo'}</span>
+                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">{t("group")}</span>
+                <span className="font-semibold text-zinc-700">{selectedLote.grupo?.nomeGrupo || t("noGroup")}</span>
               </div>
             </div>
 
@@ -252,17 +254,17 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
               <div className="flex items-center gap-3 text-sm text-zinc-600 bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-100">
                 <Activity className={`w-4 h-4 ${selectedLote.status === 'ativo' ? 'text-emerald-500' : 'text-zinc-400'}`} />
                 <div className="flex flex-col">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Status</span>
-                  <span className="font-semibold text-zinc-700 capitalize">{selectedLote.status || 'N/D'}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">{t("status")}</span>
+                  <span className="font-semibold text-zinc-700 capitalize">{selectedLote.status || t("na")}</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 text-sm text-zinc-600 bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-100">
                 <Users className="w-4 h-4 text-zinc-400" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Capacidade</span>
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">{t("capacity")}</span>
                   <span className="font-semibold text-zinc-700">
-                    {selectedLote.qtdMax ? `${selectedLote.qtdMax} cbç` : 'N/D'}
+                    {selectedLote.qtdMax ? `${selectedLote.qtdMax} cbç` : t("na")}
                   </span>
                 </div>
               </div>
@@ -271,11 +273,11 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
             <div className="flex items-center gap-3 text-sm text-zinc-600 bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-100">
               <Maximize className="w-4 h-4 text-zinc-400" />
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Área do Piquete</span>
+                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">{t("plotArea")}</span>
                 <span className="font-semibold text-zinc-700">
-                  {selectedLote.areaM2 
-                    ? `${Number(selectedLote.areaM2).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} m²` 
-                    : 'N/D'}
+                  {selectedLote.areaM2
+                    ? `${Number(selectedLote.areaM2).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} m²`
+                    : t("na")}
                 </span>
               </div>
             </div>
@@ -284,7 +286,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
               <div className="flex gap-3 text-sm text-zinc-600 bg-zinc-50/80 p-2.5 rounded-lg border border-zinc-100 items-start">
                 <Info className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Observações</span>
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">{t("notes")}</span>
                   <span className="font-medium text-zinc-600 text-xs mt-0.5">{selectedLote.descricao}</span>
                 </div>
               </div>
@@ -294,7 +296,7 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
               onClick={() => setIsDetalhesModalOpen(true)}
               className="w-full mt-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow-sm"
             >
-              Ver Ficha Completa
+              {t("viewDetails")}
             </button>
           </div>
         </div>

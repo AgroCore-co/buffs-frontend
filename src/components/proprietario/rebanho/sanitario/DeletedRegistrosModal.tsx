@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RotateCcw, Syringe, Calendar, AlertCircle } from "lucide-react";
@@ -32,6 +33,7 @@ interface RegistroRowProps {
 }
 
 function RegistroRow({ registro, onRestore, isRestoring, restoringId }: RegistroRowProps) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.sanitario.deletedModal");
   const med = getMedicacao(registro);
   const isThisRestoring = isRestoring && restoringId === registro.idSanit;
 
@@ -64,7 +66,7 @@ function RegistroRow({ registro, onRestore, isRestoring, restoringId }: Registro
 
       {/* Data de remoção */}
       <div className="text-right flex-shrink-0 hidden sm:block">
-        <p className="text-[10px] text-zinc-400 uppercase tracking-wide font-bold">Removido em</p>
+        <p className="text-[10px] text-zinc-400 uppercase tracking-wide font-bold">{t("removedAt")}</p>
         <p className="text-xs text-red-400 font-medium">{formatDate(registro.deletedAt)}</p>
       </div>
 
@@ -78,7 +80,7 @@ function RegistroRow({ registro, onRestore, isRestoring, restoringId }: Registro
         className="flex-shrink-0"
       >
         <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-        Restaurar
+        {t("restore")}
       </Button>
     </div>
   );
@@ -94,6 +96,7 @@ interface Props {
 }
 
 export function DeletedRegistrosModal({ isOpen, onClose, idBufalo, onMutated }: Props) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.sanitario.deletedModal");
   const queryClient = useQueryClient();
   const [restoringId, setRestoringId] = React.useState<string | null>(null);
 
@@ -108,13 +111,13 @@ export function DeletedRegistrosModal({ isOpen, onClose, idBufalo, onMutated }: 
     mutationFn: (id: string) => dadosSanitariosService.restore(id),
     onMutate: (id) => setRestoringId(id),
     onSuccess: () => {
-      toast.success("Registro restaurado com sucesso.");
+      toast.success(t("toast.restored"));
       queryClient.invalidateQueries({ queryKey: ["dados-sanitarios"] });
       onMutated?.();
       setRestoringId(null);
     },
     onError: () => {
-      toast.error("Erro ao restaurar registro.");
+      toast.error(t("toast.error"));
       setRestoringId(null);
     },
   });
@@ -123,15 +126,15 @@ export function DeletedRegistrosModal({ isOpen, onClose, idBufalo, onMutated }: 
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Registros Removidos"
-      description="Registros sanitários removidos deste búfalo. Restaure qualquer um para reativá-lo."
+      title={t("title")}
+      description={t("description")}
       size="lg"
     >
       {/* Loading */}
       {isLoading && (
         <div className="flex flex-col items-center justify-center h-40 gap-2 text-zinc-400">
           <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin" />
-          <span className="text-sm">Carregando registros...</span>
+          <span className="text-sm">{t("loading")}</span>
         </div>
       )}
 
@@ -142,8 +145,8 @@ export function DeletedRegistrosModal({ isOpen, onClose, idBufalo, onMutated }: 
             <AlertCircle className="w-6 h-6 text-green-400" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-zinc-500">Nenhum registro removido</p>
-            <p className="text-xs text-zinc-400 mt-0.5">Este búfalo não possui registros sanitários removidos.</p>
+            <p className="text-sm font-semibold text-zinc-500">{t("empty")}</p>
+            <p className="text-xs text-zinc-400 mt-0.5">{t("emptyDesc")}</p>
           </div>
         </div>
       )}
@@ -154,7 +157,7 @@ export function DeletedRegistrosModal({ isOpen, onClose, idBufalo, onMutated }: 
           <div className="px-6 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
             <p className="text-xs text-amber-700 font-medium">
-              {deletados.length} registro{deletados.length !== 1 ? "s" : ""} removido{deletados.length !== 1 ? "s" : ""}
+              {t("count", { count: deletados.length })}
             </p>
           </div>
           <div className="divide-y divide-zinc-50">

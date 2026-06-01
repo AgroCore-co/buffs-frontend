@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
@@ -33,6 +34,7 @@ interface BufaloListItem extends Bufalo {
 }
 
 export default function RebanhoPage() {
+  const t = useTranslations('RebanhoPage');
   const router = useRouter();
   const { activeId, activePropriedade } = usePropriedadeStore();
   const [page, setPage] = useState(1);
@@ -120,23 +122,18 @@ export default function RebanhoPage() {
   };
 
   const formatPercent = (value: number, total: number) => {
-    if (!hasActivePropriedade) return "Selecione uma propriedade";
-    if (isLoadingDashboard) return "Carregando...";
-    if (total <= 0) return "0% do rebanho";
+    if (!hasActivePropriedade) return t('metrics.selectProperty');
+    if (isLoadingDashboard) return t('metrics.loading');
+    if (total <= 0) return t('metrics.percentHerd', { percent: '0' });
     const percent = Math.round((value / total) * 100);
-    return `${percent}% do rebanho`;
+    return t('metrics.percentHerd', { percent: String(percent) });
   };
 
-  const formatSexo = (sexo?: string) => (sexo === "F" ? "Fêmea" : sexo === "M" ? "Macho" : "—");
+  const formatSexo = (sexo?: string) => (sexo === "F" ? t('sex.F') : sexo === "M" ? t('sex.M') : "—");
 
   const formatMaturidade = (nivel?: string) => {
-    const map: Record<string, string> = {
-      B: "Bezerro",
-      N: "Novilha",
-      V: "Vaca",
-      T: "Touro",
-    };
-    return nivel ? map[nivel] || nivel : "—";
+    if (!nivel) return "—";
+    return t.has(`maturity.${nivel}`) ? t(`maturity.${nivel}` as 'maturity.B') : nivel;
   };
 
   const formatDate = (value?: string | null) => {
@@ -153,40 +150,39 @@ export default function RebanhoPage() {
         <div className="flex flex-col gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#404040]">
-              Gestão do Rebanho{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
+              {t('title')}{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
             </h1>
             <p className="text-sm text-[#404040]/60 mt-1">
-              Gerencie seu rebanho de búfalos, registre informações zootécnicas
-              e sanitárias.
+              {t('subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
             <MetricCard
-              title="Total do Rebanho"
+              title={t('metrics.total')}
               value={formatValue(totalAtivos)}
-              subtitle="Búfalos ativos (Machos + Fêmeas)"
+              subtitle={t('metrics.totalDesc')}
               icon={<Database className="w-4 h-4" />}
             />
 
             <MetricCard
-              title="Fêmeas"
+              title={t('metrics.females')}
               value={formatValue(totalFemeas)}
               subtitle={formatPercent(totalFemeas, totalAtivos)}
               icon={<Venus className="w-4 h-4" />}
             />
 
             <MetricCard
-              title="Machos"
+              title={t('metrics.males')}
               value={formatValue(totalMachos)}
               subtitle={formatPercent(totalMachos, totalAtivos)}
               icon={<Mars className="w-4 h-4" />}
             />
 
             <MetricCard
-              title="Vacas Produtoras"
+              title={t('metrics.producers')}
               value={formatValue(totalLactando)}
-              subtitle="Em lactação"
+              subtitle={t('metrics.producersDesc')}
               icon={<Droplets className="w-4 h-4" />}
             />
           </div>
@@ -218,10 +214,10 @@ export default function RebanhoPage() {
       <Container className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-sm font-semibold text-zinc-900">Búfalos da Propriedade</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">{t('table.title')}</h2>
             {!isLoadingBufalos && hasActivePropriedade && (
               <p className="text-xs text-zinc-500 mt-0.5">
-                {meta.total.toLocaleString("pt-BR")} animal{meta.total !== 1 ? "is" : ""} no total
+                {t('table.totalAnimals', { count: meta.total })}
               </p>
             )}
           </div>
@@ -233,7 +229,7 @@ export default function RebanhoPage() {
           <div className="w-full min-h-[240px] flex items-center justify-center border border-zinc-200 rounded-xl bg-zinc-50/50">
             <div className="flex flex-col items-center gap-2 text-zinc-400">
               <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
-              <span className="text-sm font-medium">Carregando búfalos...</span>
+              <span className="text-sm font-medium">{t('table.loading')}</span>
             </div>
           </div>
         ) : (
@@ -253,24 +249,24 @@ export default function RebanhoPage() {
             emptyState={
               <TableEmptyState
                 icon={Database}
-                title={hasActivePropriedade ? "Nenhum búfalo encontrado" : "Selecione uma propriedade"}
+                title={hasActivePropriedade ? t('table.emptyTitle') : t('table.emptyTitleNoProperty')}
                 description={
                   hasActivePropriedade
-                    ? "Não há búfalos cadastrados para esta propriedade."
-                    : "Escolha uma propriedade para visualizar o rebanho."
+                    ? t('table.emptyDesc')
+                    : t('table.emptyDescNoProperty')
                 }
               />
             }
           >
             <TableHeader>
-              <TableHead>Nome</TableHead>
-              <TableHead>Brinco</TableHead>
-              <TableHead>Sexo</TableHead>
-              <TableHead>Maturidade</TableHead>
-              <TableHead>Raça</TableHead>
-              <TableHead>Grupo</TableHead>
-              <TableHead>Nascimento</TableHead>
-              <TableHead align="right">Status</TableHead>
+              <TableHead>{t('table.headers.name')}</TableHead>
+              <TableHead>{t('table.headers.tag')}</TableHead>
+              <TableHead>{t('table.headers.sex')}</TableHead>
+              <TableHead>{t('table.headers.maturity')}</TableHead>
+              <TableHead>{t('table.headers.breed')}</TableHead>
+              <TableHead>{t('table.headers.group')}</TableHead>
+              <TableHead>{t('table.headers.birthDate')}</TableHead>
+              <TableHead align="right">{t('table.headers.status')}</TableHead>
             </TableHeader>
             <TableBody>
               {bufalos.map((bufalo) => (
@@ -307,7 +303,7 @@ export default function RebanhoPage() {
                   </TableCell>
                   <TableCell align="right">
                     <Badge type={bufalo.status ? "active" : "inactive"}>
-                      {bufalo.status ? "Ativo" : "Inativo"}
+                      {bufalo.status ? t('status.active') : t('status.inactive')}
                     </Badge>
                   </TableCell>
                 </TableRow>

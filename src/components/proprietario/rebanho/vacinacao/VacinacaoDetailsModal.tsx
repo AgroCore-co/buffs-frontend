@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   Syringe, Pencil, Trash2, Calendar, Clock,
@@ -77,6 +78,7 @@ interface Props {
 }
 
 export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade, onMutated }: Props) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.vacinacao");
   const [view, setView] = useState<View>("details");
   const [form, setForm] = useState<FormState>({
     idMedicacao: "", dtAplicacao: "", dosagem: "", unidade_medida: "ml",
@@ -125,40 +127,40 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
           dtRetorno:         form.necessita_retorno ? (form.dtRetorno || null) : null,
         },
       });
-      toast.success("Registro atualizado com sucesso.");
+      toast.success(t("modal.toast.updated"));
       onMutated?.();
       setView("details");
     } catch {
-      toast.error("Erro ao atualizar registro.");
+      toast.error(t("modal.toast.errorUpdate"));
     }
   };
 
   const handleDelete = async () => {
     try {
       await deleteVacinacao(registro.idSanit);
-      toast.success("Registro removido com sucesso.");
+      toast.success(t("modal.toast.removed"));
       onMutated?.();
       onClose();
     } catch {
-      toast.error("Erro ao remover registro.");
+      toast.error(t("modal.toast.errorRemove"));
     }
   };
 
   const handleRestore = async () => {
     try {
       await restoreVacinacao(registro.idSanit);
-      toast.success("Registro restaurado com sucesso.");
+      toast.success(t("modal.toast.restored"));
       onMutated?.();
       onClose();
     } catch {
-      toast.error("Erro ao restaurar registro.");
+      toast.error(t("modal.toast.errorRestore"));
     }
   };
 
   const titles: Record<View, string> = {
-    details:          "Registro de Vacinação",
-    edit:             "Editar Vacinação",
-    "confirm-delete": "Remover Vacinação",
+    details:          t("modal.detailsTitle"),
+    edit:             t("modal.editTitle"),
+    "confirm-delete": t("modal.removeTitle"),
   };
 
   // ─── View: Detalhes ──────────────────────────────────────────────────────────
@@ -170,19 +172,19 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
       <div className="flex items-center flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
           <Syringe className="w-3.5 h-3.5" />
-          Vacinação
+          {t("modal.vaccineBadge")}
         </span>
         {isDeleted && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 text-zinc-500 rounded-full text-xs font-semibold">
             <XCircle className="w-3.5 h-3.5" />
-            Removido
+            {t("modal.status.removed")}
           </span>
         )}
       </div>
 
       {/* Nome da vacina em destaque */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Vacina</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">{t("modal.fields.vaccine")}</p>
         <p className="text-2xl font-bold text-zinc-900">{medicacao?.medicacao ?? "—"}</p>
         {medicacao?.descricao && (
           <p className="text-sm text-zinc-500 mt-1">{medicacao.descricao}</p>
@@ -191,19 +193,19 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
 
       {/* Grid de informações */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-        <InfoField label="Doença / Prevenção">
+        <InfoField label={t("modal.fields.disease")}>
           <span className="capitalize">{registro.doenca}</span>
         </InfoField>
-        <InfoField label="Data de Aplicação">
+        <InfoField label={t("modal.fields.applicationDate")}>
           <span className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-zinc-400" />
             {formatDate(registro.dtAplicacao)}
           </span>
         </InfoField>
-        <InfoField label="Dosagem">
+        <InfoField label={t("modal.fields.dosage")}>
           <span className="font-mono">{registro.dosagem} {registro.unidadeMedida}</span>
         </InfoField>
-        <InfoField label="Tipo de Tratamento">
+        <InfoField label={t("modal.fields.treatmentType")}>
           {medicacao?.tipoTratamento ?? "—"}
         </InfoField>
       </div>
@@ -212,33 +214,33 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
       <div className={`rounded-xl p-4 border ${registro.necessitaRetorno ? "bg-amber-50 border-amber-200" : "bg-zinc-50 border-zinc-100"}`}>
         <div className="flex items-center gap-2">
           <Clock className={`w-4 h-4 ${registro.necessitaRetorno ? "text-amber-500" : "text-zinc-400"}`} />
-          <span className="text-sm font-semibold text-zinc-700">Reforço / Retorno</span>
+          <span className="text-sm font-semibold text-zinc-700">{t("modal.fields.booster")}</span>
           <span className={`ml-auto text-xs font-semibold px-2.5 py-0.5 rounded-full ${registro.necessitaRetorno ? "bg-amber-100 text-amber-700" : "bg-zinc-100 text-zinc-400"}`}>
-            {registro.necessitaRetorno ? "Necessário" : "Não necessário"}
+            {registro.necessitaRetorno ? t("modal.returnStatus.necessary") : t("modal.returnStatus.notNecessary")}
           </span>
         </div>
         {registro.necessitaRetorno && (
           <p className={`text-sm mt-2 font-medium ${registro.dtRetorno ? "text-amber-700" : "text-amber-500"}`}>
             {registro.dtRetorno
-              ? <>Previsto para <strong>{formatDate(registro.dtRetorno)}</strong></>
-              : "Data de retorno não definida"}
+              ? <>{t("modal.returnStatus.scheduledFor")} <strong>{formatDate(registro.dtRetorno)}</strong></>
+              : t("modal.returnStatus.dateNotDefined")}
           </p>
         )}
       </div>
 
       {/* Observação */}
       {registro.observacao && (
-        <InfoField label="Observação">
+        <InfoField label={t("modal.fields.observation")}>
           <span className="text-zinc-600 font-normal">{registro.observacao}</span>
         </InfoField>
       )}
 
       {/* Timestamps */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-4 border-t border-zinc-100">
-        <InfoField label="Criado em">{formatDate(registro.createdAt)}</InfoField>
-        <InfoField label="Atualizado em">{formatDate(registro.updatedAt)}</InfoField>
+        <InfoField label={t("modal.fields.createdAt")}>{formatDate(registro.createdAt)}</InfoField>
+        <InfoField label={t("modal.fields.updatedAt")}>{formatDate(registro.updatedAt)}</InfoField>
         {isDeleted && (
-          <InfoField label="Removido em">
+          <InfoField label={t("modal.fields.removedAt")}>
             <span className="text-red-500">{formatDate(registro.deletedAt)}</span>
           </InfoField>
         )}
@@ -249,17 +251,17 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
         {isDeleted ? (
           <Button variant="outline" size="sm" isLoading={isRestoringVacinacao} onClick={handleRestore}>
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-            Restaurar registro
+            {t("modal.actions.restore")}
           </Button>
         ) : (
           <>
             <Button variant="danger" size="sm" onClick={() => setView("confirm-delete")}>
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Remover
+              {t("modal.actions.remove")}
             </Button>
             <Button variant="primary" size="sm" onClick={() => setView("edit")}>
               <Pencil className="w-3.5 h-3.5 mr-1.5" />
-              Editar
+              {t("modal.actions.edit")}
             </Button>
           </>
         )}
@@ -277,24 +279,23 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
         className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 transition-colors w-fit"
       >
         <ChevronLeft className="w-3.5 h-3.5" />
-        Voltar aos detalhes
+        {t("modal.actions.backToDetails")}
       </button>
 
       <div className="grid grid-cols-2 gap-4">
 
         {/* Vacina */}
         <div className="space-y-1.5 col-span-2">
-          <label className="text-sm font-medium text-zinc-700">Vacina</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.vaccine")}</label>
           <select
             value={form.idMedicacao}
             onChange={e => setForm(f => ({ ...f, idMedicacao: e.target.value }))}
             className={inputClass}
           >
-            {/* Garante a opção atual mesmo que a lista ainda não tenha carregado */}
             {form.idMedicacao && !vacinas.some(v => v.idMedicacao === form.idMedicacao) && (
-              <option value={form.idMedicacao}>{medicacao?.medicacao ?? "Vacina atual"}</option>
+              <option value={form.idMedicacao}>{medicacao?.medicacao ?? t("modal.fields.selectVaccine")}</option>
             )}
-            <option value="">Selecione a vacina</option>
+            <option value="">{t("modal.fields.selectVaccine")}</option>
             {vacinas.map(v => (
               <option key={v.idMedicacao} value={v.idMedicacao}>
                 {v.medicacao}{v.descricao ? ` — ${v.descricao}` : ""}
@@ -305,7 +306,7 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
 
         {/* Data de aplicação */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Data de Aplicação</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.applicationDate")}</label>
           <input
             type="date"
             required
@@ -317,7 +318,7 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
 
         {/* Doença */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Doença / Prevenção</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.disease")}</label>
           <input
             type="text"
             value={form.doenca}
@@ -328,7 +329,7 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
 
         {/* Dosagem */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Dosagem</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.dosage")}</label>
           <input
             type="number"
             step="0.01"
@@ -341,7 +342,7 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
 
         {/* Unidade de medida */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Unidade de Medida</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.unit")}</label>
           <select
             value={form.unidade_medida}
             onChange={e => setForm(f => ({ ...f, unidade_medida: e.target.value }))}
@@ -363,13 +364,13 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
           />
           <div className="w-10 h-6 bg-zinc-200 rounded-full peer peer-checked:bg-[#ce7d0a] transition-colors duration-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-200 peer-checked:after:translate-x-4" />
         </label>
-        <span className="text-sm font-medium text-zinc-700">Necessita de reforço/retorno</span>
+        <span className="text-sm font-medium text-zinc-700">{t("modal.fields.needsBooster")}</span>
       </div>
 
       {/* Data de retorno */}
       {form.necessita_retorno && (
         <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-          <label className="text-sm font-medium text-zinc-700">Data de Retorno</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.returnDate")}</label>
           <input
             type="date"
             min={form.dtAplicacao}
@@ -382,10 +383,10 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
 
       <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
         <Button type="button" variant="outline" onClick={() => setView("details")} disabled={isUpdatingVacinacao}>
-          Cancelar
+          {t("modal.actions.cancel")}
         </Button>
         <Button type="submit" variant="primary" isLoading={isUpdatingVacinacao}>
-          Salvar Alterações
+          {t("modal.actions.saveChanges")}
         </Button>
       </div>
     </form>
@@ -399,22 +400,21 @@ export function VacinacaoDetailsModal({ isOpen, onClose, registro, idPropriedade
         <Trash2 className="w-6 h-6 text-red-600" />
       </div>
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-zinc-900">Remover este registro?</h3>
+        <h3 className="text-base font-semibold text-zinc-900">{t("modal.confirmRemove.title")}</h3>
         <p className="text-sm text-zinc-500 leading-relaxed">
-          A vacinação de{" "}
-          <span className="font-semibold text-zinc-700">{medicacao?.medicacao ?? registro.doenca}</span>{" "}
-          aplicada em{" "}
-          <span className="font-semibold text-zinc-700">{formatDate(registro.dtAplicacao)}</span>{" "}
-          será removida. Você pode restaurá-la depois em registros removidos.
+          {t("modal.confirmRemove.description", {
+            vaccine: medicacao?.medicacao ?? registro.doenca,
+            date: formatDate(registro.dtAplicacao),
+          })}
         </p>
       </div>
       <div className="flex gap-3 w-full">
         <Button variant="outline" className="flex-1" onClick={() => setView("details")} disabled={isDeletingVacinacao}>
-          Cancelar
+          {t("modal.actions.cancel")}
         </Button>
         <Button variant="danger" className="flex-1" isLoading={isDeletingVacinacao} onClick={handleDelete}>
           <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-          Sim, remover
+          {t("modal.actions.yesRemove")}
         </Button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -50,11 +51,11 @@ function mapTipoTratamento(tipoTratamento?: string): TipoTratamento {
   return "doenca";
 }
 
-const TIPO_CONFIG: Record<TipoTratamento, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-  suplementacao: { label: "Suplementação",        color: "text-blue-700",   bg: "bg-blue-100",   icon: Link2       },
-  parasita:      { label: "Parasitas/Vermifugação", color: "text-orange-700", bg: "bg-orange-100", icon: Flame       },
-  doenca:        { label: "Doença/Tratamento",     color: "text-red-700",    bg: "bg-red-100",    icon: AlertCircle },
-  vacina:        { label: "Vacinação",             color: "text-green-700",  bg: "bg-green-100",  icon: Syringe     },
+const TIPO_CONFIG: Record<TipoTratamento, { color: string; bg: string; icon: React.ElementType }> = {
+  suplementacao: { color: "text-blue-700",   bg: "bg-blue-100",   icon: Link2       },
+  parasita:      { color: "text-orange-700", bg: "bg-orange-100", icon: Flame       },
+  doenca:        { color: "text-red-700",    bg: "bg-red-100",    icon: AlertCircle },
+  vacina:        { color: "text-green-700",  bg: "bg-green-100",  icon: Syringe     },
 };
 
 const UNIDADES = ["ml", "mL", "dose", "g", "mg", "comprimido", "UI", "mL/kg"];
@@ -80,6 +81,7 @@ interface Props {
 }
 
 export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated }: Props) {
+  const t = useTranslations("Proprietario.rebanho.bufalo.sanitario");
   const queryClient = useQueryClient();
   const [view, setView] = useState<View>("details");
   const [form, setForm] = useState<FormState>({
@@ -122,31 +124,31 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
     mutationFn: ({ id, data }: { id: string; data: Partial<DadoSanitarioDTO> }) =>
       dadosSanitariosService.update(id, data),
     onSuccess: () => {
-      toast.success("Registro atualizado com sucesso.");
+      toast.success(t("modal.toast.updated"));
       invalidar();
       setView("details");
     },
-    onError: () => toast.error("Erro ao atualizar registro."),
+    onError: () => toast.error(t("modal.toast.errorUpdate")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => dadosSanitariosService.delete(id),
     onSuccess: () => {
-      toast.success("Registro removido com sucesso.");
+      toast.success(t("modal.toast.removed"));
       invalidar();
       onClose();
     },
-    onError: () => toast.error("Erro ao remover registro."),
+    onError: () => toast.error(t("modal.toast.errorRemove")),
   });
 
   const restoreMutation = useMutation({
     mutationFn: (id: string) => dadosSanitariosService.restore(id),
     onSuccess: () => {
-      toast.success("Registro restaurado com sucesso.");
+      toast.success(t("modal.toast.restored"));
       invalidar();
       onClose();
     },
-    onError: () => toast.error("Erro ao restaurar registro."),
+    onError: () => toast.error(t("modal.toast.errorRestore")),
   });
 
   if (!registro) return null;
@@ -173,9 +175,9 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
   };
 
   const titles: Record<View, string> = {
-    details:        "Registro Sanitário",
-    edit:           "Editar Registro",
-    "confirm-delete": "Remover Registro",
+    details:          t("modal.detailsTitle"),
+    edit:             t("modal.editTitle"),
+    "confirm-delete": t("modal.removeTitle"),
   };
 
   // ─── View: Detalhes ──────────────────────────────────────────────────────────
@@ -187,19 +189,19 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
       <div className="flex items-center flex-wrap gap-2">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.color}`}>
           <TipoIcon className="w-3.5 h-3.5" />
-          {cfg.label}
+          {t(`tipoConfig.${tipo}`)}
         </span>
         {isDeleted && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 text-zinc-500 rounded-full text-xs font-semibold">
             <XCircle className="w-3.5 h-3.5" />
-            Removido
+            {t("modal.status.removed")}
           </span>
         )}
       </div>
 
       {/* Nome da medicação em destaque */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Medicação</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">{t("modal.fields.medication")}</p>
         <p className="text-2xl font-bold text-zinc-900">{medicacao?.medicacao ?? "—"}</p>
         {medicacao?.descricao && (
           <p className="text-sm text-zinc-500 mt-1">{medicacao.descricao}</p>
@@ -208,19 +210,19 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
 
       {/* Grid de informações */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-        <InfoField label="Doença / Condição">
+        <InfoField label={t("modal.fields.disease")}>
           <span className="capitalize">{registro.doenca}</span>
         </InfoField>
-        <InfoField label="Data de Aplicação">
+        <InfoField label={t("modal.fields.applicationDate")}>
           <span className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-zinc-400" />
             {formatDate(registro.dtAplicacao)}
           </span>
         </InfoField>
-        <InfoField label="Dosagem">
+        <InfoField label={t("modal.fields.dosage")}>
           <span className="font-mono">{registro.dosagem} {registro.unidadeMedida}</span>
         </InfoField>
-        <InfoField label="Tipo de Tratamento">
+        <InfoField label={t("modal.fields.treatmentType")}>
           {medicacao?.tipoTratamento ?? "—"}
         </InfoField>
       </div>
@@ -229,33 +231,33 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
       <div className={`rounded-xl p-4 border ${registro.necessitaRetorno ? "bg-amber-50 border-amber-200" : "bg-zinc-50 border-zinc-100"}`}>
         <div className="flex items-center gap-2">
           <Clock className={`w-4 h-4 ${registro.necessitaRetorno ? "text-amber-500" : "text-zinc-400"}`} />
-          <span className="text-sm font-semibold text-zinc-700">Retorno</span>
+          <span className="text-sm font-semibold text-zinc-700">{t("modal.fields.return")}</span>
           <span className={`ml-auto text-xs font-semibold px-2.5 py-0.5 rounded-full ${registro.necessitaRetorno ? "bg-amber-100 text-amber-700" : "bg-zinc-100 text-zinc-400"}`}>
-            {registro.necessitaRetorno ? "Necessário" : "Não necessário"}
+            {registro.necessitaRetorno ? t("modal.returnStatus.necessary") : t("modal.returnStatus.notNecessary")}
           </span>
         </div>
         {registro.necessitaRetorno && (
           <p className={`text-sm mt-2 font-medium ${registro.dtRetorno ? "text-amber-700" : "text-amber-500"}`}>
             {registro.dtRetorno
-              ? <>Previsto para <strong>{formatDate(registro.dtRetorno)}</strong></>
-              : "Data de retorno não definida"}
+              ? <>{t("modal.returnStatus.scheduledFor")} <strong>{formatDate(registro.dtRetorno)}</strong></>
+              : t("modal.returnStatus.dateNotDefined")}
           </p>
         )}
       </div>
 
       {/* Observação */}
       {registro.observacao && (
-        <InfoField label="Observação">
+        <InfoField label={t("modal.fields.observation")}>
           <span className="text-zinc-600 font-normal">{registro.observacao}</span>
         </InfoField>
       )}
 
       {/* Timestamps */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-4 border-t border-zinc-100">
-        <InfoField label="Criado em">{formatDate(registro.createdAt)}</InfoField>
-        <InfoField label="Atualizado em">{formatDate(registro.updatedAt)}</InfoField>
+        <InfoField label={t("modal.fields.createdAt")}>{formatDate(registro.createdAt)}</InfoField>
+        <InfoField label={t("modal.fields.updatedAt")}>{formatDate(registro.updatedAt)}</InfoField>
         {isDeleted && (
-          <InfoField label="Removido em">
+          <InfoField label={t("modal.fields.removedAt")}>
             <span className="text-red-500">{formatDate(registro.deletedAt)}</span>
           </InfoField>
         )}
@@ -271,17 +273,17 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
             onClick={() => restoreMutation.mutate(registro.idSanit)}
           >
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-            Restaurar registro
+            {t("modal.actions.restore")}
           </Button>
         ) : (
           <>
             <Button variant="danger" size="sm" onClick={() => setView("confirm-delete")}>
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Remover
+              {t("modal.actions.remove")}
             </Button>
             <Button variant="primary" size="sm" onClick={() => setView("edit")}>
               <Pencil className="w-3.5 h-3.5 mr-1.5" />
-              Editar
+              {t("modal.actions.edit")}
             </Button>
           </>
         )}
@@ -299,14 +301,14 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
         className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 transition-colors w-fit"
       >
         <ChevronLeft className="w-3.5 h-3.5" />
-        Voltar aos detalhes
+        {t("modal.actions.backToDetails")}
       </button>
 
       <div className="grid grid-cols-2 gap-4">
 
         {/* Data de aplicação */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Data de Aplicação</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.applicationDate")}</label>
           <input
             type="date"
             required
@@ -318,7 +320,7 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
 
         {/* Dosagem */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Dosagem</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.dosage")}</label>
           <input
             type="number"
             required
@@ -332,7 +334,7 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
 
         {/* Unidade de medida */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-700">Unidade de Medida</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.unit")}</label>
           <select
             value={form.unidade_medida}
             onChange={e => setForm(f => ({ ...f, unidade_medida: e.target.value }))}
@@ -344,7 +346,7 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
 
         {/* Doença com autocomplete */}
         <div className="space-y-1.5 relative">
-          <label className="text-sm font-medium text-zinc-700">Doença / Condição</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.disease")}</label>
           <input
             type="text"
             required
@@ -390,13 +392,13 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
           />
           <div className="w-10 h-6 bg-zinc-200 rounded-full peer peer-checked:bg-[#ce7d0a] transition-colors duration-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-200 peer-checked:after:translate-x-4" />
         </label>
-        <span className="text-sm font-medium text-zinc-700">Necessita de retorno</span>
+        <span className="text-sm font-medium text-zinc-700">{t("modal.fields.needsReturn")}</span>
       </div>
 
       {/* Data de retorno */}
       {form.necessita_retorno && (
         <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-          <label className="text-sm font-medium text-zinc-700">Data de Retorno</label>
+          <label className="text-sm font-medium text-zinc-700">{t("modal.fields.returnDate")}</label>
           <input
             type="date"
             min={form.dtAplicacao}
@@ -409,10 +411,10 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
 
       <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
         <Button type="button" variant="outline" onClick={() => setView("details")} disabled={updateMutation.isPending}>
-          Cancelar
+          {t("modal.actions.cancel")}
         </Button>
         <Button type="submit" variant="primary" isLoading={updateMutation.isPending}>
-          Salvar Alterações
+          {t("modal.actions.saveChanges")}
         </Button>
       </div>
     </form>
@@ -426,13 +428,12 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
         <Trash2 className="w-6 h-6 text-red-600" />
       </div>
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-zinc-900">Remover este registro?</h3>
+        <h3 className="text-base font-semibold text-zinc-900">{t("modal.confirmRemove.title")}</h3>
         <p className="text-sm text-zinc-500 leading-relaxed">
-          O registro de{" "}
-          <span className="font-semibold text-zinc-700">{medicacao?.medicacao ?? registro.doenca}</span>{" "}
-          aplicado em{" "}
-          <span className="font-semibold text-zinc-700">{formatDate(registro.dtAplicacao)}</span>{" "}
-          será removido. Você pode restaurá-lo depois na aba de registros removidos.
+          {t("modal.confirmRemove.description", {
+            medication: medicacao?.medicacao ?? registro.doenca,
+            date: formatDate(registro.dtAplicacao),
+          })}
         </p>
       </div>
       <div className="flex gap-3 w-full">
@@ -442,7 +443,7 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
           onClick={() => setView("details")}
           disabled={deleteMutation.isPending}
         >
-          Cancelar
+          {t("modal.actions.cancel")}
         </Button>
         <Button
           variant="danger"
@@ -451,7 +452,7 @@ export function DadoSanitarioDetailsModal({ isOpen, onClose, registro, onMutated
           onClick={() => deleteMutation.mutate(registro.idSanit)}
         >
           <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-          Sim, remover
+          {t("modal.actions.yesRemove")}
         </Button>
       </div>
     </div>

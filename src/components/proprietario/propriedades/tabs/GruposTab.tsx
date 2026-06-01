@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useGrupos, useGruposByPropriedade } from "@/hooks/useGrupos";
 import { useLotesByPropriedade } from "@/hooks/useLotes";
 import { Lote } from "@/services/lotes.service";
@@ -24,6 +25,7 @@ interface GruposTabProps {
 }
 
 export default function GruposTab({ idPropriedade }: GruposTabProps) {
+  const t = useTranslations("Proprietario.detalhes.grupos");
   const [page, setPage] = useState(1);
   const limit = 12;
 
@@ -186,7 +188,7 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
       <div className="w-full min-h-[400px] flex items-center justify-center border border-zinc-200 rounded-xl bg-zinc-50/50">
         <div className="flex flex-col items-center gap-2 text-zinc-400">
           <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
-          <span className="text-sm font-medium">Carregando grupos...</span>
+          <span className="text-sm font-medium">{t("loading")}</span>
         </div>
       </div>
     );
@@ -198,10 +200,10 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-zinc-900 tracking-tight">
-            Grupos de Manejo
+            {t("title")}
           </h2>
           <p className="text-sm text-zinc-500 mt-1">
-            Gerencie as divisões e categorias do rebanho nesta propriedade.
+            {t("subtitle")}
           </p>
         </div>
         <Button
@@ -210,7 +212,7 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
           icon={Plus}
           className="shrink-0"
         >
-          Novo Grupo
+          {t("newGroup")}
         </Button>
       </div>
 
@@ -220,14 +222,13 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
             <Hash className="w-6 h-6 text-zinc-400" />
           </div>
           <h3 className="text-sm font-semibold text-zinc-900 mb-1">
-            Nenhum grupo encontrado
+            {t("empty")}
           </h3>
           <p className="text-sm text-zinc-500 max-w-sm mb-4">
-            Você ainda não tem grupos cadastrados para esta propriedade. Crie
-            o primeiro grupo para organizar seu rebanho.
+            {t("emptyDesc")}
           </p>
           <Button onClick={handleOpenCreate} variant="secondary">
-            Criar meu primeiro grupo
+            {t("createFirst")}
           </Button>
         </div>
       ) : (
@@ -259,7 +260,7 @@ export default function GruposTab({ idPropriedade }: GruposTabProps) {
                 <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center text-[11px] text-zinc-500 gap-1.5">
                   <Calendar className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate">
-                    Criado em{" "}
+                    {t("createdAt")}{" "}
                     {new Date(grupo.createdAt).toLocaleDateString("pt-BR")}
                   </span>
                 </div>

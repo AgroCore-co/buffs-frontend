@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 import { useBufalo } from "@/hooks/useBufalos";
 
@@ -20,16 +21,6 @@ import { ZootecnicoTab }   from "@/components/proprietario/rebanho/ZootecnicoTab
 
 import { ArrowLeft, Beef, Calendar, Tag } from "lucide-react";
 
-// ─── Mapeamentos (usados apenas no header) ────────────────────────────────────
-
-const SEXO_MAP: Record<string, string> = { M: "Macho", F: "Fêmea" };
-const MATURIDADE_MAP: Record<string, string> = {
-  B: "Bezerro",
-  N: "Novilha",
-  V: "Vaca / Adulto",
-  T: "Touro / Adulto",
-};
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(value?: string | null) {
@@ -42,6 +33,7 @@ function formatDate(value?: string | null) {
 
 export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const t = useTranslations('BufaloPage');
   const { id } = React.use(params);
   const [activeTab, setActiveTab] = useState("visao-geral");
 
@@ -50,12 +42,12 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <BackBtn onClick={() => router.back()} />
+        <BackBtn label={t('back')} onClick={() => router.back()} />
         <Container className="p-5">
           <div className="w-full min-h-[200px] flex items-center justify-center">
             <div className="flex flex-col items-center gap-2 text-zinc-400">
               <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
-              <span className="text-sm font-medium">Carregando prontuário...</span>
+              <span className="text-sm font-medium">{t('loading')}</span>
             </div>
           </div>
         </Container>
@@ -66,18 +58,21 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
   if (!bufalo) {
     return (
       <div className="flex flex-col gap-4">
-        <BackBtn onClick={() => router.back()} />
+        <BackBtn label={t('back')} onClick={() => router.back()} />
         <Container className="p-5 flex flex-col items-center gap-2 py-12">
           <Beef className="w-8 h-8 text-zinc-300" />
-          <p className="text-sm font-semibold text-zinc-500">Búfalo não encontrado.</p>
+          <p className="text-sm font-semibold text-zinc-500">{t('notFound')}</p>
         </Container>
       </div>
     );
   }
 
+  const sexLabel = bufalo.sexo ? (t.has(`sex.${bufalo.sexo}`) ? t(`sex.${bufalo.sexo}` as 'sex.M') : bufalo.sexo) : '';
+  const maturityLabel = bufalo.nivelMaturidade ? (t.has(`maturity.${bufalo.nivelMaturidade}`) ? t(`maturity.${bufalo.nivelMaturidade}` as 'maturity.B') : bufalo.nivelMaturidade) : '';
+
   return (
     <div className="flex flex-col gap-4">
-      <BackBtn onClick={() => router.back()} />
+      <BackBtn label={t('back')} onClick={() => router.back()} />
 
       {/* ── Header ──────────────────────────────────────────────── */}
       <Container className="p-5">
@@ -89,7 +84,7 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-xl font-bold text-foreground tracking-tight uppercase">{bufalo.nome}</h1>
               <Badge type={bufalo.status ? "active" : "inactive"}>
-                {bufalo.status ? "Ativo" : "Inativo"}
+                {bufalo.status ? t('status.active') : t('status.inactive')}
               </Badge>
             </div>
             <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground font-medium">
@@ -103,7 +98,7 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
               {bufalo.sexo && (
                 <>
                   <span className="w-1 h-1 rounded-full bg-border" />
-                  <span>{SEXO_MAP[bufalo.sexo] ?? bufalo.sexo} · {MATURIDADE_MAP[bufalo.nivelMaturidade] ?? bufalo.nivelMaturidade}</span>
+                  <span>{sexLabel} · {maturityLabel}</span>
                 </>
               )}
             </div>
@@ -115,16 +110,16 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
       <Container className="pt-2 px-6 w-full min-w-0">
         <TabNav
           tabs={[
-            { key: "visao-geral",    label: "Visão Geral"   },
-            { key: "zootecnico",     label: "Zootécnico"    },
-            { key: "reproducao",     label: "Reprodução"    },
+            { key: "visao-geral",    label: t('tabs.overview')      },
+            { key: "zootecnico",     label: t('tabs.zootechnical')  },
+            { key: "reproducao",     label: t('tabs.reproduction')  },
             // Produção (ordenha) só faz sentido para fêmeas
-            ...(bufalo.sexo === "F" ? [{ key: "producao", label: "Produção" }] : []),
-            { key: "sanitario",      label: "Sanitário"     },
-            { key: "movimentacoes",  label: "Movimentações" },
-            { key: "desempenho",     label: "Desempenho"    },
-            { key: "eventos",        label: "Eventos"       },
-            { key: "genealogia",     label: "Genealogia"    },
+            ...(bufalo.sexo === "F" ? [{ key: "producao", label: t('tabs.production') }] : []),
+            { key: "sanitario",      label: t('tabs.health')        },
+            { key: "movimentacoes",  label: t('tabs.movements')     },
+            { key: "desempenho",     label: t('tabs.performance')   },
+            { key: "eventos",        label: t('tabs.events')        },
+            { key: "genealogia",     label: t('tabs.genealogy')     },
           ]}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -183,14 +178,14 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
   );
 }
 
-function BackBtn({ onClick }: { onClick: () => void }) {
+function BackBtn({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <button
       onClick={onClick}
       className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-[var(--color-primary-dark)] transition-colors ml-1 w-fit"
     >
       <ArrowLeft className="w-3 h-3" />
-      Voltar
+      {label}
     </button>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   useAlimentacaoDef,
   useAlimentacaoRegistro,
@@ -26,6 +27,7 @@ interface AlimentacaoTabProps {
 type SubTab = "registros" | "tipos";
 
 export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
+  const t = useTranslations('Alimentacao');
   const [activeTab, setActiveTab] = useState<SubTab>("registros");
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -186,9 +188,9 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-6 h-6 text-red-600" />
             </div>
-            <h3 className="text-lg font-semibold text-zinc-900 mb-1">Confirmar Exclusão</h3>
+            <h3 className="text-lg font-semibold text-zinc-900 mb-1">{t('deleteTitle')}</h3>
             <p className="text-sm text-zinc-500 mb-6">
-              Tem a certeza que deseja eliminar o {activeTab === "registros" ? "registo" : "alimento"}
+              {t('deleteRecord', { type: activeTab === "registros" ? t('record') : t('food') })}
               <span className="font-semibold text-zinc-700 block mt-1">
                 {activeTab === "registros"
                   ? `${(selectedForDelete as AlimentacaoRegistro).alimentacaodef?.tipoAlimentacao} (${(selectedForDelete as AlimentacaoRegistro).quantidade}${(selectedForDelete as AlimentacaoRegistro).unidadeMedida})`
@@ -205,13 +207,13 @@ export default function AlimentacaoTab({ idPropriedade }: AlimentacaoTabProps) {
                 {(isDeletingRegistro || isDeletingDef) && (
                   <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 )}
-                Sim, excluir
+                {t('yesDelete')}
               </button>
               <button
                 onClick={closeAllModals}
                 className="w-full py-2.5 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50"
               >
-                Cancelar
+                {t('cancel')}
               </button>
             </div>
           </div>

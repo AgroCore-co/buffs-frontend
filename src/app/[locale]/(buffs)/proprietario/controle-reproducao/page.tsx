@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Activity, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
 
 import Container from "@/components/ui/Container";
@@ -32,6 +33,7 @@ function statusBadge(status?: string): string {
 const TABLE_LIMIT = 10;
 
 export default function ControleReproducaoPage() {
+  const t = useTranslations('ReproducaoPage');
   const { activeId, activePropriedade } = usePropriedadeStore();
   const hasActive = !!activeId;
 
@@ -57,36 +59,36 @@ export default function ControleReproducaoPage() {
         <div className="flex flex-col gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#404040]">
-              Controle de Reprodução{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
+              {t('title')}{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
             </h1>
             <p className="text-sm text-[#404040]/60 mt-1">
-              Gerencie o ciclo reprodutivo do rebanho, registre inseminações e acompanhe prenhezes.
+              {t('subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
             <MetricCard
-              title="Reproduções em Andamento"
+              title={t('metrics.ongoing')}
               value={fmtMetric(metrics?.totalEmAndamento)}
-              subtitle="Reproduções não concluídas"
+              subtitle={t('metrics.ongoingDesc')}
               icon={<Activity className="w-4 h-4 text-[#ce7d0a]" />}
             />
             <MetricCard
-              title="Reproduções Confirmadas"
+              title={t('metrics.confirmed')}
               value={fmtMetric(metrics?.totalConfirmada)}
-              subtitle="Gestação confirmada"
+              subtitle={t('metrics.confirmedDesc')}
               icon={<CheckCircle2 className="w-4 h-4 text-green-600" />}
             />
             <MetricCard
-              title="Reproduções com Falha"
+              title={t('metrics.failed')}
               value={fmtMetric(metrics?.totalFalha)}
-              subtitle="Falha na reprodução"
+              subtitle={t('metrics.failedDesc')}
               icon={<XCircle className="w-4 h-4 text-red-500" />}
             />
             <MetricCard
-              title="Última Reprodução"
+              title={t('metrics.lastReproduction')}
               value={!hasActive ? "—" : isLoadingMetrics ? "..." : formatDate(metrics?.ultimaDataReproducao)}
-              subtitle="Data da última reprodução"
+              subtitle={t('metrics.lastReproductionDesc')}
               icon={<CalendarDays className="w-4 h-4 text-[#ce7d0a]" />}
             />
           </div>
@@ -96,15 +98,15 @@ export default function ControleReproducaoPage() {
       {/* ── Tabela de registros ───────────────────────────────────── */}
       <Container className="p-5">
         <div className="mb-4">
-          <h2 className="text-2xl font-bold text-[#404040]">Registros de Reprodução</h2>
-          <p className="text-sm text-[#404040]/60 mt-1">Visualização dos registros de coberturas e inseminações.</p>
+          <h2 className="text-2xl font-bold text-[#404040]">{t('table.title')}</h2>
+          <p className="text-sm text-[#404040]/60 mt-1">{t('table.subtitle')}</p>
         </div>
 
         {isLoadingList && hasActive ? (
           <div className="w-full min-h-[240px] flex items-center justify-center border border-zinc-200 rounded-xl bg-zinc-50/50">
             <div className="flex flex-col items-center gap-2 text-zinc-400">
               <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
-              <span className="text-sm font-medium">Carregando registros...</span>
+              <span className="text-sm font-medium">{t('table.loading')}</span>
             </div>
           </div>
         ) : (
@@ -126,23 +128,23 @@ export default function ControleReproducaoPage() {
             emptyState={
               <TableEmptyState
                 icon={Activity}
-                title={hasActive ? "Nenhum registro de reprodução" : "Selecione uma propriedade"}
+                title={hasActive ? t('table.emptyTitle') : t('table.emptyTitleNoProperty')}
                 description={
                   hasActive
-                    ? "Coberturas e inseminações registradas aparecerão aqui."
-                    : "Escolha uma propriedade para visualizar os registros de reprodução."
+                    ? t('table.emptyDesc')
+                    : t('table.emptyDescNoProperty')
                 }
               />
             }
           >
             <TableHeader>
-              <TableHead>Data do Evento</TableHead>
-              <TableHead>Matriz</TableHead>
-              <TableHead>Touro / Semen</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Parto</TableHead>
-              <TableHead align="right">Ocorrência</TableHead>
+              <TableHead>{t('table.headers.eventDate')}</TableHead>
+              <TableHead>{t('table.headers.matrix')}</TableHead>
+              <TableHead>{t('table.headers.bull')}</TableHead>
+              <TableHead>{t('table.headers.type')}</TableHead>
+              <TableHead>{t('table.headers.status')}</TableHead>
+              <TableHead>{t('table.headers.birth')}</TableHead>
+              <TableHead align="right">{t('table.headers.occurrence')}</TableHead>
             </TableHeader>
             <TableBody>
               {registros.map((r: Reproducao) => (
@@ -158,7 +160,7 @@ export default function ControleReproducaoPage() {
                   </TableCell>
                   <TableCell>
                     {r.idSemen ? (
-                      <span className="text-sm italic text-zinc-700">Inseminação Artificial</span>
+                      <span className="text-sm italic text-zinc-700">{t('table.artificialInsemination')}</span>
                     ) : (
                       <div className="flex flex-col">
                         <span className="text-sm text-zinc-800">{r.bufalo_idBufalo?.nome ?? "—"}</span>
@@ -190,7 +192,7 @@ export default function ControleReproducaoPage() {
 
         {hasActive && !isLoadingList && total > 0 && (
           <p className="text-sm text-zinc-500 mt-4">
-            Mostrando {(page - 1) * TABLE_LIMIT + 1} a {Math.min(page * TABLE_LIMIT, total)} de {total} registros
+            {t('table.showing', { from: (page - 1) * TABLE_LIMIT + 1, to: Math.min(page * TABLE_LIMIT, total), total })}
           </p>
         )}
       </Container>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Container from "@/components/ui/Container";
 import { Layers } from "lucide-react";
 
@@ -15,30 +16,23 @@ interface MaturidadeChartProps {
   hasActivePropriedade?: boolean;
 }
 
-const SHORT_LABELS: Record<string, string> = {
-  Bezerro: "Bezerros",
-  Novilha: "Novilhas",
-  Novilho: "Novilhos",
-  Vaca: "Vacas",
-  Touro: "Touros",
-};
-
 export default function MaturidadeChart({
   data,
   isLoading = false,
   hasActivePropriedade = true,
 }: MaturidadeChartProps) {
+  const t = useTranslations('Charts.maturity');
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   const emptyState = !hasActivePropriedade
     ? {
-        title: "Selecione uma propriedade",
-        description: "Escolha uma propriedade para visualizar a distribuição.",
+        title: t('selectProperty'),
+        description: t('selectPropertyDesc'),
       }
     : total === 0
       ? {
-          title: "Nenhum animal encontrado",
-          description: "Cadastre animais para ver a distribuição de maturidade.",
+          title: t('emptyTitle'),
+          description: t('emptyDesc'),
         }
       : null;
 
@@ -48,11 +42,11 @@ export default function MaturidadeChart({
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-gray-800 leading-tight">
-            Distribuição por Maturidade
+            {t('title')}
           </h2>
           {!isLoading && !emptyState && (
             <p className="text-xs text-gray-400 mt-0.5">
-              {total.toLocaleString("pt-BR")} animal{total !== 1 ? "is" : ""} no total
+              {t('totalAnimals', { count: total })}
             </p>
           )}
         </div>
@@ -66,7 +60,7 @@ export default function MaturidadeChart({
       ) : emptyState ? (
         <EmptyState title={emptyState.title} description={emptyState.description} />
       ) : (
-        <DataList data={data} total={total} />
+        <DataList data={data} total={total} t={t} />
       )}
     </Container>
   );
@@ -100,13 +94,14 @@ function EmptyState({ title, description }: { title: string; description: string
   );
 }
 
-function DataList({ data, total }: { data: MaturidadeItem[]; total: number }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function DataList({ data, total, t }: { data: MaturidadeItem[]; total: number; t: any }) {
   return (
     <div className="flex flex-col justify-center gap-4 flex-1 py-1">
       {data.map((item, index) => {
         const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
         const color = item.color || "#CE7D0A";
-        const label = SHORT_LABELS[item.name] ?? item.name;
+        const label = t.has(`labels.${item.name}`) ? t(`labels.${item.name}`) : item.name;
 
         return (
           <div key={`${item.name}-${index}`} className="flex flex-col gap-1.5 group">

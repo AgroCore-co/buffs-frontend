@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useDataIngestion, useJobStatus } from "@/hooks/useDataIngestion";
 import { ExportFiltersDTO } from "@/services/dataIngestion.service";
 import { 
@@ -23,6 +24,7 @@ interface DataIngestionTabProps {
 type CategoryTab = "leite" | "pesagem" | "reproducao";
 
 export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProps) {
+  const t = useTranslations('DataIngestion');
   // ==========================================================================
   // ESTADOS GERAIS
   // ==========================================================================
@@ -135,9 +137,9 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
             {status === "failed" && <XCircle className="w-5 h-5 text-red-500" />}
             <div>
               <h3 className="text-sm font-bold text-zinc-900">
-                {isRunning ? "Processando Planilha..." : status === "completed" ? "Importação Concluída" : "Falha na Importação"}
+                {isRunning ? t('jobStatus.processing') : status === "completed" ? t('jobStatus.completed') : t('jobStatus.failed')}
               </h3>
-              <p className="text-xs text-zinc-500">ID da Tarefa: {activeJobId}</p>
+              <p className="text-xs text-zinc-500">{t('jobStatus.taskId', { id: activeJobId })}</p>
             </div>
           </div>
           {isRunning && <span className="text-sm font-semibold text-blue-600">{(progress * 100).toFixed(0)}%</span>}
@@ -152,15 +154,15 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
         {status === "completed" && result && (
           <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-zinc-100">
             <div className="flex flex-col">
-              <span className="text-xs text-zinc-500 uppercase tracking-wider">Total de Linhas</span>
+              <span className="text-xs text-zinc-500 uppercase tracking-wider">{t('jobStatus.totalRows')}</span>
               <span className="text-lg font-semibold text-zinc-900">{result.totalRows}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-xs text-emerald-600 uppercase tracking-wider">Importados</span>
+              <span className="text-xs text-emerald-600 uppercase tracking-wider">{t('jobStatus.imported')}</span>
               <span className="text-lg font-semibold text-emerald-700">{result.imported}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-xs text-amber-600 uppercase tracking-wider">Ignorados / Alertas</span>
+              <span className="text-xs text-amber-600 uppercase tracking-wider">{t('jobStatus.skippedWarnings')}</span>
               <span className="text-lg font-semibold text-amber-700">{result.skipped}</span>
             </div>
           </div>
@@ -172,13 +174,13 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
             {result.errors?.map((err, idx) => (
               <div key={`err-${idx}`} className="flex items-start gap-2 p-2 bg-red-50 text-red-700 rounded-lg text-xs">
                 <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <p><strong>Linha {err.row}</strong> ({err.field}): {err.message} <span className="opacity-70">[{err.value}]</span></p>
+                <p><strong>{t('jobStatus.row', { row: err.row })}</strong> ({err.field}): {err.message} <span className="opacity-70">[{err.value}]</span></p>
               </div>
             ))}
             {result.warnings?.map((warn, idx) => (
               <div key={`warn-${idx}`} className="flex items-start gap-2 p-2 bg-amber-50 text-amber-700 rounded-lg text-xs">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <p><strong>Linha {warn.row}</strong> ({warn.field}): {warn.message} <span className="opacity-70">[{warn.value}]</span></p>
+                <p><strong>{t('jobStatus.row', { row: warn.row })}</strong> ({warn.field}): {warn.message} <span className="opacity-70">[{warn.value}]</span></p>
               </div>
             ))}
           </div>
@@ -195,22 +197,22 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
       
       {/* HEADER DA TAB */}
       <div>
-        <h2 className="text-lg font-semibold text-zinc-900 tracking-tight">Importação e Exportação de Dados</h2>
-        <p className="text-sm text-zinc-500 mt-1">Carregue planilhas em lote ou baixe relatórios avançados em Excel (.xlsx).</p>
+        <h2 className="text-lg font-semibold text-zinc-900 tracking-tight">{t('title')}</h2>
+        <p className="text-sm text-zinc-500 mt-1">{t('subtitle')}</p>
       </div>
 
       {/* SUB-TABS (Navegação Interna) */}
       <div className="flex items-center gap-6 border-b border-zinc-200">
         <button onClick={() => { setActiveTab("leite"); setActiveJobId(null); setFilters({}); }} className={`pb-3 text-sm font-medium transition-colors relative flex items-center gap-2 ${activeTab === "leite" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-700"}`}>
-          <Milk className="w-4 h-4" /> Produção de Leite
+          <Milk className="w-4 h-4" /> {t('tabs.milk')}
           {activeTab === "leite" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-zinc-900 rounded-t-full" />}
         </button>
         <button onClick={() => { setActiveTab("pesagem"); setActiveJobId(null); setFilters({}); }} className={`pb-3 text-sm font-medium transition-colors relative flex items-center gap-2 ${activeTab === "pesagem" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-700"}`}>
-          <Scale className="w-4 h-4" /> Pesagem Animal
+          <Scale className="w-4 h-4" /> {t('tabs.weighing')}
           {activeTab === "pesagem" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-zinc-900 rounded-t-full" />}
         </button>
         <button onClick={() => { setActiveTab("reproducao"); setActiveJobId(null); setFilters({}); }} className={`pb-3 text-sm font-medium transition-colors relative flex items-center gap-2 ${activeTab === "reproducao" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-700"}`}>
-          <Dna className="w-4 h-4" /> Reprodução
+          <Dna className="w-4 h-4" /> {t('tabs.reproduction')}
           {activeTab === "reproducao" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-zinc-900 rounded-t-full" />}
         </button>
       </div>
@@ -223,9 +225,9 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <UploadCloud className="w-5 h-5 text-zinc-900" />
-            <h3 className="text-base font-semibold text-zinc-900">Importar Planilha</h3>
+            <h3 className="text-base font-semibold text-zinc-900">{t('import.title')}</h3>
           </div>
-          <p className="text-xs text-zinc-500 mb-4">Envie um arquivo .xlsx de até 50MB seguindo o padrão de colunas da plataforma.</p>
+          <p className="text-xs text-zinc-500 mb-4">{t('import.description')}</p>
 
           <div 
             onClick={() => fileInputRef.current?.click()}
@@ -233,10 +235,10 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
           >
             <FileSpreadsheet className={`w-8 h-8 mb-2 ${selectedFile ? 'text-emerald-500' : 'text-zinc-400'}`} />
             <span className="text-sm font-medium text-zinc-900">
-              {selectedFile ? selectedFile.name : "Clique para selecionar um arquivo"}
+              {selectedFile ? selectedFile.name : t('import.selectFile')}
             </span>
             <span className="text-xs text-zinc-500 mt-1">
-              {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : "ou arraste e solte aqui"}
+              {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : t('import.dragDrop')}
             </span>
             <input 
               type="file" 
@@ -253,7 +255,7 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
             className="w-full mt-4 py-2.5 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-zinc-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             {isImporting && <RefreshCw className="w-4 h-4 animate-spin" />}
-            Iniciar Processamento ETL
+            {t('import.startETL')}
           </button>
 
           {/* Renderização do Status do Job (Se houver) */}
@@ -266,15 +268,15 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
         <div className="bg-zinc-50/50 border border-zinc-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <DownloadCloud className="w-5 h-5 text-zinc-900" />
-            <h3 className="text-base font-semibold text-zinc-900">Exportar Dados</h3>
+            <h3 className="text-base font-semibold text-zinc-900">{t('export.title')}</h3>
           </div>
-          <p className="text-xs text-zinc-500 mb-6">Utilize os filtros abaixo para baixar um relatório consolidado em Excel.</p>
+          <p className="text-xs text-zinc-500 mb-6">{t('export.description')}</p>
 
           <div className="space-y-4">
             {/* Filtro de Datas (Comum a todos) */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-700">Data Inicial</label>
+                <label className="text-xs font-medium text-zinc-700">{t('export.startDate')}</label>
                 <input 
                   type="date" 
                   value={filters.de || ""}
@@ -283,7 +285,7 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-700">Data Final</label>
+                <label className="text-xs font-medium text-zinc-700">{t('export.endDate')}</label>
                 <input 
                   type="date" 
                   value={filters.ate || ""}
@@ -295,48 +297,48 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
 
             {/* Filtro de Maturidade (Comum a todos) */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-700">Maturidade do Animal</label>
+              <label className="text-xs font-medium text-zinc-700">{t('export.maturity')}</label>
               <select 
                 value={filters.maturidade || ""}
                 onChange={(e) => setFilters({ ...filters, maturidade: e.target.value as ExportFiltersDTO['maturidade'] })}
                 className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900"
               >
-                <option value="">Todas as maturidades</option>
-                <option value="novilha">Novilha</option>
-                <option value="primipara">Primípara</option>
-                <option value="multipara">Multípara</option>
+                <option value="">{t('export.allMaturities')}</option>
+                <option value="novilha">{t('export.heifer')}</option>
+                <option value="primipara">{t('export.primiparous')}</option>
+                <option value="multipara">{t('export.multiparous')}</option>
               </select>
             </div>
 
             {/* Filtros Específicos por Tab */}
             {activeTab === "pesagem" && (
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-700">Sexo</label>
+                <label className="text-xs font-medium text-zinc-700">{t('export.sex')}</label>
                 <select 
                   value={filters.sexo || ""}
                   onChange={(e) => setFilters({ ...filters, sexo: e.target.value as ExportFiltersDTO['sexo'] })}
                   className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900"
                 >
-                  <option value="">Ambos os sexos</option>
-                  <option value="M">Macho (M)</option>
-                  <option value="F">Fêmea (F)</option>
+                  <option value="">{t('export.bothSexes')}</option>
+                  <option value="M">{t('export.maleM')}</option>
+                  <option value="F">{t('export.femaleF')}</option>
                 </select>
               </div>
             )}
 
             {activeTab === "reproducao" && (
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-700">Tipo de Inseminação</label>
+                <label className="text-xs font-medium text-zinc-700">{t('export.inseminationType')}</label>
                 <select 
                   value={filters.tipo || ""}
                   onChange={(e) => setFilters({ ...filters, tipo: e.target.value as ExportFiltersDTO['tipo'] })}
                   className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900"
                 >
-                  <option value="">Todos os tipos</option>
-                  <option value="MN">Monta Natural (MN)</option>
-                  <option value="IA">Inseminação Artificial (IA)</option>
-                  <option value="IATF">IATF</option>
-                  <option value="TE">Transf. de Embrião (TE)</option>
+                  <option value="">{t('export.allTypes')}</option>
+                  <option value="MN">{t('export.naturalMating')}</option>
+                  <option value="IA">{t('export.artificialInsemination')}</option>
+                  <option value="IATF">{t('export.iatf')}</option>
+                  <option value="TE">{t('export.embryoTransfer')}</option>
                 </select>
               </div>
             )}
@@ -352,7 +354,7 @@ export default function DataIngestionTab({ idPropriedade }: DataIngestionTabProp
             ) : (
               <DownloadCloud className="w-4 h-4" />
             )}
-            Gerar e Baixar Planilha
+            {t('export.generateDownload')}
           </button>
         </div>
 
