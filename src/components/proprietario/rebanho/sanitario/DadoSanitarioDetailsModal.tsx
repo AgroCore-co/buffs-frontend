@@ -6,8 +6,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Syringe, Pencil, Trash2, AlertCircle, Calendar,
-  Clock, ChevronLeft, Flame, Link2, FlaskConical,
-  CheckCircle2, XCircle, RotateCcw,
+  Clock, ChevronLeft, Flame, Link2,
+  XCircle, RotateCcw,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";

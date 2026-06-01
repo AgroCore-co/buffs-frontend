@@ -30,7 +30,7 @@ interface PropriedadeCardWithEnderecoProps {
 function PropriedadeCardWithEndereco({ propriedade, me, onEditar, onDeletar }: PropriedadeCardWithEnderecoProps) {
   const router = useRouter();
   // Usa o hook específico passando o ID diretamente
-  const { data: endereco, isLoading: isLoadingEndereco } = useEndereco(propriedade.idEndereco);
+  const { data: endereco } = useEndereco(propriedade.idEndereco);
   
   return (
     <div

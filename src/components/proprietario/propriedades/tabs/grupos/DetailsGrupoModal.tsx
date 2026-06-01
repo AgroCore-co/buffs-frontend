@@ -245,7 +245,7 @@ export function DetailsGrupoModal({
 
     if (minLat === Infinity) return null;
     return [[minLat, minLng], [maxLat, maxLng]] as [[number, number], [number, number]];
-  }, [lotes, statusGrupo]);
+  }, [lotes, statusGrupo, grupo?.idGrupo]);
 
   const fallbackCenter: [number, number] = mapBounds ? mapBounds[0] : [-24.7366, -48.0673];
 

@@ -207,7 +207,7 @@ export function AlimentacaoFormTipo({
         ? { tipoAlimentacao: initialTipo.tipoAlimentacao, descricao: initialTipo.descricao || "" }
         : { tipoAlimentacao: "", descricao: "" }
     );
-  }, [isOpen]);
+  }, [isOpen, initialTipo]);
 
   if (!isOpen) return null;
 

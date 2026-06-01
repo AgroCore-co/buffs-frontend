@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Syringe, CheckCircle2, History, Calendar, Clock, Trash2, Plus } from "lucide-react";
+import { Syringe, History, Calendar, Clock, Trash2, Plus } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import { Button } from "@/components/ui/Button";
 import { Bufalo } from "@/services/bufalos.service";

@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -86,7 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!isAuthenticated && !isAuthRoute && !isPublicRoute) {
       // Não está logado e tentou acessar área restrita: mostra tela de não autenticado
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowNotAuthenticated(true);
     } 
     else if (isAuthenticated && profile) {

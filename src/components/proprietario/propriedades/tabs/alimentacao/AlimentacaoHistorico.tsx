@@ -40,7 +40,7 @@ interface AlimentacaoHistoricoProps {
 export function AlimentacaoHistorico({
   activeTab,
   onTabChange,
-  page,
+  page: _page,
   onPageChange,
   isLoading,
   registros,

@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
-  Activity, Droplets, RefreshCw, TrendingUp, TrendingDown, AlertCircle,
+  Activity, Droplets, RefreshCw,
   ChevronLeft, ChevronRight, BarChart3, Bell,
 } from "lucide-react";
 import {

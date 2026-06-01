@@ -79,7 +79,6 @@ export default function MapaPiquetes({ idPropriedade }: MapaPiquetesProps) {
 
   useEffect(() => {
     void import("leaflet/dist/leaflet.css");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
