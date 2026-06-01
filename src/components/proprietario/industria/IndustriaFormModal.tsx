@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Building2, User, Phone, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/Modal";
@@ -37,6 +38,7 @@ export function IndustriaFormModal({
   onClose,
   data,
 }: IndustriaFormModalProps) {
+  const t = useTranslations("Proprietario.industria.formModal");
   const isEditing = !!data;
   const { activeId } = usePropriedadeStore();
 
@@ -71,7 +73,7 @@ export function IndustriaFormModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nome.trim()) {
-      toast.error("O nome da indústria é obrigatório.");
+      toast.error(t("toast.nameRequired"));
       return;
     }
 
@@ -81,25 +83,25 @@ export function IndustriaFormModal({
         { id, data: { ...formData, id_propriedade: activeId ?? undefined } },
         {
           onSuccess: () => {
-            toast.success("Indústria atualizada com sucesso!");
+            toast.success(t("toast.updateSuccess"));
             onClose();
           },
-          onError: () => toast.error("Erro ao atualizar os dados."),
+          onError: () => toast.error(t("toast.updateError")),
         },
       );
     } else {
       if (!activeId) {
-        toast.error("Nenhuma propriedade selecionada.");
+        toast.error(t("toast.noProperty"));
         return;
       }
       createMutation.mutate(
         { ...formData, id_propriedade: activeId },
         {
           onSuccess: () => {
-            toast.success("Indústria cadastrada com sucesso!");
+            toast.success(t("toast.createSuccess"));
             onClose();
           },
-          onError: () => toast.error("Erro ao cadastrar a indústria."),
+          onError: () => toast.error(t("toast.createError")),
         },
       );
     }
@@ -112,20 +114,20 @@ export function IndustriaFormModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditing ? "Editar Indústria" : "Nova Indústria"}
+      title={isEditing ? t("editTitle") : t("createTitle")}
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-5 py-2">
         <div className="space-y-1.5">
           <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-[#ce7d0a]" /> Nome da Indústria *
+            <Building2 className="w-4 h-4 text-[#ce7d0a]" /> {t("fields.name")}
           </label>
           <input
             type="text"
             name="nome"
             value={formData.nome}
             onChange={handleChange}
-            placeholder="Ex: Laticínio Valle"
+            placeholder={t("fields.namePlaceholder")}
             className={inputClass}
             required
           />
@@ -134,27 +136,27 @@ export function IndustriaFormModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-              <User className="w-4 h-4 text-[#ce7d0a]" /> Representante
+              <User className="w-4 h-4 text-[#ce7d0a]" /> {t("fields.representative")}
             </label>
             <input
               type="text"
               name="representante"
               value={formData.representante}
               onChange={handleChange}
-              placeholder="Nome do contato"
+              placeholder={t("fields.representativePlaceholder")}
               className={inputClass}
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-              <Phone className="w-4 h-4 text-[#ce7d0a]" /> Contato
+              <Phone className="w-4 h-4 text-[#ce7d0a]" /> {t("fields.contact")}
             </label>
             <input
               type="text"
               name="contato"
               value={formData.contato}
               onChange={handleChange}
-              placeholder="(00) 00000-0000"
+              placeholder={t("fields.contactPlaceholder")}
               className={inputClass}
             />
           </div>
@@ -162,13 +164,13 @@ export function IndustriaFormModal({
 
         <div className="space-y-1.5">
           <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[#ce7d0a]" /> Observações
+            <FileText className="w-4 h-4 text-[#ce7d0a]" /> {t("fields.observations")}
           </label>
           <textarea
             name="observacao"
             value={formData.observacao}
             onChange={handleChange}
-            placeholder="Informações adicionais..."
+            placeholder={t("fields.observationsPlaceholder")}
             rows={3}
             className={`${inputClass} resize-none`}
           />
@@ -181,7 +183,7 @@ export function IndustriaFormModal({
             onClick={onClose}
             disabled={isPending}
           >
-            Cancelar
+            {t("actions.cancel")}
           </Button>
           <Button
             type="submit"
@@ -189,7 +191,7 @@ export function IndustriaFormModal({
             isLoading={isPending}
             className="min-w-[120px] font-bold"
           >
-            {isEditing ? "Salvar Alterações" : "Cadastrar"}
+            {isEditing ? t("actions.save") : t("actions.create")}
           </Button>
         </div>
       </form>

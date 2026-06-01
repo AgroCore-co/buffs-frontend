@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Factory,
   Plus,
@@ -38,6 +39,7 @@ function formatDate(d?: string) {
 // ── page ──────────────────────────────────────────────────────────────────────
 
 export default function IndustriaPage() {
+  const t = useTranslations("Proprietario.industria");
   const { activeId } = usePropriedadeStore();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,11 +69,9 @@ export default function IndustriaPage() {
           <div>
             <h1 className="text-xl font-bold text-[#404040] flex items-center gap-2">
               <Factory size={22} className="text-[#ce7d0a]" />
-              Indústrias
+              {t("title")}
             </h1>
-            <p className="text-sm text-[#404040]/60 mt-0.5">
-              Indústrias e laticínios parceiros cadastrados no sistema.
-            </p>
+            <p className="text-sm text-[#404040]/60 mt-0.5">{t("subtitle")}</p>
           </div>
           <Button
             variant="primary"
@@ -80,7 +80,7 @@ export default function IndustriaPage() {
             className="font-bold shadow-sm shrink-0"
             onClick={() => setIsCriarOpen(true)}
           >
-            Nova Indústria
+            {t("newIndustry")}
           </Button>
         </div>
       </Container>
@@ -95,7 +95,7 @@ export default function IndustriaPage() {
           />
           <input
             type="text"
-            placeholder="Buscar por nome ou representante..."
+            placeholder={t("searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffcf78]/50 focus:border-[#ffcf78] bg-gray-50 transition-all"
@@ -109,17 +109,17 @@ export default function IndustriaPage() {
               icon={PackageSearch}
               title={
                 !activeId
-                  ? "Nenhuma propriedade selecionada"
+                  ? t("empty.noProperty")
                   : searchTerm
-                    ? "Nenhuma indústria encontrada"
-                    : "Nenhuma indústria cadastrada"
+                    ? t("empty.notFound")
+                    : t("empty.none")
               }
               description={
                 !activeId
-                  ? "Selecione uma propriedade no seletor do cabeçalho."
+                  ? t("empty.noPropertyDesc")
                   : searchTerm
-                    ? "Tente buscar por outro termo."
-                    : "Cadastre a primeira indústria parceira desta propriedade."
+                    ? t("empty.notFoundDesc")
+                    : t("empty.noneDesc")
               }
               action={
                 !searchTerm && activeId ? (
@@ -129,7 +129,7 @@ export default function IndustriaPage() {
                     icon={Plus}
                     onClick={() => setIsCriarOpen(true)}
                   >
-                    Nova Indústria
+                    {t("newIndustry")}
                   </Button>
                 ) : undefined
               }
@@ -137,11 +137,11 @@ export default function IndustriaPage() {
           }
         >
           <TableHeader>
-            <TableHead>Nome</TableHead>
-            <TableHead>Representante</TableHead>
-            <TableHead>Contato</TableHead>
-            <TableHead>Observação</TableHead>
-            <TableHead>Cadastrado em</TableHead>
+            <TableHead>{t("headers.name")}</TableHead>
+            <TableHead>{t("headers.representative")}</TableHead>
+            <TableHead>{t("headers.contact")}</TableHead>
+            <TableHead>{t("headers.observation")}</TableHead>
+            <TableHead>{t("headers.registeredAt")}</TableHead>
           </TableHeader>
 
           <TableBody>
@@ -207,7 +207,7 @@ export default function IndustriaPage() {
 
         {!isLoading && filtered.length > 0 && (
           <p className="text-xs text-gray-500 mt-3">
-            Mostrando {filtered.length} registro{filtered.length !== 1 ? "s" : ""}
+            {t("showing", { count: filtered.length })}
           </p>
         )}
       </Container>

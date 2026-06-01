@@ -21,6 +21,7 @@
     "medicamentos": "Medications",
     "lactacao": "Lactation",
     "controleReproducao": "Reproduction Control",
+    "materialGenetico": "Genetic Material",
     "simulacao": "Simulation",
     "coletas": "Collections",
     "industria": "Industry",
@@ -1182,6 +1183,200 @@
       "empty": "No reproductive events",
       "emptyDesc": "Register reproductive events to view them here.",
       "showing": "Showing {from} to {to} of {total} records"
+    },
+    "simulacao": {
+      "title": "Mating Simulator",
+      "subtitle": "Predictive tool for genetic compatibility analysis and F1 offspring production estimation.",
+      "params": {
+        "title": "Mating Parameters",
+        "bullLabel": "1. Select the Sire (Bull)",
+        "matrixLabel": "2. Select the Dam",
+        "selectPlaceholder": "Select...",
+        "selectedBull": "Sire:",
+        "selectedMatrix": "Dam:",
+        "processing": "Processing...",
+        "run": "Run Simulation",
+        "reset": "Clear simulation"
+      },
+      "results": {
+        "title": "Analysis Result",
+        "idle": "Awaiting Data",
+        "idleDesc": "Select a bull and a dam on the left panel to preview the mating forecast.",
+        "loadingDesc": "Crossing genetic data... Verifying pedigrees and inbreeding coefficients.",
+        "highRisk": "High Inbreeding Risk",
+        "moderateRisk": "Moderate Risk",
+        "goodCompatibility": "Excellent Compatibility",
+        "defaultRisk": "Low",
+        "parentage": "Relatedness:",
+        "errorMessage": "Error running simulation. Please try again.",
+        "metrics": {
+          "inbreeding": "Offspring Inbreeding",
+          "inbreedingDesc": "Inbreeding coefficient",
+          "predicted": "Predicted Production",
+          "predictedDesc": "Estimated L/day",
+          "variation": "Variation vs Average",
+          "variationDesc": "Comparative",
+          "avgDesc": "Current average: {avg} L/day",
+          "potential": "Potential",
+          "potentialDesc": "Genetic classification",
+          "riskLevel": "Risk Level",
+          "riskLevelDesc": "Mating not recommended"
+        },
+        "analysis": {
+          "title": "Relatedness Analysis",
+          "kinship": "Kinship Coefficient",
+          "kinshipDesc": "Between selected parents",
+          "relation": "Identified Relation",
+          "relationDesc": "Based on available pedigree",
+          "halfSiblings": "Half-siblings",
+          "noRelation": "No close relation",
+          "offspring": "Offspring Inbreeding",
+          "highRiskDesc": "Risk of inbreeding depression",
+          "moderateRiskDesc": "Monitor in next generations",
+          "noRiskDesc": "Excellent genetic diversity"
+        }
+      },
+      "top5": {
+        "matrices": {
+          "title": "Top 5 Recommended Dams",
+          "subtitle": "Ranked by readiness, age, history and ideal period.",
+          "loading": "Loading dams...",
+          "empty": "No dams found for this property.",
+          "defaultStatus": "Ready"
+        },
+        "bulls": {
+          "title": "Top 5 Recommended Bulls",
+          "subtitle": "Ranked by age, history, success rate and genetics.",
+          "loading": "Loading bulls...",
+          "empty": "No bulls found for this property.",
+          "activeBadge": "Active"
+        },
+        "score": "Score:"
+      }
+    },
+    "industria": {
+      "title": "Industries",
+      "subtitle": "Partner dairies and industries registered in the system.",
+      "newIndustry": "New Industry",
+      "searchPlaceholder": "Search by name or representative...",
+      "showing": "Showing {count} record(s)",
+      "headers": {
+        "name": "Name",
+        "representative": "Representative",
+        "contact": "Contact",
+        "observation": "Observation",
+        "registeredAt": "Registered at"
+      },
+      "empty": {
+        "noProperty": "No property selected",
+        "noPropertyDesc": "Select a property from the header selector.",
+        "notFound": "No industry found",
+        "notFoundDesc": "Try searching with a different term.",
+        "none": "No industries registered",
+        "noneDesc": "Register the first partner industry for this property."
+      },
+      "formModal": {
+        "createTitle": "New Industry",
+        "editTitle": "Edit Industry",
+        "fields": {
+          "name": "Industry Name *",
+          "namePlaceholder": "e.g. Valle Dairy",
+          "representative": "Representative",
+          "representativePlaceholder": "Contact name",
+          "contact": "Contact",
+          "contactPlaceholder": "(00) 00000-0000",
+          "observations": "Observations",
+          "observationsPlaceholder": "Additional information..."
+        },
+        "actions": {
+          "cancel": "Cancel",
+          "save": "Save Changes",
+          "create": "Register"
+        },
+        "toast": {
+          "nameRequired": "Industry name is required.",
+          "noProperty": "No property selected.",
+          "createSuccess": "Industry registered successfully!",
+          "createError": "Error registering industry.",
+          "updateSuccess": "Industry updated successfully!",
+          "updateError": "Error updating industry data."
+        }
+      },
+      "detalheModal": {
+        "title": "Industry Details",
+        "tagline": "Active registration in the system",
+        "contactInfo": "Contact Information",
+        "administrative": "Administrative",
+        "fields": {
+          "representative": "Representative",
+          "contact": "Phone / Contact",
+          "registeredAt": "Registration Date",
+          "id": "Record ID"
+        },
+        "observations": "Observations",
+        "noObservations": "No observations recorded.",
+        "noRepresentative": "No representative",
+        "noContact": "No contact",
+        "actions": {
+          "remove": "Remove Record",
+          "close": "Close",
+          "edit": "Edit Data"
+        },
+        "confirmDelete": {
+          "title": "Confirm Deletion",
+          "heading": "Delete Industry?",
+          "description": "This action will remove the dairy from the system. Historical collection data linked to it may be affected.",
+          "cancel": "Cancel",
+          "confirm": "Yes, Delete"
+        },
+        "toast": {
+          "deleteSuccess": "Industry removed successfully!",
+          "deleteError": "Error removing industry."
+        }
+      }
+    },
+    "coleta": {
+      "title": "Industry Collections",
+      "subtitle": "Buffalo milk production monitoring.",
+      "sectionTitle": "Collection Records",
+      "loading": "Loading...",
+      "totalRegistered": "{count} collections registered",
+      "selectProperty": "Select a property to view collections.",
+      "showing": "Showing {showing} of {total} records",
+      "empty": {
+        "noProperty": "No property selected",
+        "noPropertyDesc": "Select a property from the header selector.",
+        "none": "No collections found",
+        "noneDesc": "There are no collections registered for this property."
+      },
+      "headers": {
+        "date": "Collection Date",
+        "company": "Company",
+        "quantity": "Quantity",
+        "observation": "Observation",
+        "status": "Status"
+      },
+      "status": {
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "modal": {
+        "title": "Collection Details",
+        "loading": "Loading...",
+        "approved": "Collection Approved",
+        "rejected": "Collection Rejected",
+        "testResult": "Test Result",
+        "fields": {
+          "industry": "Industry / Dairy",
+          "representative": "Representative",
+          "contact": "Contact",
+          "date": "Collection Date",
+          "notInformed": "Not informed"
+        },
+        "observations": "Observations",
+        "noObservations": "No observations recorded for this collection.",
+        "close": "Close Details"
+      }
     }
   },
   "Gerente": {
@@ -1441,10 +1636,56 @@
         "type": "Type",
         "status": "Status",
         "birth": "Birth",
-        "occurrence": "Occurrence"
+        "occurrence": "Occurrence",
+        "actions": "Actions"
       },
       "artificialInsemination": "Artificial Insemination",
       "showing": "Showing {from} to {to} of {total} records"
+    },
+    "actions": {
+      "new": "New Record",
+      "edit": "Edit",
+      "delete": "Remove"
+    },
+    "toast": {
+      "deleting": "Removing...",
+      "deleteSuccess": "Record removed successfully.",
+      "deleteError": "Error removing record."
+    },
+    "formModal": {
+      "createTitle": "New Reproductive Event",
+      "editTitle": "Edit Reproductive Event",
+      "fields": {
+        "femea": "Recipient Female",
+        "femeaPlaceholder": "Select a female...",
+        "tipo": "Reproductive Technique",
+        "tipoDesc": {
+          "IA": "Artificial Insemination — uses frozen semen.",
+          "IATF": "Fixed-Time AI — uses semen with hormonal protocol.",
+          "TE": "Embryo Transfer — requires a registered embryo.",
+          "Monta_Natural": "Natural Mating — requires a sire buffalo."
+        },
+        "semen": "Genetic Material (Semen)",
+        "embriao": "Genetic Material (Embryo)",
+        "semenPlaceholder": "Select a material...",
+        "semenEmpty": "No material of the required type registered for this property.",
+        "macho": "Sire Buffalo",
+        "machoPlaceholder": "Select a sire...",
+        "dtEvento": "Event Date",
+        "status": "Status",
+        "optional": "(optional)"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "create": "Register"
+      },
+      "toast": {
+        "created": "Reproductive event registered successfully.",
+        "updated": "Reproductive event updated successfully.",
+        "errorCreate": "Error registering reproductive event.",
+        "errorUpdate": "Error updating reproductive event."
+      }
     },
     "modal": {
       "title": "Reproduction Details",
@@ -1461,6 +1702,76 @@
       "birthType": "Birth Type",
       "occurrence": "Occurrence / Observation",
       "noOccurrence": "No observation recorded."
+    }
+  },
+  "MaterialGeneticoPage": {
+    "title": "Genetic Material",
+    "subtitle": "Manage the property's semen, embryos, and oocyte inventory.",
+    "actions": {
+      "new": "New Record",
+      "edit": "Edit",
+      "delete": "Remove"
+    },
+    "toast": {
+      "deleting": "Removing...",
+      "deleteSuccess": "Genetic material removed successfully.",
+      "deleteError": "Error removing genetic material."
+    },
+    "table": {
+      "title": "Genetic Material Records",
+      "subtitle": "Semen, embryos, and oocytes registered for reproductive use.",
+      "loading": "Loading records...",
+      "emptyTitle": "No genetic material registered",
+      "emptyTitleNoProperty": "Select a property",
+      "emptyDesc": "Register semen, embryos, or oocytes for inseminations and transfers.",
+      "emptyDescNoProperty": "Choose a property to view genetic materials.",
+      "headers": {
+        "tipo": "Type",
+        "origem": "Origin",
+        "fornecedorOuBufalo": "Supplier / Buffalo",
+        "dataColeta": "Collection Date",
+        "actions": "Actions"
+      },
+      "showing": "Showing {from} to {to} of {total} records"
+    },
+    "modal": {
+      "title": "Genetic Material Details",
+      "close": "Close",
+      "material": "{tipo}",
+      "createdAt": "Record created on {date}",
+      "originSection": "Origin",
+      "detailsSection": "Details",
+      "origem": "Origin",
+      "bufaloOrigem": "Source Buffalo",
+      "fornecedor": "Supplier",
+      "dataColeta": "Collection Date",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Removed"
+    },
+    "formModal": {
+      "createTitle": "New Genetic Material",
+      "editTitle": "Edit Genetic Material",
+      "fields": {
+        "tipo": "Type",
+        "origem": "Origin",
+        "bufaloOrigem": "Source Buffalo",
+        "bufaloOrigemPlaceholder": "Select a buffalo...",
+        "fornecedor": "Supplier",
+        "fornecedorPlaceholder": "External supplier name...",
+        "dataColeta": "Collection / Acquisition Date"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "create": "Register"
+      },
+      "toast": {
+        "created": "Genetic material registered successfully.",
+        "updated": "Genetic material updated successfully.",
+        "errorCreate": "Error registering genetic material.",
+        "errorUpdate": "Error updating genetic material."
+      }
     }
   },
   "Charts": {

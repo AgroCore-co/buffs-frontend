@@ -21,6 +21,7 @@
     "medicamentos": "Medicamentos",
     "lactacao": "Lactação",
     "controleReproducao": "Controle Reprodução",
+    "materialGenetico": "Material Genético",
     "simulacao": "Simulação",
     "coletas": "Coletas",
     "industria": "Indústria",
@@ -1182,6 +1183,200 @@
       "empty": "Nenhum evento reprodutivo",
       "emptyDesc": "Registre eventos reprodutivos para visualizar aqui.",
       "showing": "Mostrando {from} a {to} de {total} registros"
+    },
+    "simulacao": {
+      "title": "Simulador de Acasalamento",
+      "subtitle": "Ferramenta preditiva para análise de compatibilidade genética e estimativa de produção da progênie (F1).",
+      "params": {
+        "title": "Parâmetros do Cruzamento",
+        "bullLabel": "1. Selecione o Reprodutor (Touro)",
+        "matrixLabel": "2. Selecione a Matriz",
+        "selectPlaceholder": "Selecione...",
+        "selectedBull": "Reprodutor:",
+        "selectedMatrix": "Matriz:",
+        "processing": "Processando...",
+        "run": "Executar Simulação",
+        "reset": "Limpar simulação"
+      },
+      "results": {
+        "title": "Resultado da Análise",
+        "idle": "Aguardando Dados",
+        "idleDesc": "Selecione um touro e uma matriz no painel ao lado para visualizar a previsão de acasalamento.",
+        "loadingDesc": "Cruzando dados genéticos... Verificando pedigrees e coeficientes de endogamia.",
+        "highRisk": "Risco Alto de Consanguinidade",
+        "moderateRisk": "Risco Moderado",
+        "goodCompatibility": "Excelente Compatibilidade",
+        "defaultRisk": "Baixo",
+        "parentage": "Parentesco:",
+        "errorMessage": "Erro ao realizar simulação. Tente novamente.",
+        "metrics": {
+          "inbreeding": "Consanguinidade Prole",
+          "inbreedingDesc": "Coeficiente de endogamia",
+          "predicted": "Produção Prevista",
+          "predictedDesc": "Litros/dia estimado",
+          "variation": "Variação da Média",
+          "variationDesc": "Comparativo",
+          "avgDesc": "Média atual: {avg} L/dia",
+          "potential": "Potencial",
+          "potentialDesc": "Classificação genética",
+          "riskLevel": "Nível de Risco",
+          "riskLevelDesc": "Cruzamento não recomendado"
+        },
+        "analysis": {
+          "title": "Análise de Parentesco",
+          "kinship": "Coeficiente de Parentesco",
+          "kinshipDesc": "Entre os pais selecionados",
+          "relation": "Relação Identificada",
+          "relationDesc": "Base no pedigree disponível",
+          "halfSiblings": "Meio-irmãos",
+          "noRelation": "Sem parentesco próximo",
+          "offspring": "Endogamia da Prole",
+          "highRiskDesc": "Risco de depressão endogâmica",
+          "moderateRiskDesc": "Monitorar nas próximas gerações",
+          "noRiskDesc": "Excelente diversidade genética"
+        }
+      },
+      "top5": {
+        "matrices": {
+          "title": "Top 5 Matrizes Recomendadas",
+          "subtitle": "Classificadas por prontidão, idade, histórico e período ideal.",
+          "loading": "Carregando matrizes...",
+          "empty": "Nenhuma matriz encontrada para esta propriedade.",
+          "defaultStatus": "Apta"
+        },
+        "bulls": {
+          "title": "Top 5 Touros Recomendados",
+          "subtitle": "Classificados por idade, histórico, taxa de sucesso e genética.",
+          "loading": "Carregando touros...",
+          "empty": "Nenhum touro encontrado para esta propriedade.",
+          "activeBadge": "Ativo"
+        },
+        "score": "Score:"
+      }
+    },
+    "industria": {
+      "title": "Indústrias",
+      "subtitle": "Indústrias e laticínios parceiros cadastrados no sistema.",
+      "newIndustry": "Nova Indústria",
+      "searchPlaceholder": "Buscar por nome ou representante...",
+      "showing": "Mostrando {count} registro(s)",
+      "headers": {
+        "name": "Nome",
+        "representative": "Representante",
+        "contact": "Contato",
+        "observation": "Observação",
+        "registeredAt": "Cadastrado em"
+      },
+      "empty": {
+        "noProperty": "Nenhuma propriedade selecionada",
+        "noPropertyDesc": "Selecione uma propriedade no seletor do cabeçalho.",
+        "notFound": "Nenhuma indústria encontrada",
+        "notFoundDesc": "Tente buscar por outro termo.",
+        "none": "Nenhuma indústria cadastrada",
+        "noneDesc": "Cadastre a primeira indústria parceira desta propriedade."
+      },
+      "formModal": {
+        "createTitle": "Nova Indústria",
+        "editTitle": "Editar Indústria",
+        "fields": {
+          "name": "Nome da Indústria *",
+          "namePlaceholder": "Ex: Laticínio Valle",
+          "representative": "Representante",
+          "representativePlaceholder": "Nome do contato",
+          "contact": "Contato",
+          "contactPlaceholder": "(00) 00000-0000",
+          "observations": "Observações",
+          "observationsPlaceholder": "Informações adicionais..."
+        },
+        "actions": {
+          "cancel": "Cancelar",
+          "save": "Salvar Alterações",
+          "create": "Cadastrar"
+        },
+        "toast": {
+          "nameRequired": "O nome da indústria é obrigatório.",
+          "noProperty": "Nenhuma propriedade selecionada.",
+          "createSuccess": "Indústria cadastrada com sucesso!",
+          "createError": "Erro ao cadastrar a indústria.",
+          "updateSuccess": "Indústria atualizada com sucesso!",
+          "updateError": "Erro ao atualizar os dados."
+        }
+      },
+      "detalheModal": {
+        "title": "Detalhes da Indústria",
+        "tagline": "Ficha cadastral ativa no sistema",
+        "contactInfo": "Informações de Contato",
+        "administrative": "Administrativo",
+        "fields": {
+          "representative": "Representante",
+          "contact": "Telefone / Contato",
+          "registeredAt": "Data de Cadastro",
+          "id": "ID do Registro"
+        },
+        "observations": "Observações",
+        "noObservations": "Nenhuma observação registrada.",
+        "noRepresentative": "Sem representante",
+        "noContact": "Sem contato",
+        "actions": {
+          "remove": "Remover Registro",
+          "close": "Fechar",
+          "edit": "Editar Dados"
+        },
+        "confirmDelete": {
+          "title": "Confirmar Exclusão",
+          "heading": "Excluir Indústria?",
+          "description": "Esta ação removerá o laticínio do sistema. Dados históricos de coletas vinculados a ele podem ser afetados.",
+          "cancel": "Cancelar",
+          "confirm": "Sim, Excluir"
+        },
+        "toast": {
+          "deleteSuccess": "Indústria removida com sucesso!",
+          "deleteError": "Erro ao remover indústria."
+        }
+      }
+    },
+    "coleta": {
+      "title": "Coletas da Indústria",
+      "subtitle": "Monitoramento da produção de leite de búfalas.",
+      "sectionTitle": "Registro de Coletas",
+      "loading": "Carregando...",
+      "totalRegistered": "{count} coletas registradas",
+      "selectProperty": "Selecione uma propriedade para ver as coletas.",
+      "showing": "Mostrando {showing} de {total} registros",
+      "empty": {
+        "noProperty": "Nenhuma propriedade selecionada",
+        "noPropertyDesc": "Selecione uma propriedade no seletor do cabeçalho.",
+        "none": "Nenhuma coleta encontrada",
+        "noneDesc": "Não há coletas registradas para esta propriedade."
+      },
+      "headers": {
+        "date": "Data da Coleta",
+        "company": "Empresa",
+        "quantity": "Quantidade",
+        "observation": "Observação",
+        "status": "Status"
+      },
+      "status": {
+        "approved": "Aprovado",
+        "rejected": "Reprovado"
+      },
+      "modal": {
+        "title": "Detalhes da Coleta",
+        "loading": "Carregando...",
+        "approved": "Coleta Aprovada",
+        "rejected": "Coleta Reprovada",
+        "testResult": "Resultado do Teste",
+        "fields": {
+          "industry": "Indústria / Laticínio",
+          "representative": "Representante",
+          "contact": "Contato",
+          "date": "Data da Coleta",
+          "notInformed": "Não informado"
+        },
+        "observations": "Observações",
+        "noObservations": "Nenhuma observação registrada para esta coleta.",
+        "close": "Fechar Detalhes"
+      }
     }
   },
   "Gerente": {
@@ -1441,10 +1636,56 @@
         "type": "Tipo",
         "status": "Status",
         "birth": "Parto",
-        "occurrence": "Ocorrência"
+        "occurrence": "Ocorrência",
+        "actions": "Ações"
       },
       "artificialInsemination": "Inseminação Artificial",
       "showing": "Mostrando {from} a {to} de {total} registros"
+    },
+    "actions": {
+      "new": "Novo Registro",
+      "edit": "Editar",
+      "delete": "Remover"
+    },
+    "toast": {
+      "deleting": "Removendo...",
+      "deleteSuccess": "Registro removido com sucesso.",
+      "deleteError": "Erro ao remover registro."
+    },
+    "formModal": {
+      "createTitle": "Novo Registro de Reprodução",
+      "editTitle": "Editar Reprodução",
+      "fields": {
+        "femea": "Fêmea Receptora",
+        "femeaPlaceholder": "Selecione a fêmea...",
+        "tipo": "Tipo de Técnica Reprodutiva",
+        "tipoDesc": {
+          "IA": "Inseminação Artificial — usa sêmen congelado.",
+          "IATF": "IA em Tempo Fixo — usa sêmen com protocolo hormonal.",
+          "TE": "Transferência de Embrião — requer embrião cadastrado.",
+          "Monta_Natural": "Monta Natural — requer touro reprodutor."
+        },
+        "semen": "Material Genético (Sêmen)",
+        "embriao": "Material Genético (Embrião)",
+        "semenPlaceholder": "Selecione o material...",
+        "semenEmpty": "Nenhum material do tipo necessário cadastrado para esta propriedade.",
+        "macho": "Touro Reprodutor",
+        "machoPlaceholder": "Selecione o touro...",
+        "dtEvento": "Data do Evento",
+        "status": "Status",
+        "optional": "(opcional)"
+      },
+      "actions": {
+        "cancel": "Cancelar",
+        "save": "Salvar",
+        "create": "Registrar"
+      },
+      "toast": {
+        "created": "Reprodução registrada com sucesso.",
+        "updated": "Reprodução atualizada com sucesso.",
+        "errorCreate": "Erro ao registrar reprodução.",
+        "errorUpdate": "Erro ao atualizar reprodução."
+      }
     },
     "modal": {
       "title": "Detalhes da Reprodução",
@@ -1461,6 +1702,76 @@
       "birthType": "Tipo de Parto",
       "occurrence": "Ocorrência / Observação",
       "noOccurrence": "Nenhuma observação registrada."
+    }
+  },
+  "MaterialGeneticoPage": {
+    "title": "Material Genético",
+    "subtitle": "Gerencie o estoque de sêmen, embriões e óvulos da propriedade.",
+    "actions": {
+      "new": "Novo Registro",
+      "edit": "Editar",
+      "delete": "Remover"
+    },
+    "toast": {
+      "deleting": "Removendo...",
+      "deleteSuccess": "Material genético removido com sucesso.",
+      "deleteError": "Erro ao remover material genético."
+    },
+    "table": {
+      "title": "Registros de Material Genético",
+      "subtitle": "Sêmen, embriões e óvulos cadastrados para uso reprodutivo.",
+      "loading": "Carregando registros...",
+      "emptyTitle": "Nenhum material genético cadastrado",
+      "emptyTitleNoProperty": "Selecione uma propriedade",
+      "emptyDesc": "Cadastre sêmen, embriões ou óvulos para uso em inseminações e transferências.",
+      "emptyDescNoProperty": "Escolha uma propriedade para visualizar os materiais genéticos.",
+      "headers": {
+        "tipo": "Tipo",
+        "origem": "Origem",
+        "fornecedorOuBufalo": "Fornecedor / Búfalo",
+        "dataColeta": "Data de Coleta",
+        "actions": "Ações"
+      },
+      "showing": "Mostrando {from} a {to} de {total} registros"
+    },
+    "modal": {
+      "title": "Detalhes do Material Genético",
+      "close": "Fechar",
+      "material": "{tipo}",
+      "createdAt": "Registro criado em {date}",
+      "originSection": "Origem",
+      "detailsSection": "Detalhes",
+      "origem": "Origem",
+      "bufaloOrigem": "Búfalo de Origem",
+      "fornecedor": "Fornecedor",
+      "dataColeta": "Data de Coleta",
+      "status": "Status",
+      "active": "Ativo",
+      "inactive": "Removido"
+    },
+    "formModal": {
+      "createTitle": "Novo Material Genético",
+      "editTitle": "Editar Material Genético",
+      "fields": {
+        "tipo": "Tipo",
+        "origem": "Origem",
+        "bufaloOrigem": "Búfalo de Origem",
+        "bufaloOrigemPlaceholder": "Selecione o búfalo...",
+        "fornecedor": "Fornecedor",
+        "fornecedorPlaceholder": "Nome do fornecedor externo...",
+        "dataColeta": "Data de Coleta / Aquisição"
+      },
+      "actions": {
+        "cancel": "Cancelar",
+        "save": "Salvar",
+        "create": "Cadastrar"
+      },
+      "toast": {
+        "created": "Material genético cadastrado com sucesso.",
+        "updated": "Material genético atualizado com sucesso.",
+        "errorCreate": "Erro ao cadastrar material genético.",
+        "errorUpdate": "Erro ao atualizar material genético."
+      }
     }
   },
   "Charts": {

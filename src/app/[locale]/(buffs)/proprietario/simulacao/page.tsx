@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   GitMerge,
   Search,
@@ -96,6 +97,7 @@ function normalizeResultado(raw: ResultadoSimulacao) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SimulacaoPage() {
+  const t = useTranslations("Proprietario.simulacao");
   const { activeId } = usePropriedadeStore();
 
   const [touroId, setTouroId] = useState("");
@@ -128,7 +130,7 @@ export default function SimulacaoPage() {
             parentesco: 0,
             nivelParentesco: null,
             risco: "Alto",
-            recomendacao: "Erro ao realizar simulação. Tente novamente.",
+            recomendacao: t("results.errorMessage"),
             detalhes: {
               e_meio_irmao: false,
               tem_parentesco_direto: false,
@@ -165,12 +167,9 @@ export default function SimulacaoPage() {
           <div>
             <h1 className="text-xl font-bold text-[#404040] flex items-center gap-2">
               <Dna size={22} className="text-[#ce7d0a]" />
-              Simulador de Acasalamento
+              {t("title")}
             </h1>
-            <p className="text-sm text-[#404040]/60 mt-0.5">
-              Ferramenta preditiva para análise de compatibilidade genética e estimativa de
-              produção da progênie (F1).
-            </p>
+            <p className="text-sm text-[#404040]/60 mt-0.5">{t("subtitle")}</p>
           </div>
         </div>
       </Container>
@@ -180,14 +179,14 @@ export default function SimulacaoPage() {
         {/* Coluna de inputs */}
         <Container className="lg:col-span-1 border-t-4 border-t-[#ffcf78] p-5">
           <h2 className="text-base font-bold text-[#404040] mb-4">
-            Parâmetros do Cruzamento
+            {t("params.title")}
           </h2>
 
           <form onSubmit={handleSimulation} className="flex flex-col gap-5">
             {/* Touro */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                1. Selecione o Reprodutor (Touro)
+                {t("params.bullLabel")}
               </label>
               <select
                 className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffcf78] text-gray-700 transition-shadow text-sm"
@@ -197,18 +196,18 @@ export default function SimulacaoPage() {
                   if (simulationDone) setSimulationDone(false);
                 }}
               >
-                <option value="">Selecione...</option>
-                {listaTouros.map((t) => (
-                  <option key={t.idBufalo} value={t.idBufalo}>
-                    {t.nome} ({t.brinco}) — Score {t.score}
+                <option value="">{t("params.selectPlaceholder")}</option>
+                {listaTouros.map((item) => (
+                  <option key={item.idBufalo} value={item.idBufalo}>
+                    {item.nome} ({item.brinco}) — Score {item.score}
                   </option>
                 ))}
               </select>
               {touroId && (
                 <p className="mt-2 text-xs text-green-700 bg-green-50 p-2 rounded border border-green-100">
-                  Reprodutor:{" "}
+                  {t("params.selectedBull")}{" "}
                   <strong>
-                    {listaTouros.find((t) => t.idBufalo === touroId)?.nome}
+                    {listaTouros.find((item) => item.idBufalo === touroId)?.nome}
                   </strong>
                 </p>
               )}
@@ -217,7 +216,7 @@ export default function SimulacaoPage() {
             {/* Matriz */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                2. Selecione a Matriz
+                {t("params.matrixLabel")}
               </label>
               <select
                 className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffcf78] text-gray-700 transition-shadow text-sm"
@@ -227,18 +226,18 @@ export default function SimulacaoPage() {
                   if (simulationDone) setSimulationDone(false);
                 }}
               >
-                <option value="">Selecione...</option>
-                {listaMatrizes.map((m) => (
-                  <option key={m.idBufalo} value={m.idBufalo}>
-                    {m.nome} ({m.brinco})
+                <option value="">{t("params.selectPlaceholder")}</option>
+                {listaMatrizes.map((item) => (
+                  <option key={item.idBufalo} value={item.idBufalo}>
+                    {item.nome} ({item.brinco})
                   </option>
                 ))}
               </select>
               {matrizId && (
                 <p className="mt-2 text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-100">
-                  Matriz:{" "}
+                  {t("params.selectedMatrix")}{" "}
                   <strong>
-                    {listaMatrizes.find((m) => m.idBufalo === matrizId)?.nome}
+                    {listaMatrizes.find((item) => item.idBufalo === matrizId)?.nome}
                   </strong>
                 </p>
               )}
@@ -253,7 +252,7 @@ export default function SimulacaoPage() {
                 disabled={!touroId || !matrizId || isPending}
                 isLoading={isPending}
               >
-                {isPending ? "Processando..." : "Executar Simulação"}
+                {isPending ? t("params.processing") : t("params.run")}
               </Button>
 
               {simulationDone && (
@@ -263,7 +262,7 @@ export default function SimulacaoPage() {
                   className="w-full mt-3 text-sm text-gray-500 hover:text-[#ce7d0a] flex items-center justify-center gap-1 transition-colors"
                 >
                   <RotateCcw size={14} />
-                  Limpar simulação
+                  {t("params.reset")}
                 </button>
               )}
             </div>
@@ -273,7 +272,7 @@ export default function SimulacaoPage() {
         {/* Coluna de resultados */}
         <Container className="lg:col-span-2 p-5 min-h-[420px]">
           <h2 className="text-base font-bold text-[#404040] mb-5">
-            Resultado da Análise
+            {t("results.title")}
           </h2>
 
           {/* Idle */}
@@ -283,11 +282,10 @@ export default function SimulacaoPage() {
                 <Search size={32} />
               </div>
               <h3 className="text-base font-semibold text-gray-700">
-                Aguardando Dados
+                {t("results.idle")}
               </h3>
               <p className="text-sm text-gray-500 max-w-sm mt-2">
-                Selecione um touro e uma matriz no painel ao lado para visualizar
-                a previsão de acasalamento.
+                {t("results.idleDesc")}
               </p>
             </div>
           )}
@@ -297,8 +295,7 @@ export default function SimulacaoPage() {
             <div className="flex flex-col items-center justify-center h-[300px] gap-4">
               <div className="w-10 h-10 border-4 border-[#ffcf78] border-t-[#ce7d0a] rounded-full animate-spin" />
               <p className="text-sm text-gray-500 text-center max-w-xs">
-                Cruzando dados genéticos... Verificando pedigrees e coeficientes
-                de endogamia.
+                {t("results.loadingDesc")}
               </p>
             </div>
           )}
@@ -344,13 +341,13 @@ export default function SimulacaoPage() {
                         }`}
                       >
                         {resultado.riscoAlto
-                          ? "Risco Alto de Consanguinidade"
+                          ? t("results.highRisk")
                           : resultado.riscoModerado
-                            ? "Risco Moderado"
-                            : "Excelente Compatibilidade"}
+                            ? t("results.moderateRisk")
+                            : t("results.goodCompatibility")}
                       </h3>
                       <Badge type={resultado.temRisco ? "inactive" : "active"}>
-                        {resultado.risco ?? "Baixo"}
+                        {resultado.risco ?? t("results.defaultRisk")}
                       </Badge>
                     </div>
                     <p
@@ -366,7 +363,7 @@ export default function SimulacaoPage() {
                     </p>
                     {resultado.nivelParentesco && (
                       <p className="text-xs text-gray-600 mt-1">
-                        <strong>Parentesco:</strong> {resultado.nivelParentesco}
+                        <strong>{t("results.parentage")}</strong> {resultado.nivelParentesco}
                       </p>
                     )}
                   </div>
@@ -384,46 +381,46 @@ export default function SimulacaoPage() {
                     className={`grid grid-cols-1 sm:grid-cols-2 ${temParentescoProximo ? "lg:grid-cols-2" : "lg:grid-cols-4"} gap-3 mb-5`}
                   >
                     <MetricCard
-                      title="Consanguinidade Prole"
+                      title={t("results.metrics.inbreeding")}
                       value={`${resultado.consanguinidade}%`}
-                      subtitle="Coeficiente de endogamia"
+                      subtitle={t("results.metrics.inbreedingDesc")}
                       icon={<Dna size={14} className="text-[#ce7d0a]" />}
                     />
                     {!temParentescoProximo && (
                       <>
                         <MetricCard
-                          title="Produção Prevista"
+                          title={t("results.metrics.predicted")}
                           value={
                             resultado.predicaoLitros
                               ? `${resultado.predicaoLitros.toFixed(1)} L`
                               : "N/A"
                           }
-                          subtitle="Litros/dia estimado"
+                          subtitle={t("results.metrics.predictedDesc")}
                           icon={<Gauge size={14} className="text-[#ce7d0a]" />}
                         />
                         <MetricCard
-                          title="Variação da Média"
+                          title={t("results.metrics.variation")}
                           value={resultado.variacaoProducao}
                           subtitle={
                             resultado.producaoMedia
-                              ? `Média atual: ${resultado.producaoMedia.toFixed(1)} L/dia`
-                              : "Comparativo"
+                              ? t("results.metrics.avgDesc", { avg: resultado.producaoMedia.toFixed(1) })
+                              : t("results.metrics.variationDesc")
                           }
                           icon={<TrendingUp size={14} className="text-[#ce7d0a]" />}
                         />
                         <MetricCard
-                          title="Potencial"
+                          title={t("results.metrics.potential")}
                           value={resultado.classificacao ?? "N/A"}
-                          subtitle="Classificação genética"
+                          subtitle={t("results.metrics.potentialDesc")}
                           icon={<Sparkles size={14} className="text-[#ce7d0a]" />}
                         />
                       </>
                     )}
                     {temParentescoProximo && (
                       <MetricCard
-                        title="Nível de Risco"
-                        value={resultado.risco ?? "Alto"}
-                        subtitle="Cruzamento não recomendado"
+                        title={t("results.metrics.riskLevel")}
+                        value={resultado.risco ?? t("results.defaultRisk")}
+                        subtitle={t("results.metrics.riskLevelDesc")}
                         icon={<AlertTriangle size={14} className="text-[#ce7d0a]" />}
                       />
                     )}
@@ -453,14 +450,14 @@ export default function SimulacaoPage() {
                     }
                   />
                   <h4 className="font-semibold text-gray-700 text-sm">
-                    Análise de Parentesco
+                    {t("results.analysis.title")}
                   </h4>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
                     <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">
-                      Coeficiente de Parentesco
+                      {t("results.analysis.kinship")}
                     </p>
                     <p
                       className={`text-2xl font-bold ${
@@ -474,19 +471,19 @@ export default function SimulacaoPage() {
                       {resultado.parentesco}%
                     </p>
                     <p className="text-[10px] text-gray-400 mt-1">
-                      Entre os pais selecionados
+                      {t("results.analysis.kinshipDesc")}
                     </p>
                   </div>
 
                   <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
                     <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">
-                      Relação Identificada
+                      {t("results.analysis.relation")}
                     </p>
                     {resultado.detalhes.e_meio_irmao ? (
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-amber-400" />
                         <p className="text-base font-semibold text-amber-700">
-                          Meio-irmãos
+                          {t("results.analysis.halfSiblings")}
                         </p>
                       </div>
                     ) : resultado.detalhes.tem_parentesco_direto ? (
@@ -500,18 +497,18 @@ export default function SimulacaoPage() {
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-green-400" />
                         <p className="text-base font-semibold text-green-700">
-                          Sem parentesco próximo
+                          {t("results.analysis.noRelation")}
                         </p>
                       </div>
                     )}
                     <p className="text-[10px] text-gray-400 mt-1">
-                      Base no pedigree disponível
+                      {t("results.analysis.relationDesc")}
                     </p>
                   </div>
 
                   <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
                     <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">
-                      Endogamia da Prole
+                      {t("results.analysis.offspring")}
                     </p>
                     <p
                       className={`text-2xl font-bold ${
@@ -526,10 +523,10 @@ export default function SimulacaoPage() {
                     </p>
                     <p className="text-[10px] text-gray-400 mt-1">
                       {resultado.consanguinidade > 6.25
-                        ? "Risco de depressão endogâmica"
+                        ? t("results.analysis.highRiskDesc")
                         : resultado.consanguinidade > 0
-                          ? "Monitorar nas próximas gerações"
-                          : "Excelente diversidade genética"}
+                          ? t("results.analysis.moderateRiskDesc")
+                          : t("results.analysis.noRiskDesc")}
                     </p>
                   </div>
                 </div>
@@ -545,10 +542,10 @@ export default function SimulacaoPage() {
         <Container className="p-5">
           <div className="mb-4">
             <h2 className="text-base font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-              Top 5 Matrizes Recomendadas
+              {t("top5.matrices.title")}
             </h2>
             <p className="text-xs text-gray-500 mt-1 pl-4">
-              Classificadas por prontidão, idade, histórico e período ideal.
+              {t("top5.matrices.subtitle")}
             </p>
           </div>
 
@@ -556,12 +553,12 @@ export default function SimulacaoPage() {
             {loadingBufalos ? (
               <div className="flex items-center justify-center py-8 gap-3">
                 <div className="w-5 h-5 border-2 border-[#ffcf78] border-t-[#ce7d0a] rounded-full animate-spin" />
-                <span className="text-sm text-gray-500">Carregando matrizes...</span>
+                <span className="text-sm text-gray-500">{t("top5.matrices.loading")}</span>
               </div>
             ) : listaMatrizes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 gap-2 text-gray-400">
                 <Users size={32} />
-                <p className="text-sm">Nenhuma matriz encontrada para esta propriedade.</p>
+                <p className="text-sm">{t("top5.matrices.empty")}</p>
               </div>
             ) : (
               listaMatrizes.slice(0, 5).map((item, index) => (
@@ -597,10 +594,10 @@ export default function SimulacaoPage() {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                      {item.dados_reprodutivos?.status ?? "Apta"}
+                      {item.dados_reprodutivos?.status ?? t("top5.matrices.defaultStatus")}
                     </span>
                     <span className="text-xs font-bold text-[#ce7d0a]">
-                      Score: {item.score}
+                      {t("top5.score")} {item.score}
                     </span>
                   </div>
                 </button>
@@ -613,10 +610,10 @@ export default function SimulacaoPage() {
         <Container className="p-5">
           <div className="mb-4">
             <h2 className="text-base font-bold text-[#404040] border-l-4 border-[#ffcf78] pl-3">
-              Top 5 Touros Recomendados
+              {t("top5.bulls.title")}
             </h2>
             <p className="text-xs text-gray-500 mt-1 pl-4">
-              Classificados por idade, histórico, taxa de sucesso e genética.
+              {t("top5.bulls.subtitle")}
             </p>
           </div>
 
@@ -624,12 +621,12 @@ export default function SimulacaoPage() {
             {loadingBufalos ? (
               <div className="flex items-center justify-center py-8 gap-3">
                 <div className="w-5 h-5 border-2 border-[#ffcf78] border-t-[#ce7d0a] rounded-full animate-spin" />
-                <span className="text-sm text-gray-500">Carregando touros...</span>
+                <span className="text-sm text-gray-500">{t("top5.bulls.loading")}</span>
               </div>
             ) : listaTouros.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 gap-2 text-gray-400">
                 <Users size={32} />
-                <p className="text-sm">Nenhum touro encontrado para esta propriedade.</p>
+                <p className="text-sm">{t("top5.bulls.empty")}</p>
               </div>
             ) : (
               listaTouros.slice(0, 5).map((item, index) => (
@@ -665,10 +662,10 @@ export default function SimulacaoPage() {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                      Ativo
+                      {t("top5.bulls.activeBadge")}
                     </span>
                     <span className="text-xs font-bold text-[#ce7d0a]">
-                      Score: {item.score}
+                      {t("top5.score")} {item.score}
                     </span>
                   </div>
                 </button>

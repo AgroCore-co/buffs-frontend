@@ -6,6 +6,7 @@ import {
   CalendarCheck2,
   Factory,
   Pill,
+  FlaskConical,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -53,6 +54,7 @@ export const proprietarioNavigation: NavSection[] = [
     sectionKey: 'sections.controle',
     items: [
       { icon: CalendarCheck2, labelKey: 'controleReproducao', href: '/proprietario/controle-reproducao' },
+      { icon: FlaskConical, labelKey: 'materialGenetico', href: '/proprietario/material-genetico' },
       { icon: PawPrint, labelKey: 'simulacao', href: '/proprietario/simulacao' },
     ],
   },

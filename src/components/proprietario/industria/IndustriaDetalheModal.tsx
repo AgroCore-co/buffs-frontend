@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Building2,
   User,
@@ -63,6 +64,7 @@ export function IndustriaDetalheModal({
   onEdit,
   idPropriedade,
 }: IndustriaDetalheModalProps) {
+  const t = useTranslations("Proprietario.industria.detalheModal");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deleteMutation = useDeleteLaticinio(idPropriedade);
 
@@ -77,11 +79,11 @@ export function IndustriaDetalheModal({
     const id = data.id_industria ?? data.id!;
     deleteMutation.mutate(id, {
       onSuccess: () => {
-        toast.success("Indústria removida com sucesso!");
+        toast.success(t("toast.deleteSuccess"));
         setConfirmDelete(false);
         onClose();
       },
-      onError: () => toast.error("Erro ao remover indústria."),
+      onError: () => toast.error(t("toast.deleteError")),
     });
   };
 
@@ -91,7 +93,7 @@ export function IndustriaDetalheModal({
       <Modal
         isOpen={isOpen}
         onClose={() => setConfirmDelete(false)}
-        title="Confirmar Exclusão"
+        title={t("confirmDelete.title")}
         size="md"
       >
         <div className="flex flex-col gap-6 pt-2">
@@ -101,11 +103,10 @@ export function IndustriaDetalheModal({
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-1">
-                Excluir Indústria?
+                {t("confirmDelete.heading")}
               </h3>
               <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                Esta ação removerá o laticínio do sistema. Dados históricos de
-                coletas vinculados a ele podem ser afetados.
+                {t("confirmDelete.description")}
               </p>
             </div>
           </div>
@@ -123,11 +124,11 @@ export function IndustriaDetalheModal({
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <User size={12} className="shrink-0" />
-                    <span>{data.representante || "Sem representante"}</span>
+                    <span>{data.representante || t("noRepresentative")}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Phone size={12} className="shrink-0" />
-                    <span>{data.contato || "Sem contato"}</span>
+                    <span>{data.contato || t("noContact")}</span>
                   </div>
                 </div>
               </div>
@@ -140,7 +141,7 @@ export function IndustriaDetalheModal({
               onClick={() => setConfirmDelete(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancelar
+              {t("confirmDelete.cancel")}
             </Button>
             <Button
               variant="danger"
@@ -148,7 +149,7 @@ export function IndustriaDetalheModal({
               onClick={handleDelete}
               className="flex items-center justify-center gap-2"
             >
-              <Trash2 size={15} /> Sim, Excluir
+              <Trash2 size={15} /> {t("confirmDelete.confirm")}
             </Button>
           </div>
         </div>
@@ -160,7 +161,7 @@ export function IndustriaDetalheModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Detalhes da Indústria"
+      title={t("title")}
       size="lg"
     >
       <div className="space-y-5">
@@ -171,9 +172,7 @@ export function IndustriaDetalheModal({
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-800">{data.nome}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Ficha cadastral ativa no sistema
-            </p>
+            <p className="text-xs text-slate-500 mt-0.5">{t("tagline")}</p>
           </div>
         </div>
 
@@ -181,23 +180,23 @@ export function IndustriaDetalheModal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <h4 className="text-xs font-bold text-slate-900 border-b border-slate-200 pb-2 mb-2 uppercase tracking-wide">
-              Informações de Contato
+              {t("contactInfo")}
             </h4>
-            <DetailRow icon={User} label="Representante" value={data.representante} />
-            <DetailRow icon={Phone} label="Telefone / Contato" value={data.contato} />
+            <DetailRow icon={User} label={t("fields.representative")} value={data.representante} />
+            <DetailRow icon={Phone} label={t("fields.contact")} value={data.contato} />
           </div>
           <div>
             <h4 className="text-xs font-bold text-slate-900 border-b border-slate-200 pb-2 mb-2 uppercase tracking-wide">
-              Administrativo
+              {t("administrative")}
             </h4>
             <DetailRow
               icon={Calendar}
-              label="Data de Cadastro"
+              label={t("fields.registeredAt")}
               value={formatDate(data.created_at ?? data.createdAt)}
             />
             <DetailRow
               icon={Info}
-              label="ID do Registro"
+              label={t("fields.id")}
               value={data.id_industria ?? data.id}
             />
           </div>
@@ -209,10 +208,10 @@ export function IndustriaDetalheModal({
             <FileText className="w-4 h-4 text-[#ce7d0a] mt-0.5 shrink-0" />
             <div>
               <h5 className="text-[10px] font-bold text-[#ce7d0a] mb-1 uppercase tracking-wider">
-                Observações
+                {t("observations")}
               </h5>
               <p className="text-sm text-[#43310b]/80 leading-relaxed font-medium">
-                {data.observacao || "Nenhuma observação registrada."}
+                {data.observacao || t("noObservations")}
               </p>
             </div>
           </div>
@@ -225,11 +224,11 @@ export function IndustriaDetalheModal({
             onClick={() => setConfirmDelete(true)}
             className="text-red-500 hover:text-red-600 hover:bg-red-50 flex items-center gap-2"
           >
-            <Trash2 size={15} /> Remover Registro
+            <Trash2 size={15} /> {t("actions.remove")}
           </Button>
           <div className="flex gap-3">
             <Button variant="secondary" onClick={onClose}>
-              Fechar
+              {t("actions.close")}
             </Button>
             <Button
               variant="primary"
@@ -239,7 +238,7 @@ export function IndustriaDetalheModal({
               }}
               className="flex items-center gap-2 font-bold"
             >
-              <Edit2 size={15} /> Editar Dados
+              <Edit2 size={15} /> {t("actions.edit")}
             </Button>
           </div>
         </div>

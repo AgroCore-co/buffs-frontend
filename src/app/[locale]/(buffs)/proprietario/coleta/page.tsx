@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Droplets, CheckCircle2, XCircle, PackageSearch } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Badge from "@/components/ui/Badge";
@@ -37,6 +38,7 @@ const LIMIT = 10;
 // ── page ──────────────────────────────────────────────────────────────────────
 
 export default function ColetaPage() {
+  const t = useTranslations("Proprietario.coleta");
   const { activeId } = usePropriedadeStore();
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Coleta | null>(null);
@@ -55,11 +57,9 @@ export default function ColetaPage() {
           <div>
             <h1 className="text-xl font-bold text-[#404040] flex items-center gap-2">
               <Droplets size={22} className="text-[#ce7d0a]" />
-              Coletas da Indústria
+              {t("title")}
             </h1>
-            <p className="text-sm text-[#404040]/60 mt-0.5">
-              Monitoramento da produção de leite de búfalas.
-            </p>
+            <p className="text-sm text-[#404040]/60 mt-0.5">{t("subtitle")}</p>
           </div>
         </div>
       </Container>
@@ -69,15 +69,17 @@ export default function ColetaPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
           <div>
             <h2 className="text-base font-bold text-[#404040]">
-              Registro de Coletas
+              {t("sectionTitle")}
             </h2>
             <p className="text-sm text-[#404040]/60">
               {activeId ? (
                 <>
-                  {isLoading ? "Carregando..." : <strong>{totalItems} coletas registradas</strong>}
+                  {isLoading
+                    ? t("loading")
+                    : <strong>{t("totalRegistered", { count: totalItems })}</strong>}
                 </>
               ) : (
-                "Selecione uma propriedade para ver as coletas."
+                t("selectProperty")
               )}
             </p>
           </div>
@@ -90,13 +92,13 @@ export default function ColetaPage() {
               icon={PackageSearch}
               title={
                 activeId
-                  ? "Nenhuma coleta encontrada"
-                  : "Nenhuma propriedade selecionada"
+                  ? t("empty.none")
+                  : t("empty.noProperty")
               }
               description={
                 activeId
-                  ? "Não há coletas registradas para esta propriedade."
-                  : "Selecione uma propriedade no seletor do cabeçalho."
+                  ? t("empty.noneDesc")
+                  : t("empty.noPropertyDesc")
               }
             />
           }
@@ -107,11 +109,11 @@ export default function ColetaPage() {
           }
         >
           <TableHeader>
-            <TableHead>Data da Coleta</TableHead>
-            <TableHead>Empresa</TableHead>
-            <TableHead>Quantidade</TableHead>
-            <TableHead>Observação</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t("headers.date")}</TableHead>
+            <TableHead>{t("headers.company")}</TableHead>
+            <TableHead>{t("headers.quantity")}</TableHead>
+            <TableHead>{t("headers.observation")}</TableHead>
+            <TableHead>{t("headers.status")}</TableHead>
           </TableHeader>
 
           <TableBody>
@@ -165,7 +167,7 @@ export default function ColetaPage() {
                           <XCircle size={14} className="text-red-500 shrink-0" />
                         )}
                         <Badge type={coleta.resultado_teste ? "active" : "inactive"}>
-                          {coleta.resultado_teste ? "Aprovado" : "Reprovado"}
+                          {coleta.resultado_teste ? t("status.approved") : t("status.rejected")}
                         </Badge>
                       </div>
                     </TableCell>
@@ -176,7 +178,7 @@ export default function ColetaPage() {
 
         {!isLoading && coletas.length > 0 && (
           <p className="text-xs text-gray-500 mt-3">
-            Mostrando {Math.min(LIMIT, totalItems)} de {totalItems} registros
+            {t("showing", { showing: Math.min(LIMIT, totalItems), total: totalItems })}
           </p>
         )}
       </Container>

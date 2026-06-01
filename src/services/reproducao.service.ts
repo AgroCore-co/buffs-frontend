@@ -56,6 +56,29 @@ export interface PaginacaoParams {
   limit?: number;
 }
 
+export type TipoInseminacao = 'IA' | 'IATF' | 'TE' | 'Monta Natural';
+export type StatusReproducao = 'Em andamento' | 'Confirmada' | 'Falha' | 'Concluída';
+
+export const TIPO_INSEMINACAO_OPTIONS: TipoInseminacao[] = ['IA', 'IATF', 'TE', 'Monta Natural'];
+export const STATUS_REPRODUCAO_OPTIONS: StatusReproducao[] = [
+  'Em andamento',
+  'Confirmada',
+  'Falha',
+  'Concluída',
+];
+
+export interface CreateReproducaoDTO {
+  idPropriedade: string;
+  idBufala: string;
+  tipoInseminacao: TipoInseminacao;
+  dtEvento: string;
+  idSemen?: string;
+  idBufalo?: string;
+  status?: StatusReproducao;
+}
+
+export type UpdateReproducaoDTO = Partial<CreateReproducaoDTO>;
+
 // ==========================================
 // SERVIÇO DE REPRODUÇÃO (COBERTURAS)
 // ==========================================
@@ -80,5 +103,23 @@ export const reproducaoService = {
   async getById(id: string): Promise<Reproducao> {
     const response = await apiClient.get<Reproducao>(`/cobertura/${id}`);
     return response.data;
+  },
+
+  async create(data: CreateReproducaoDTO): Promise<Reproducao> {
+    const response = await apiClient.post<Reproducao>('/cobertura', data);
+    return response.data;
+  },
+
+  async update(id: string, data: UpdateReproducaoDTO): Promise<Reproducao> {
+    const response = await apiClient.patch<Reproducao>(`/cobertura/${id}`, data);
+    return response.data;
+  },
+
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/cobertura/${id}`);
+  },
+
+  async restore(id: string): Promise<void> {
+    await apiClient.post(`/cobertura/${id}/restore`);
   },
 };

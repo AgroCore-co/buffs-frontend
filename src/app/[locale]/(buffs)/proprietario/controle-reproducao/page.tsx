@@ -2,18 +2,21 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Activity, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
+import { Activity, CheckCircle2, XCircle, CalendarDays, Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import Container from "@/components/ui/Container";
 import MetricCard from "@/components/ui/MetricCard";
 import {
   DataTable, TableBody, TableCell, TableEmptyState, TableHead, TableHeader, TableRow,
 } from "@/components/ui/DataTable";
+import { Button } from "@/components/ui/Button";
 import { usePropriedadeStore } from "@/stores/propriedade.store";
 import { useDashboardReproducao } from "@/hooks/useDashboard";
-import { useReproducoesByPropriedade } from "@/hooks/useReproducao";
+import { useReproducoesByPropriedade, useReproducaoMutations } from "@/hooks/useReproducao";
 import type { Reproducao } from "@/services/reproducao.service";
 import { ReproducaoDetailModal } from "@/components/proprietario/reproducao/ReproducaoDetailModal";
+import { CoberturaFormModal } from "@/components/proprietario/reproducao/CoberturaFormModal";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -39,11 +42,14 @@ export default function ControleReproducaoPage() {
 
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Reproducao | null>(null);
+  const [editing, setEditing] = useState<Reproducao | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const { data: metrics, isLoading: isLoadingMetrics } = useDashboardReproducao(activeId ?? "", { enabled: hasActive });
   const { data, isLoading: isLoadingList } = useReproducoesByPropriedade(
     activeId ?? "", { page, limit: TABLE_LIMIT }, { enabled: hasActive },
   );
+  const { deleteReproducao, isDeleting } = useReproducaoMutations();
 
   const registros = data?.data ?? [];
   const meta = data?.meta;
@@ -52,18 +58,49 @@ export default function ControleReproducaoPage() {
 
   const fmtMetric = (v?: number) => (!hasActive ? "0" : isLoadingMetrics ? "..." : String(v ?? 0));
 
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const toastId = toast.loading(t('toast.deleting'));
+    try {
+      await deleteReproducao(id);
+      toast.success(t('toast.deleteSuccess'), { id: toastId });
+    } catch {
+      toast.error(t('toast.deleteError'), { id: toastId });
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent, registro: Reproducao) => {
+    e.stopPropagation();
+    setEditing(registro);
+    setIsFormOpen(true);
+  };
+
   return (
     <div className="flex flex-col gap-6 pb-10">
       {/* ── Header + métricas ─────────────────────────────────────── */}
       <Container className="p-5">
         <div className="flex flex-col gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[#404040]">
-              {t('title')}{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
-            </h1>
-            <p className="text-sm text-[#404040]/60 mt-1">
-              {t('subtitle')}
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-[#404040]">
+                {t('title')}{activePropriedade?.nome ? ` - ${activePropriedade.nome}` : ""}
+              </h1>
+              <p className="text-sm text-[#404040]/60 mt-1">
+                {t('subtitle')}
+              </p>
+            </div>
+            {hasActive && (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setEditing(null);
+                  setIsFormOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                {t('actions.new')}
+              </Button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
@@ -144,7 +181,8 @@ export default function ControleReproducaoPage() {
               <TableHead>{t('table.headers.type')}</TableHead>
               <TableHead>{t('table.headers.status')}</TableHead>
               <TableHead>{t('table.headers.birth')}</TableHead>
-              <TableHead align="right">{t('table.headers.occurrence')}</TableHead>
+              <TableHead>{t('table.headers.occurrence')}</TableHead>
+              <TableHead align="right">{t('table.headers.actions')}</TableHead>
             </TableHeader>
             <TableBody>
               {registros.map((r: Reproducao) => (
@@ -179,10 +217,29 @@ export default function ControleReproducaoPage() {
                   <TableCell>
                     <span className="text-sm text-zinc-600">{r.tipoParto || "—"}</span>
                   </TableCell>
-                  <TableCell align="right">
-                    <span className="text-sm text-zinc-500 max-w-[200px] inline-block truncate align-middle" title={r.ocorrencia ?? ""}>
+                  <TableCell>
+                    <span className="text-sm text-zinc-500 max-w-[160px] inline-block truncate align-middle" title={r.ocorrencia ?? ""}>
                       {r.ocorrencia?.trim() || "—"}
                     </span>
+                  </TableCell>
+                  <TableCell align="right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={(e) => handleEdit(e, r)}
+                        className="p-1.5 rounded-md text-zinc-500 hover:text-[#ce7d0a] hover:bg-zinc-100 transition-colors"
+                        title={t('actions.edit')}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => handleDelete(e, r.idReproducao)}
+                        disabled={isDeleting}
+                        className="p-1.5 rounded-md text-zinc-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        title={t('actions.delete')}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -197,11 +254,22 @@ export default function ControleReproducaoPage() {
         )}
       </Container>
 
-      {/* ── Modal ────────────────────────────────────────────────── */}
+      {/* ── Modais ────────────────────────────────────────────────── */}
       <ReproducaoDetailModal
         isOpen={!!selected}
         onClose={() => setSelected(null)}
         registro={selected}
+      />
+
+      <CoberturaFormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditing(null);
+        }}
+        idPropriedade={activeId ?? ""}
+        registro={editing}
+        onSaved={() => setPage(1)}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Calendar,
   AlertCircle,
@@ -66,6 +67,7 @@ function formatVolume(val?: string | number | null) {
 }
 
 export function ColetaModal({ isOpen, onClose, data: initialData }: ColetaModalProps) {
+  const t = useTranslations("Proprietario.coleta.modal");
   const [data, setData] = useState<Coleta | null>(null);
   const [laticinio, setLaticinio] = useState<Laticinio | null>(null);
   const [loading, setLoading] = useState(false);
@@ -105,11 +107,11 @@ export function ColetaModal({ isOpen, onClose, data: initialData }: ColetaModalP
   const isApproved = data?.resultado_teste;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Detalhes da Coleta" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("title")} size="md">
       {loading || !data ? (
         <div className="flex items-center justify-center gap-3 py-12">
           <div className="w-6 h-6 border-2 border-[#ffcf78] border-t-[#ce7d0a] rounded-full animate-spin" />
-          <span className="text-sm text-gray-500">Carregando...</span>
+          <span className="text-sm text-gray-500">{t("loading")}</span>
         </div>
       ) : (
         <div className="space-y-5">
@@ -135,10 +137,10 @@ export function ColetaModal({ isOpen, onClose, data: initialData }: ColetaModalP
               </div>
               <div>
                 <h3 className="font-bold text-sm">
-                  Coleta {isApproved ? "Aprovada" : "Reprovada"}
+                  {isApproved ? t("approved") : t("rejected")}
                 </h3>
                 <p className="text-[10px] opacity-80 uppercase font-semibold tracking-wider">
-                  Resultado do Teste
+                  {t("testResult")}
                 </p>
               </div>
             </div>
@@ -152,21 +154,21 @@ export function ColetaModal({ isOpen, onClose, data: initialData }: ColetaModalP
             <div className="p-1">
               <DetailRow
                 icon={Landmark}
-                label="Indústria / Laticínio"
-                value={laticinio?.nome ?? data.nome_empresa ?? "Não informado"}
+                label={t("fields.industry")}
+                value={laticinio?.nome ?? data.nome_empresa ?? t("fields.notInformed")}
                 colorClass="text-blue-500"
               />
               {laticinio && (
                 <>
                   <DetailRow
                     icon={User}
-                    label="Representante"
+                    label={t("fields.representative")}
                     value={laticinio.representante}
                     colorClass="text-indigo-500"
                   />
                   <DetailRow
                     icon={Phone}
-                    label="Contato"
+                    label={t("fields.contact")}
                     value={laticinio.contato}
                     colorClass="text-green-500"
                   />
@@ -174,7 +176,7 @@ export function ColetaModal({ isOpen, onClose, data: initialData }: ColetaModalP
               )}
               <DetailRow
                 icon={Calendar}
-                label="Data da Coleta"
+                label={t("fields.date")}
                 value={formatDate(data.dt_coleta)}
                 colorClass="text-[#ce7d0a]"
               />
@@ -187,10 +189,10 @@ export function ColetaModal({ isOpen, onClose, data: initialData }: ColetaModalP
               <AlertCircle className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
               <div>
                 <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Observações
+                  {t("observations")}
                 </h5>
                 <p className="text-sm text-slate-700 leading-relaxed font-medium">
-                  {data.observacao || "Nenhuma observação registrada para esta coleta."}
+                  {data.observacao || t("noObservations")}
                 </p>
               </div>
             </div>
@@ -198,7 +200,7 @@ export function ColetaModal({ isOpen, onClose, data: initialData }: ColetaModalP
 
           <div className="flex justify-end pt-1">
             <Button variant="secondary" onClick={onClose}>
-              Fechar Detalhes
+              {t("close")}
             </Button>
           </div>
         </div>
