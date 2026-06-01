@@ -1,10 +1,40 @@
 "use client";
 
 import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Dna, User, Crown } from "lucide-react";
+import { AxiosError } from "axios";
+import { Dna, User, Crown, ShieldCheck, AlertCircle, Sparkles } from "lucide-react";
 
-import { bufalosService, Bufalo } from "@/services/bufalos.service";
+import { Bufalo } from "@/services/bufalos.service";
+import { useAnaliseGenealogica, useGenealogiaArvore } from "@/hooks/useGenealogia";
+import type { GenealogiaNode } from "@/services/genealogia.service";
+
+// ─── Helpers de risco / IA ──────────────────────────────────────────────────────
+
+function normalizeRisco(value?: string): string {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toUpperCase();
+}
+
+function riscoStyle(value?: string): { text: string; bg: string } {
+  const r = normalizeRisco(value);
+  if (r.includes("ALTO")) return { text: "text-red-700", bg: "bg-red-100" };
+  if (r.includes("MEDIO") || r.includes("MEDIA")) return { text: "text-amber-700", bg: "bg-amber-100" };
+  if (r.includes("BAIXO") || r.includes("BAIXA")) return { text: "text-emerald-700", bg: "bg-emerald-100" };
+  return { text: "text-zinc-600", bg: "bg-zinc-100" };
+}
+
+/** Mensagem amigável para erros da IA (503 = indisponível). */
+function iaErro(error: unknown): string {
+  const ax = error as AxiosError<{ message?: string }>;
+  const status = ax?.response?.status;
+  const msg = ax?.response?.data?.message;
+  if (status === 503) return msg || "Serviço de IA temporariamente indisponível.";
+  if (status === 404) return "Búfalo não encontrado para análise.";
+  if (status === 400) return msg || "Requisição inválida para a análise.";
+  return msg || "Não foi possível obter a análise da IA.";
+}
 
 // ─── Constantes de layout ──────────────────────────────────────────────────────
 
@@ -80,53 +110,27 @@ function calcLayout(
   return { nodes, links };
 }
 
-// ─── Fetch recursivo fora do componente ──────────────────────────────────────
+// ─── Transformação do nó da IA para o formato da árvore ───────────────────────
+//
+// A rota /reproducao/genealogia/{id} não retorna `sexo` nem `registro`.
+// Derivamos o sexo pela posição: ramo `pai` é sempre macho, `mae` sempre fêmea;
+// a raiz usa o sexo do próprio búfalo.
 
-async function fetchGenealogyTree(rootId: string): Promise<TreeNode> {
-  const cache = new Map<string, TreeNode | null>();
+function normalizeParent(p?: GenealogiaNode | string | null): GenealogiaNode | null {
+  if (!p) return null;
+  if (typeof p === "string") return { id: "", nome: p };
+  return p;
+}
 
-  async function fetchNode(id: string | null | undefined, depth: number): Promise<TreeNode | null> {
-    if (!id || depth >= 2) return null;
-    if (cache.has(id)) return cache.get(id)!;
-
-    try {
-      const data = await bufalosService.getById(id);
-      if (!data) { cache.set(id, null); return null; }
-
-      const pai = await fetchNode(data.idPai, depth + 1);
-      const mae = await fetchNode(data.idMae, depth + 1);
-
-      const node: TreeNode = {
-        id: data.idBufalo,
-        nome: data.nome,
-        registro: data.registroDef ?? data.registroProv ?? data.brinco,
-        sexo: data.sexo,
-        pai,
-        mae,
-      };
-      cache.set(id, node);
-      return node;
-    } catch {
-      cache.set(id, null);
-      return null;
-    }
-  }
-
-  const root = await bufalosService.getById(rootId);
-  if (!root) throw new Error("Búfalo não encontrado");
-
-  const [pai, mae] = await Promise.all([
-    fetchNode(root.idPai, 0),
-    fetchNode(root.idMae, 0),
-  ]);
-
+function toTreeNode(node: GenealogiaNode | null, sexo: string): TreeNode | null {
+  if (!node) return null;
   return {
-    id: root.idBufalo,
-    nome: root.nome,
-    registro: root.registroDef ?? root.registroProv ?? root.brinco,
-    sexo: root.sexo,
-    pai,
-    mae,
+    id: node.id || null,
+    nome: node.nome,
+    registro: "",
+    sexo,
+    pai: toTreeNode(normalizeParent(node.pai), "M"),
+    mae: toTreeNode(normalizeParent(node.mae), "F"),
   };
 }
 
@@ -167,9 +171,11 @@ function NodeCard({ node }: { node: LayoutNode }) {
         <p className="text-xs font-bold text-slate-800 truncate leading-tight" title={node.nome}>
           {node.nome}
         </p>
-        <p className="text-[10px] text-slate-500 font-mono mt-0.5 truncate">
-          {node.registro || "S/ Reg"}
-        </p>
+        {node.registro && (
+          <p className="text-[10px] text-slate-500 font-mono mt-0.5 truncate">
+            {node.registro}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -181,12 +187,28 @@ export function GenealogiaTab({ bufalo }: { bufalo: Bufalo }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
 
-  const { data: treeData, isLoading } = useQuery({
-    queryKey: ["genealogia-tree", bufalo.idBufalo],
-    queryFn: () => fetchGenealogyTree(bufalo.idBufalo),
-    staleTime: 10 * 60 * 1000,
-    enabled: !!bufalo.idBufalo,
-  });
+  // Árvore genealógica vinda da rota de IA (/reproducao/genealogia/{id}).
+  const { data: arvore, isLoading, isError: isErrorArvore } = useGenealogiaArvore(bufalo.idBufalo, 4);
+  const treeData = useMemo(
+    () => (arvore ? toTreeNode(arvore, bufalo.sexo) : null),
+    [arvore, bufalo.sexo],
+  );
+
+  // Análise genética (IA) — consanguinidade, risco, ancestrais/descendentes
+  const {
+    data: analise,
+    isLoading: isLoadingAnalise,
+    isError: isErrorAnalise,
+    error: errorAnalise,
+  } = useAnaliseGenealogica(bufalo.idBufalo);
+
+  const consangStyle = riscoStyle(analise?.riscoGenetico);
+  const consanguinidadeLabel = useMemo(() => {
+    if (isLoadingAnalise) return "...";
+    if (isErrorAnalise) return "Indisponível";
+    if (!analise) return "—";
+    return analise.eFundador ? "Fundador" : `${analise.consanguinidade.toFixed(2)}%`;
+  }, [analise, isErrorAnalise, isLoadingAnalise]);
 
   // Calcula o layout da árvore
   const { nodes, links, bounds } = useMemo(() => {
@@ -277,9 +299,11 @@ export function GenealogiaTab({ bufalo }: { bufalo: Bufalo }) {
           <div className="p-2.5 bg-green-50 rounded-xl flex-shrink-0">
             <Dna className="w-5 h-5 text-green-600" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Consanguinidade</p>
-            <p className="text-sm font-bold text-green-700">N/A</p>
+            <p className={`text-sm font-bold ${analise ? consangStyle.text : "text-zinc-800"}`}>
+              {consanguinidadeLabel}
+            </p>
           </div>
         </div>
       </div>
@@ -293,6 +317,20 @@ export function GenealogiaTab({ bufalo }: { bufalo: Bufalo }) {
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 rounded-2xl gap-2">
             <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
             <span className="text-sm text-zinc-500 font-medium">Construindo árvore genealógica...</span>
+          </div>
+        )}
+
+        {!isLoading && (isErrorArvore || !treeData) && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 rounded-2xl gap-2 text-center px-6">
+            <Dna className="w-8 h-8 text-zinc-200" />
+            <p className="text-sm font-semibold text-zinc-400">
+              {isErrorArvore ? "Não foi possível carregar a árvore" : "Genealogia indisponível"}
+            </p>
+            <p className="text-xs text-zinc-300 max-w-xs">
+              {isErrorArvore
+                ? "Tente novamente em instantes."
+                : "Este animal ainda não possui genealogia registrada."}
+            </p>
           </div>
         )}
 
@@ -335,6 +373,84 @@ export function GenealogiaTab({ bufalo }: { bufalo: Bufalo }) {
           </svg>
         </div>
       </div>
+
+      {/* ── Análise Genética (IA) ────────────────────────────── */}
+      <div className="bg-white border border-zinc-200 rounded-2xl p-5">
+        <h2 className="text-sm font-bold text-zinc-800 mb-4 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-indigo-500" /> Análise Genética (IA)
+        </h2>
+
+        {isLoadingAnalise ? (
+          <div className="flex flex-col items-center justify-center h-32 gap-2 text-zinc-400">
+            <div className="w-5 h-5 border-2 border-zinc-300 border-t-indigo-500 rounded-full animate-spin" />
+            <span className="text-sm font-medium">Calculando consanguinidade...</span>
+          </div>
+        ) : isErrorAnalise ? (
+          <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
+            <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-700">Análise indisponível</p>
+              <p className="text-sm text-amber-600 mt-0.5">{iaErro(errorAnalise)}</p>
+            </div>
+          </div>
+        ) : analise ? (
+          <div className="flex flex-col gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Coeficiente */}
+              <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-4 flex items-start gap-3">
+                <div className="p-2 bg-white rounded-md border border-zinc-200"><Dna className="w-4 h-4 text-zinc-500" /></div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Coef. Consanguinidade</p>
+                  <p className={`text-xl font-extrabold leading-tight mt-0.5 ${consangStyle.text}`}>
+                    {consanguinidadeLabel}
+                  </p>
+                </div>
+              </div>
+
+              {/* Risco genético */}
+              <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-4 flex items-start gap-3">
+                <div className="p-2 bg-white rounded-md border border-zinc-200"><ShieldCheck className="w-4 h-4 text-zinc-500" /></div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Risco Genético</p>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold mt-1 ${consangStyle.bg} ${consangStyle.text}`}>
+                    {analise.riscoGenetico || "—"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Fundador */}
+              <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-4 flex items-start gap-3">
+                <div className="p-2 bg-white rounded-md border border-zinc-200"><Crown className="w-4 h-4 text-zinc-500" /></div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Fundador</p>
+                  <p className="text-sm font-bold text-zinc-800 mt-1">{analise.eFundador ? "Sim" : "Não"}</p>
+                </div>
+              </div>
+            </div>
+
+            {analise.descricaoRisco && (
+              <p className="text-sm text-zinc-500">{analise.descricaoRisco}</p>
+            )}
+
+            {/* Resumo de linhagem */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-zinc-100">
+              <ResumoItem label="Ancestrais" value={analise.resumo?.totalAncestrais ?? 0} />
+              <ResumoItem label="Gerações (asc.)" value={analise.resumo?.geracoesAncestrais ?? 0} />
+              <ResumoItem label="Descendentes" value={analise.resumo?.totalDescendentes ?? 0} />
+              <ResumoItem label="Gerações (desc.)" value={analise.resumo?.geracoesDescendentes ?? 0} />
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ResumoItem({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="text-center">
+      <p className="text-lg font-bold text-zinc-800">{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{label}</p>
     </div>
   );
 }

@@ -1,63 +1,33 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Syringe, CheckCircle2, History, Calendar,
-  Link2, Flame, AlertCircle, Trash2, Plus,
-} from "lucide-react";
+import { Syringe, CheckCircle2, History, Calendar, Clock, Trash2, Plus } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import { Button } from "@/components/ui/Button";
-import { useDadosSanitariosByBufalo } from "@/hooks/useDadosSanitarios";
-import { DadoSanitarioDetailsModal } from "./sanitario/DadoSanitarioDetailsModal";
-import { DeletedRegistrosModal } from "./sanitario/DeletedRegistrosModal";
-import { CreateDadoSanitarioModal } from "./sanitario/CreateDadoSanitarioModal";
-import type { DadoSanitario } from "@/services/dados-sanitarios.service";
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
-type TipoTratamento = "suplementacao" | "parasita" | "doenca" | "vacina";
+import { Bufalo } from "@/services/bufalos.service";
+import { useVacinacaoByBufalo } from "@/hooks/useVacinacao";
+import type { Vacinacao } from "@/services/vacinacao.service";
+import { VacinacaoDetailsModal } from "./vacinacao/VacinacaoDetailsModal";
+import { DeletedVacinacaoModal } from "./vacinacao/DeletedVacinacaoModal";
+import { CreateVacinacaoModal } from "./vacinacao/CreateVacinacaoModal";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(value?: string | null) {
   if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+  const datePart = value.slice(0, 10);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+  if (!match) {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+  }
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
 }
 
-function mapTipoTratamento(tipoTratamento?: string): TipoTratamento {
-  const v = tipoTratamento?.toLowerCase() ?? "";
-  if (v.includes("vacinação") || v.includes("vacinacao")) return "vacina";
-  if (v.includes("suplementação") || v.includes("suplementacao")) return "suplementacao";
-  if (v.includes("vermifugação") || v.includes("vermifugacao") || v.includes("parasita")) return "parasita";
-  return "doenca";
-}
-
-function getMedicacao(reg: DadoSanitario) {
+function getMedicacao(reg: Vacinacao) {
   return reg.medicacoe ?? reg.medicacoes;
 }
-
-function getTipo(reg: DadoSanitario): TipoTratamento {
-  return mapTipoTratamento(getMedicacao(reg)?.tipoTratamento);
-}
-
-function getSituacao(registros: DadoSanitario[]): string {
-  if (!registros.length) return "—";
-  return registros.some(r => getTipo(r) === "doenca") ? "Atenção" : "Regular";
-}
-
-function getSituacaoColor(situacao: string) {
-  if (situacao === "Atenção") return "text-amber-600";
-  if (situacao === "Regular") return "text-zinc-800";
-  return "text-zinc-400";
-}
-
-const TIPO_CONFIG: Record<TipoTratamento, { icon: React.ReactNode; label: string }> = {
-  suplementacao: { icon: <Link2       className="w-3.5 h-3.5 text-blue-500"   />, label: "Suplementação"        },
-  parasita:      { icon: <Flame       className="w-3.5 h-3.5 text-orange-500" />, label: "Parasitas/Vermifugação" },
-  doenca:        { icon: <AlertCircle className="w-3.5 h-3.5 text-red-500"    />, label: "Doença/Tratamento"     },
-  vacina:        { icon: <Syringe     className="w-3.5 h-3.5 text-green-500"  />, label: "Vacinação"            },
-};
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
@@ -79,60 +49,50 @@ function MetricCard({
 
 const LIMIT = 10;
 
-interface SanitarioTabProps {
-  bufaloId: string;
-  idPropriedade: string;
-}
-
-export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
+export function VacinacaoTab({ bufalo }: { bufalo: Bufalo }) {
   const [page, setPage] = useState(1);
-  const [selectedRegistro, setSelectedRegistro] = useState<DadoSanitario | null>(null);
+  const [selectedRegistro, setSelectedRegistro] = useState<Vacinacao | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
-  const { data, isLoading } = useDadosSanitariosByBufalo(bufaloId, { page, limit: LIMIT });
+  const { data, isLoading } = useVacinacaoByBufalo(bufalo.idBufalo, { page, limit: LIMIT });
 
-  const registros = data?.data ?? [];
-  const meta      = data?.meta;
-  const total     = meta?.total ?? 0;
+  const registros  = data?.data ?? [];
+  const meta       = data?.meta;
+  const total      = meta?.total ?? 0;
   const totalPages = meta?.totalPages ?? 1;
 
-  const situacao         = getSituacao(registros);
-  const ultimaAplicacao  = registros[0]?.dtAplicacao ?? null;
-
-  const handleMutated = () => {
-    setSelectedRegistro(null);
-  };
+  const ultimaAplicacao = page === 1 ? registros[0]?.dtAplicacao ?? null : null;
+  const retornosPendentes = registros.filter(r => r.necessitaRetorno).length;
 
   return (
     <div className="animate-in fade-in duration-300 flex flex-col gap-5">
 
-      {/* ── Métricas superiores ──────────────────────────────── */}
+      {/* ── Métricas ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
-          icon={<div className="p-2.5 bg-blue-50 rounded-xl"><Syringe className="w-5 h-5 text-blue-500" /></div>}
-          label="Total de Registros"
+          icon={<div className="p-2.5 bg-green-50 rounded-xl"><Syringe className="w-5 h-5 text-green-500" /></div>}
+          label="Total de Vacinações"
           value={isLoading ? "..." : String(total)}
         />
         <MetricCard
-          icon={<div className="p-2.5 bg-green-50 rounded-xl"><CheckCircle2 className="w-5 h-5 text-green-500" /></div>}
-          label="Situação Sanitária"
-          value={isLoading ? "..." : situacao}
-          valueClass={getSituacaoColor(situacao)}
-        />
-        <MetricCard
-          icon={<div className="p-2.5 bg-amber-50 rounded-xl"><History className="w-5 h-5 text-amber-500" /></div>}
+          icon={<div className="p-2.5 bg-blue-50 rounded-xl"><History className="w-5 h-5 text-blue-500" /></div>}
           label="Última Aplicação"
           value={isLoading ? "..." : formatDate(ultimaAplicacao)}
         />
+        <MetricCard
+          icon={<div className="p-2.5 bg-amber-50 rounded-xl"><Clock className="w-5 h-5 text-amber-500" /></div>}
+          label="Retornos Pendentes (página)"
+          value={isLoading ? "..." : String(retornosPendentes)}
+          valueClass={retornosPendentes > 0 ? "text-amber-600" : "text-zinc-800"}
+        />
       </div>
 
-      {/* ── Tabela ───────────────────────────────────────────── */}
+      {/* ── Tabela ───────────────────────────────────────────────── */}
       <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden">
 
-        {/* Header da tabela com botão de removidos */}
-        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-zinc-800">Histórico de Vacinas e Tratamentos</h2>
+        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between gap-2">
+          <h2 className="text-sm font-bold text-zinc-800">Histórico de Vacinação</h2>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -145,7 +105,7 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
             </Button>
             <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
               <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Registrar
+              Registrar vacinação
             </Button>
           </div>
         </div>
@@ -162,8 +122,8 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
         {!isLoading && registros.length === 0 && (
           <div className="flex flex-col items-center justify-center h-52 gap-2">
             <Syringe className="w-8 h-8 text-zinc-200" />
-            <p className="text-sm font-semibold text-zinc-400">Nenhum registro sanitário encontrado</p>
-            <p className="text-xs text-zinc-300">Vacinas e tratamentos aplicados aparecerão aqui</p>
+            <p className="text-sm font-semibold text-zinc-400">Nenhuma vacinação registrada</p>
+            <p className="text-xs text-zinc-300">As vacinas aplicadas neste búfalo aparecerão aqui</p>
           </div>
         )}
 
@@ -177,10 +137,10 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
                     Data Aplicação
                   </th>
                   <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 w-full">
-                    Tratamento / Vacina
+                    Vacina
                   </th>
                   <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 whitespace-nowrap">
-                    Doença
+                    Doença / Prevenção
                   </th>
                   <th className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 whitespace-nowrap">
                     Dosagem
@@ -193,9 +153,7 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
 
               <tbody className="divide-y divide-zinc-50">
                 {registros.map((reg) => {
-                  const tipo = getTipo(reg);
-                  const cfg  = TIPO_CONFIG[tipo];
-                  const med  = getMedicacao(reg);
+                  const med = getMedicacao(reg);
                   return (
                     <tr
                       key={reg.idSanit}
@@ -211,13 +169,10 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
 
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          {cfg.icon}
-                          <div>
-                            <p className="text-sm text-zinc-700 font-medium leading-tight">
-                              {med?.medicacao ?? "—"}
-                            </p>
-                            <p className="text-[11px] text-zinc-400">{cfg.label}</p>
-                          </div>
+                          <Syringe className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                          <p className="text-sm text-zinc-700 font-medium leading-tight">
+                            {med?.medicacao ?? "—"}
+                          </p>
                         </div>
                       </td>
 
@@ -233,11 +188,9 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
 
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         {reg.necessitaRetorno ? (
-                          <div className="text-right">
-                            <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                              {reg.dtRetorno ? formatDate(reg.dtRetorno) : "A definir"}
-                            </span>
-                          </div>
+                          <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                            {reg.dtRetorno ? formatDate(reg.dtRetorno) : "A definir"}
+                          </span>
                         ) : (
                           <span className="text-sm text-zinc-300">—</span>
                         )}
@@ -262,27 +215,28 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
         )}
       </div>
 
-      {/* ── Modais ───────────────────────────────────────────── */}
-      <DadoSanitarioDetailsModal
+      {/* ── Modais ───────────────────────────────────────────────── */}
+      <VacinacaoDetailsModal
         isOpen={!!selectedRegistro}
         onClose={() => setSelectedRegistro(null)}
         registro={selectedRegistro}
-        onMutated={handleMutated}
+        idPropriedade={bufalo.idPropriedade}
+        onMutated={() => setSelectedRegistro(null)}
       />
 
-      <DeletedRegistrosModal
-        isOpen={showDeleted}
-        onClose={() => setShowDeleted(false)}
-        idBufalo={bufaloId}
-        onMutated={() => setShowDeleted(false)}
-      />
-
-      <CreateDadoSanitarioModal
+      <CreateVacinacaoModal
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
-        idBufalo={bufaloId}
-        idPropriedade={idPropriedade}
+        idBufalo={bufalo.idBufalo}
+        idPropriedade={bufalo.idPropriedade}
         onCreated={() => setShowCreate(false)}
+      />
+
+      <DeletedVacinacaoModal
+        isOpen={showDeleted}
+        onClose={() => setShowDeleted(false)}
+        idBufalo={bufalo.idBufalo}
+        onMutated={() => setShowDeleted(false)}
       />
     </div>
   );

@@ -123,19 +123,11 @@ export interface MoverGrupoDTO {
   motivo?: string;
 }
 
-export interface MoverGrupoAnimal {
-  idBufalo: string;
-  nome: string;
-  grupoAnterior: string;
-  grupoNovo: string;
-}
 
 export interface MoverGrupoResponse {
   message: string;
-  grupoDestino: string;
+  updated: Bufalo[];
   totalProcessados: number;
-  motivo: string;
-  animais: MoverGrupoAnimal[];
 }
 
 // ==========================================

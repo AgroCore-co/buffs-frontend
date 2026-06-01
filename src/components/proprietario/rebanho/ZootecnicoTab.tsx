@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Scale, Activity, TrendingUp, Calendar, Ruler } from "lucide-react";
+import { Scale, Activity, TrendingUp, Calendar, Ruler, Trash2 } from "lucide-react";
 
 import {
   DataTable,
@@ -13,42 +13,34 @@ import {
   TableEmptyState,
 } from "@/components/ui/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
+import { Button } from "@/components/ui/Button";
 import { Bufalo } from "@/services/bufalos.service";
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
-interface RegistroZootecnico {
-  id: string;
-  dataRegistro: string;
-  peso: number;
-  ecc: number;
-  formatoChifre: string;
-  porte: string;
-  tipo: string;
-}
-
-// ─── Mock ─────────────────────────────────────────────────────────────────────
-
-const MOCK_REGISTROS: RegistroZootecnico[] = [
-  { id: "1",  dataRegistro: "2025-11-01", peso: 181.16, ecc: 3.76, formatoChifre: "Em Cacho",  porte: "Médio", tipo: "Mensal" },
-  { id: "2",  dataRegistro: "2025-10-01", peso: 273.19, ecc: 1.01, formatoChifre: "Curvado",   porte: "Médio", tipo: "Mensal" },
-  { id: "3",  dataRegistro: "2025-09-01", peso: 157.76, ecc: 4.34, formatoChifre: "Enrolado",  porte: "Médio", tipo: "Mensal" },
-  { id: "4",  dataRegistro: "2025-08-01", peso: 179.09, ecc: 3.71, formatoChifre: "Curvado",   porte: "Médio", tipo: "Mensal" },
-  { id: "5",  dataRegistro: "2025-07-01", peso: 247.49, ecc: 1.86, formatoChifre: "Enrolado",  porte: "Médio", tipo: "Mensal" },
-  { id: "6",  dataRegistro: "2025-06-01", peso: 301.91, ecc: 4.62, formatoChifre: "Em Cacho",  porte: "Médio", tipo: "Mensal" },
-  { id: "7",  dataRegistro: "2025-05-01", peso: 221.51, ecc: 4.90, formatoChifre: "Enrolado",  porte: "Médio", tipo: "Mensal" },
-  { id: "8",  dataRegistro: "2025-04-01", peso: 251.86, ecc: 1.13, formatoChifre: "Em Cacho",  porte: "Médio", tipo: "Mensal" },
-  { id: "9",  dataRegistro: "2025-03-01", peso: 275.32, ecc: 1.66, formatoChifre: "Em Cacho",  porte: "Médio", tipo: "Mensal" },
-  { id: "10", dataRegistro: "2025-02-01", peso: 174.67, ecc: 4.27, formatoChifre: "Curvado",   porte: "Médio", tipo: "Mensal" },
-  { id: "11", dataRegistro: "2025-01-01", peso: 192.40, ecc: 3.50, formatoChifre: "Em Cacho",  porte: "Médio", tipo: "Mensal" },
-  { id: "12", dataRegistro: "2024-12-01", peso: 210.88, ecc: 2.10, formatoChifre: "Enrolado",  porte: "Médio", tipo: "Mensal" },
-];
+import { useDadosZootecnicosByBufalo } from "@/hooks/useDadosZootecnicos";
+import type { DadoZootecnico } from "@/services/dados-zootecnicos.service";
+import { DadoZootecnicoDetailsModal } from "./zootecnico/DadoZootecnicoDetailsModal";
+import { DeletedRegistrosModal } from "./zootecnico/DeletedRegistrosModal";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/**
+ * Formata datas no padrão "YYYY-MM-DD HH:mm:ss+00" (ou ISO) para DD/MM/YYYY
+ * sem aplicar conversão de fuso horário (evita deslocar o dia).
+ */
 function formatDate(value: string) {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+  if (!value) return "—";
+  const datePart = value.slice(0, 10); // "2025-11-01"
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+  if (!match) {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+  }
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
+}
+
+function toNumber(value: string | number | null | undefined): number {
+  const n = typeof value === "number" ? value : parseFloat(value ?? "");
+  return Number.isNaN(n) ? 0 : n;
 }
 
 function getEccStyle(ecc: number): { bar: string; text: string } {
@@ -93,17 +85,24 @@ function EccBar({ ecc }: { ecc: number }) {
 
 const LIMIT = 10;
 
-export function ZootecnicoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
+export function ZootecnicoTab({ bufalo }: { bufalo: Bufalo }) {
   const [page, setPage] = useState(1);
+  const [selectedRegistro, setSelectedRegistro] = useState<DadoZootecnico | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
-  const registros = MOCK_REGISTROS;
-  const total     = registros.length;
-  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
-  const paginated  = registros.slice((page - 1) * LIMIT, page * LIMIT);
+  const { data, isLoading, isError } = useDadosZootecnicosByBufalo(bufalo.idBufalo, {
+    page,
+    limit: LIMIT,
+  });
 
-  const ultimo    = registros[0];
-  const pesoAtual = ultimo ? `${ultimo.peso.toFixed(2)} kg` : "—";
-  const eccAtual  = ultimo ? `${ultimo.ecc.toFixed(2)}` : "—";
+  const registros  = data?.data ?? [];
+  const total      = data?.meta.total ?? 0;
+  const totalPages = data?.meta.totalPages ?? 1;
+
+  // Métrica "atual" = registro mais recente (a API ordena do mais novo para o mais antigo).
+  const ultimo    = page === 1 ? registros[0] : undefined;
+  const pesoAtual = ultimo ? `${toNumber(ultimo.peso).toFixed(2)} kg` : "—";
+  const eccAtual  = ultimo ? `${toNumber(ultimo.condicaoCorporal).toFixed(2)}` : "—";
 
   return (
     <div className="animate-in fade-in duration-300 flex flex-col gap-5">
@@ -142,8 +141,17 @@ export function ZootecnicoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
 
       {/* ── Tabela ───────────────────────────────────────────────── */}
       <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-zinc-100">
+        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-zinc-800">Histórico Zootécnico</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDeleted(true)}
+            className="text-zinc-400 hover:text-zinc-700"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+            Ver removidos
+          </Button>
         </div>
 
         <DataTable
@@ -151,8 +159,20 @@ export function ZootecnicoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
           emptyState={
             <TableEmptyState
               icon={Scale}
-              title="Nenhum registro zootécnico"
-              description="Pesagens e avaliações do animal aparecerão aqui."
+              title={
+                isLoading
+                  ? "Carregando registros…"
+                  : isError
+                  ? "Erro ao carregar registros"
+                  : "Nenhum registro zootécnico"
+              }
+              description={
+                isLoading
+                  ? "Buscando o histórico zootécnico do animal."
+                  : isError
+                  ? "Não foi possível buscar os dados zootécnicos. Tente novamente."
+                  : "Pesagens e avaliações do animal aparecerão aqui."
+              }
             />
           }
         >
@@ -165,40 +185,42 @@ export function ZootecnicoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
             <TableHead align="right">Tipo</TableHead>
           </TableHeader>
           <TableBody>
-            {paginated.map((reg) => (
-              <TableRow key={reg.id}>
+            {registros.map((reg) => (
+              <TableRow key={reg.idZootec} onClick={() => setSelectedRegistro(reg)}>
                 <TableCell>
                   <div className="flex items-center gap-2 text-sm text-zinc-600">
                     <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    {formatDate(reg.dataRegistro)}
+                    {formatDate(reg.dtRegistro)}
                   </div>
                 </TableCell>
 
                 <TableCell>
                   <div className="flex items-center gap-1.5">
                     <Scale className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    <span className="text-sm font-bold text-zinc-800">{reg.peso.toFixed(2)} kg</span>
+                    <span className="text-sm font-bold text-zinc-800">
+                      {toNumber(reg.peso).toFixed(2)} kg
+                    </span>
                   </div>
                 </TableCell>
 
                 <TableCell>
-                  <EccBar ecc={reg.ecc} />
+                  <EccBar ecc={toNumber(reg.condicaoCorporal)} />
                 </TableCell>
 
                 <TableCell>
-                  <span className="text-sm text-zinc-700">{reg.formatoChifre}</span>
+                  <span className="text-sm text-zinc-700">{reg.formatoChifre || "—"}</span>
                 </TableCell>
 
                 <TableCell>
                   <div className="flex items-center gap-1.5 text-sm text-zinc-700">
                     <Ruler className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    {reg.porte}
+                    {reg.porteCorporal || "—"}
                   </div>
                 </TableCell>
 
                 <TableCell align="right">
                   <span className="px-2.5 py-1 rounded-lg border border-zinc-200 text-xs font-medium text-zinc-600 bg-white">
-                    {reg.tipo}
+                    {reg.tipoPesagem || "—"}
                   </span>
                 </TableCell>
               </TableRow>
@@ -217,6 +239,21 @@ export function ZootecnicoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
           />
         )}
       </div>
+
+      {/* ── Modais ───────────────────────────────────────────────── */}
+      <DadoZootecnicoDetailsModal
+        isOpen={!!selectedRegistro}
+        onClose={() => setSelectedRegistro(null)}
+        registro={selectedRegistro}
+        onMutated={() => setSelectedRegistro(null)}
+      />
+
+      <DeletedRegistrosModal
+        isOpen={showDeleted}
+        onClose={() => setShowDeleted(false)}
+        idBufalo={bufalo.idBufalo}
+        onMutated={() => setShowDeleted(false)}
+      />
     </div>
   );
 }

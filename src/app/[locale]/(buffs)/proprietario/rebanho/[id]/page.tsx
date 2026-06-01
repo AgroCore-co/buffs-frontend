@@ -118,7 +118,8 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
             { key: "visao-geral",    label: "Visão Geral"   },
             { key: "zootecnico",     label: "Zootécnico"    },
             { key: "reproducao",     label: "Reprodução"    },
-            { key: "producao",       label: "Produção"      },
+            // Produção (ordenha) só faz sentido para fêmeas
+            ...(bufalo.sexo === "F" ? [{ key: "producao", label: "Produção" }] : []),
             { key: "sanitario",      label: "Sanitário"     },
             { key: "movimentacoes",  label: "Movimentações" },
             { key: "desempenho",     label: "Desempenho"    },
@@ -143,7 +144,7 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
 
           {/* ── Sanitário ───────────────────────────────────────── */}
           {activeTab === "sanitario" && (
-            <SanitarioTab bufaloId={bufalo.idBufalo} />
+            <SanitarioTab bufaloId={bufalo.idBufalo} idPropriedade={bufalo.idPropriedade} />
           )}
 
           {/* ── Zootécnico ──────────────────────────────────────── */}
@@ -156,8 +157,8 @@ export default function ProntuarioBufaloPage({ params }: { params: Promise<{ id:
             <ReproducaoTab bufalo={bufalo} />
           )}
 
-          {/* ── Produção ────────────────────────────────────────── */}
-          {activeTab === "producao" && (
+          {/* ── Produção (apenas fêmeas) ────────────────────────── */}
+          {activeTab === "producao" && bufalo.sexo === "F" && (
             <ProducaoTab bufalo={bufalo} />
           )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Scale, Activity, TrendingUp } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -9,23 +9,32 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
 } from "recharts";
 import { Bufalo } from "@/services/bufalos.service";
+import { useDadosZootecnicosByBufalo } from "@/hooks/useDadosZootecnicos";
 
-// ─── Mock (cronológico: do mais antigo ao mais recente) ───────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const HISTORICO = [
-  { mes: "Dez/24", peso: 210.88, ecc: 2.10 },
-  { mes: "Jan/25", peso: 192.40, ecc: 3.50 },
-  { mes: "Fev/25", peso: 174.67, ecc: 4.27 },
-  { mes: "Mar/25", peso: 275.32, ecc: 1.66 },
-  { mes: "Abr/25", peso: 251.86, ecc: 1.13 },
-  { mes: "Mai/25", peso: 221.51, ecc: 4.90 },
-  { mes: "Jun/25", peso: 301.91, ecc: 4.62 },
-  { mes: "Jul/25", peso: 247.49, ecc: 1.86 },
-  { mes: "Ago/25", peso: 179.09, ecc: 3.71 },
-  { mes: "Set/25", peso: 157.76, ecc: 4.34 },
-  { mes: "Out/25", peso: 273.19, ecc: 1.01 },
-  { mes: "Nov/25", peso: 181.16, ecc: 3.76 },
-];
+const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+/** "2025-11-01 00:00:00+00" → "Nov/25" (sem conversão de fuso). */
+function monthLabel(value?: string | null): string {
+  if (!value) return "—";
+  const datePart = value.slice(0, 10);
+  const [year, month] = datePart.split("-");
+  const idx = Number(month) - 1;
+  if (Number.isNaN(idx) || idx < 0 || idx > 11) return datePart;
+  return `${MESES[idx]}/${year.slice(2)}`;
+}
+
+function toNumber(value: string | number | null | undefined): number {
+  const n = typeof value === "number" ? value : parseFloat(value ?? "");
+  return Number.isNaN(n) ? 0 : n;
+}
+
+interface PontoHistorico {
+  mes: string;
+  peso: number;
+  ecc: number;
+}
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
@@ -55,11 +64,59 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export function DesempenhoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
-  const ultimo   = HISTORICO[HISTORICO.length - 1];
-  const primeiro = HISTORICO[0];
-  const ganho    = ultimo.peso - primeiro.peso;
-  const mediaPeso = HISTORICO.reduce((s, h) => s + h.peso, 0) / HISTORICO.length;
+// Janela ampla o suficiente para montar a curva histórica do animal.
+const LIMIT = 100;
+
+export function DesempenhoTab({ bufalo }: { bufalo: Bufalo }) {
+  const { data, isLoading, isError } = useDadosZootecnicosByBufalo(bufalo.idBufalo, {
+    page: 1,
+    limit: LIMIT,
+  });
+
+  // A API retorna do mais recente ao mais antigo; ordenamos cronologicamente.
+  const historico = useMemo<PontoHistorico[]>(() => {
+    const registros = data?.data ?? [];
+    return [...registros]
+      .sort((a, b) => a.dtRegistro.localeCompare(b.dtRegistro))
+      .map((r) => ({
+        mes: monthLabel(r.dtRegistro),
+        peso: toNumber(r.peso),
+        ecc: toNumber(r.condicaoCorporal),
+      }));
+  }, [data]);
+
+  const temDados   = historico.length > 0;
+  const ultimo     = temDados ? historico[historico.length - 1] : undefined;
+  const primeiro   = temDados ? historico[0] : undefined;
+  const ganho      = ultimo && primeiro ? ultimo.peso - primeiro.peso : 0;
+  const mediaPeso  = temDados ? historico.reduce((s, h) => s + h.peso, 0) / historico.length : 0;
+
+  if (isLoading) {
+    return (
+      <div className="animate-in fade-in duration-300 flex items-center justify-center h-72">
+        <div className="flex flex-col items-center gap-2 text-zinc-400">
+          <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin" />
+          <span className="text-sm font-medium">Carregando histórico de desempenho...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !temDados) {
+    return (
+      <div className="animate-in fade-in duration-300 flex flex-col items-center justify-center h-72 gap-2 text-center">
+        <Scale className="w-8 h-8 text-zinc-200" />
+        <p className="text-sm font-semibold text-zinc-400">
+          {isError ? "Erro ao carregar o desempenho" : "Sem dados de desempenho"}
+        </p>
+        <p className="text-xs text-zinc-300 max-w-xs">
+          {isError
+            ? "Não foi possível buscar o histórico zootécnico. Tente novamente."
+            : "Registre pesagens e avaliações no histórico zootécnico para acompanhar a evolução."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-in fade-in duration-300 flex flex-col gap-5">
@@ -69,7 +126,7 @@ export function DesempenhoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
         <MetricCard
           icon={<div className="p-2.5 bg-indigo-50 rounded-xl"><Scale className="w-5 h-5 text-indigo-500" /></div>}
           label="Peso Atual"
-          value={`${ultimo.peso.toFixed(2)} kg`}
+          value={`${ultimo!.peso.toFixed(2)} kg`}
         />
         <MetricCard
           icon={<div className="p-2.5 bg-indigo-50 rounded-xl"><TrendingUp className="w-5 h-5 text-indigo-500" /></div>}
@@ -86,7 +143,7 @@ export function DesempenhoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
       {/* ── Curva de Peso ────────────────────────────────────────── */}
       <ChartCard title="Curva de Peso (kg)">
         <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={HISTORICO} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+          <AreaChart data={historico} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="pesoGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%"  stopColor="#6366f1" stopOpacity={0.15} />
@@ -98,7 +155,7 @@ export function DesempenhoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
             <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
             <Tooltip
               contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-              formatter={(v: number) => [`${v.toFixed(2)} kg`, "Peso"]}
+              formatter={(value) => [`${toNumber(value as number).toFixed(2)} kg`, "Peso"]}
             />
             <ReferenceLine y={mediaPeso} stroke="#a5b4fc" strokeDasharray="4 4" strokeWidth={1.5} />
             <Area
@@ -118,13 +175,13 @@ export function DesempenhoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
       {/* ── Evolução do ECC ──────────────────────────────────────── */}
       <ChartCard title="Evolução do Escore Corporal — ECC (0–5)">
         <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={HISTORICO} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+          <LineChart data={historico} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
             <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
             <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-              formatter={(v: number) => [v.toFixed(2), "ECC"]}
+              formatter={(value) => [toNumber(value as number).toFixed(2), "ECC"]}
             />
             {/* Zonas de referência */}
             <ReferenceLine y={2.5} stroke="#fbbf24" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: "Mín ideal", position: "insideTopLeft", fontSize: 10, fill: "#fbbf24" }} />

@@ -5,6 +5,7 @@ import {
   Milk,
   CalendarCheck2,
   Factory,
+  Pill,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -39,6 +40,7 @@ export const proprietarioNavigation: NavSection[] = [
     sectionKey: 'sections.rebanho',
     items: [
       { icon: PawPrint, labelKey: 'rebanho', href: '/proprietario/rebanho' },
+      { icon: Pill, labelKey: 'medicamentos', href: '/proprietario/medicamentos' },
     ],
   },
   {

@@ -1,62 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
-  MessageSquare, AlertTriangle, Wrench, StickyNote,
-  CalendarDays, User, Bell,
+  AlertTriangle, Bell, CalendarDays, Check, Stethoscope,
+  Syringe, HeartPulse, Tractor, Milk, Eye,
 } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
+import { Button } from "@/components/ui/Button";
 import { Bufalo } from "@/services/bufalos.service";
+import { useAlertasByPropriedade, useAlertasMutations } from "@/hooks/useAlertas";
+import type { Alerta, NichoAlerta, PrioridadeAlerta } from "@/services/alertas.service";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+// ─── Config de nicho e prioridade ───────────────────────────────────────────────
 
-type TipoEvento = "observacao" | "alerta" | "procedimento" | "nota";
+const NICHO_CONFIG: Record<NichoAlerta, { icon: React.ReactNode; label: string; dot: string }> = {
+  CLINICO:    { icon: <Stethoscope className="w-4 h-4" />, label: "Clínico",    dot: "bg-red-400"     },
+  SANITARIO:  { icon: <Syringe     className="w-4 h-4" />, label: "Sanitário",  dot: "bg-blue-400"    },
+  REPRODUCAO: { icon: <HeartPulse  className="w-4 h-4" />, label: "Reprodução", dot: "bg-pink-400"    },
+  MANEJO:     { icon: <Tractor     className="w-4 h-4" />, label: "Manejo",     dot: "bg-violet-400"  },
+  PRODUCAO:   { icon: <Milk        className="w-4 h-4" />, label: "Produção",   dot: "bg-emerald-400" },
+};
 
-interface Evento {
-  id: string;
-  data: string;
-  tipo: TipoEvento;
-  titulo: string;
-  descricao: string;
-  responsavel: string;
+const PRIORIDADE_CONFIG: Record<PrioridadeAlerta, { label: string; bg: string; text: string; border: string }> = {
+  ALTA:  { label: "Alta",  bg: "bg-red-50",   text: "text-red-700",   border: "border-red-200"   },
+  MEDIA: { label: "Média", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+  BAIXA: { label: "Baixa", bg: "bg-zinc-50",  text: "text-zinc-600",  border: "border-zinc-200"  },
+};
+
+function nichoCfg(nicho: NichoAlerta) {
+  return NICHO_CONFIG[nicho] ?? { icon: <Bell className="w-4 h-4" />, label: nicho, dot: "bg-zinc-400" };
 }
 
-// ─── Mock ─────────────────────────────────────────────────────────────────────
-
-const MOCK: Evento[] = [
-  { id: "1",  data: "2025-11-10", tipo: "observacao",   titulo: "Comportamento alterado",      descricao: "Animal apresentou agitação durante a ordenha. Observar nos próximos dias.",                 responsavel: "João Silva"    },
-  { id: "2",  data: "2025-10-22", tipo: "procedimento", titulo: "Casqueamento realizado",       descricao: "Casqueamento preventivo realizado com sucesso.",                                              responsavel: "Dr. Carlos"    },
-  { id: "3",  data: "2025-09-15", tipo: "alerta",       titulo: "Queda de produção",            descricao: "Produção leiteira 20% abaixo da média do lote nos últimos 5 dias.",                         responsavel: "Sistema"       },
-  { id: "4",  data: "2025-08-03", tipo: "nota",         titulo: "Transferência de lote",        descricao: "Animal transferido para lote de gestantes conforme protocolo reprodutivo.",                   responsavel: "Maria Oliveira"},
-  { id: "5",  data: "2025-07-20", tipo: "observacao",   titulo: "Boa adaptação ao grupo",      descricao: "Animal demonstrou boa adaptação ao novo grupo sem sinais de estresse.",                       responsavel: "João Silva"    },
-  { id: "6",  data: "2025-06-12", tipo: "alerta",       titulo: "Cio detectado",               descricao: "Cio detectado às 06:30. Inseminação programada para o dia seguinte.",                        responsavel: "Sistema"       },
-  { id: "7",  data: "2025-05-08", tipo: "procedimento", titulo: "Vacinação realizada",         descricao: "Vacinação antiaftosa semestral aplicada conforme calendário sanitário.",                      responsavel: "Dr. Carlos"    },
-  { id: "8",  data: "2025-04-01", tipo: "nota",         titulo: "Observação pós-parto",        descricao: "Animal em boa condição. Cria saudável. Iniciado protocolo de cuidados pós-parto.",            responsavel: "Maria Oliveira"},
-  { id: "9",  data: "2025-03-15", tipo: "observacao",   titulo: "Aumento de apetite",          descricao: "Animal consumindo 15% acima do habitual. Verificar status reprodutivo.",                      responsavel: "João Silva"    },
-  { id: "10", data: "2025-02-20", tipo: "alerta",       titulo: "Perda de peso acentuada",     descricao: "Perda de 18 kg em relação ao mês anterior. Investigar causa.",                               responsavel: "Sistema"       },
-];
-
-// ─── Config de tipos ──────────────────────────────────────────────────────────
-
-const TIPO_CONFIG: Record<TipoEvento, {
-  icon: React.ReactNode;
-  label: string;
-  dot: string;
-  bg: string;
-  text: string;
-  border: string;
-}> = {
-  observacao:   { icon: <MessageSquare className="w-4 h-4" />, label: "Observação",   dot: "bg-blue-400",   bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200"   },
-  alerta:       { icon: <AlertTriangle  className="w-4 h-4" />, label: "Alerta",       dot: "bg-amber-400",  bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200"  },
-  procedimento: { icon: <Wrench         className="w-4 h-4" />, label: "Procedimento", dot: "bg-purple-400", bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
-  nota:         { icon: <StickyNote     className="w-4 h-4" />, label: "Nota",         dot: "bg-zinc-400",   bg: "bg-zinc-50",   text: "text-zinc-700",   border: "border-zinc-200"   },
-};
+function prioridadeCfg(p: PrioridadeAlerta) {
+  return PRIORIDADE_CONFIG[p] ?? PRIORIDADE_CONFIG.BAIXA;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(v: string) {
-  const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+  const datePart = value.slice(0, 10);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+  if (!m) {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+  }
+  return `${m[3]}/${m[2]}/${m[1]}`;
 }
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
@@ -73,8 +63,12 @@ function MetricCard({ icon, label, value }: { icon: React.ReactNode; label: stri
   );
 }
 
-function EventoCard({ evento }: { evento: Evento }) {
-  const cfg = TIPO_CONFIG[evento.tipo];
+function AlertaCard({
+  alerta, onToggleVisto, isToggling,
+}: { alerta: Alerta; onToggleVisto: (a: Alerta) => void; isToggling: boolean }) {
+  const cfg = nichoCfg(alerta.nicho);
+  const prio = prioridadeCfg(alerta.prioridade);
+
   return (
     <div className="flex gap-4 group">
       {/* Linha do tempo */}
@@ -85,24 +79,57 @@ function EventoCard({ evento }: { evento: Evento }) {
 
       {/* Conteúdo */}
       <div className="pb-5 flex-1 min-w-0">
-        <div className="bg-white border border-zinc-200 rounded-xl p-4 group-hover:border-zinc-300 transition-colors">
+        <div className={`bg-white border rounded-xl p-4 transition-colors ${alerta.visto ? "border-zinc-200" : "border-amber-200 bg-amber-50/30"}`}>
           <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-zinc-200 bg-zinc-50 text-[10px] font-bold uppercase tracking-wider text-zinc-600">
                 {cfg.icon}
                 {cfg.label}
               </span>
-              <span className="text-sm font-semibold text-zinc-800">{evento.titulo}</span>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider ${prio.bg} ${prio.text} ${prio.border}`}>
+                {prio.label}
+              </span>
+              {!alerta.visto && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Novo
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-zinc-400 shrink-0">
               <CalendarDays className="w-3.5 h-3.5" />
-              {formatDate(evento.data)}
+              {formatDate(alerta.dataAlerta)}
             </div>
           </div>
-          <p className="text-sm text-zinc-500 mt-2 leading-relaxed">{evento.descricao}</p>
-          <div className="flex items-center gap-1.5 mt-2.5 text-xs text-zinc-400">
-            <User className="w-3 h-3" />
-            {evento.responsavel}
+
+          <p className="text-sm font-semibold text-zinc-800 mt-2">{alerta.motivo}</p>
+          {alerta.observacao && (
+            <p className="text-sm text-zinc-500 mt-1 leading-relaxed">{alerta.observacao}</p>
+          )}
+
+          <div className="flex items-center justify-between gap-2 mt-3 flex-wrap">
+            <div className="flex items-center gap-3 text-xs text-zinc-400">
+              {alerta.tipoEventoOrigem && (
+                <span className="inline-flex items-center gap-1">
+                  <Bell className="w-3 h-3" />
+                  {alerta.tipoEventoOrigem.replace(/_/g, " ").toLowerCase()}
+                </span>
+              )}
+              {alerta.localizacao && <span>· {alerta.localizacao}</span>}
+            </div>
+
+            <Button
+              variant={alerta.visto ? "ghost" : "outline"}
+              size="sm"
+              isLoading={isToggling}
+              onClick={() => onToggleVisto(alerta)}
+              className={alerta.visto ? "text-zinc-400 hover:text-zinc-700" : ""}
+            >
+              {alerta.visto ? (
+                <><Eye className="w-3.5 h-3.5 mr-1.5" /> Marcar como não visto</>
+              ) : (
+                <><Check className="w-3.5 h-3.5 mr-1.5" /> Marcar como visto</>
+              )}
+            </Button>
           </div>
         </div>
       </div>
@@ -113,16 +140,44 @@ function EventoCard({ evento }: { evento: Evento }) {
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 const LIMIT = 6;
+// Janela ampla o suficiente para reunir os alertas do animal (a API não filtra por animal).
+const FETCH_LIMIT = 200;
 
-export function EventosTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
+export function EventosTab({ bufalo }: { bufalo: Bufalo }) {
   const [page, setPage] = useState(1);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const total      = MOCK.length;
+  const { data, isLoading, isError } = useAlertasByPropriedade(bufalo.idPropriedade, {
+    incluirVistos: true,
+    limit: FETCH_LIMIT,
+  });
+  const { marcarVisto } = useAlertasMutations();
+
+  // A API não tem filtro por animal — filtramos no cliente e ordenamos por data desc.
+  const alertasAnimal = useMemo(() => {
+    const todos = data?.data ?? [];
+    return todos
+      .filter(a => a.animalId === bufalo.idBufalo)
+      .sort((a, b) => (b.dataAlerta ?? "").localeCompare(a.dataAlerta ?? ""));
+  }, [data, bufalo.idBufalo]);
+
+  const total      = alertasAnimal.length;
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
-  const paginated  = MOCK.slice((page - 1) * LIMIT, page * LIMIT);
-  const ultimo     = MOCK[0];
+  const paginated  = alertasAnimal.slice((page - 1) * LIMIT, page * LIMIT);
 
-  const alertas = MOCK.filter(e => e.tipo === "alerta").length;
+  const naoVistos  = alertasAnimal.filter(a => !a.visto).length;
+  const ultimo     = alertasAnimal[0];
+
+  const handleToggleVisto = async (alerta: Alerta) => {
+    setTogglingId(alerta.idAlerta);
+    try {
+      await marcarVisto({ id: alerta.idAlerta, status: !alerta.visto });
+    } catch {
+      toast.error("Erro ao atualizar o alerta.");
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   return (
     <div className="animate-in fade-in duration-300 flex flex-col gap-5">
@@ -131,35 +186,51 @@ export function EventosTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
           icon={<div className="p-2.5 bg-amber-50 rounded-xl"><Bell className="w-5 h-5 text-amber-500" /></div>}
-          label="Total de Eventos"
-          value={String(total)}
-        />
-        <MetricCard
-          icon={<div className="p-2.5 bg-amber-50 rounded-xl"><CalendarDays className="w-5 h-5 text-amber-500" /></div>}
-          label="Último Evento"
-          value={ultimo ? formatDate(ultimo.data) : "—"}
+          label="Total de Alertas"
+          value={isLoading ? "..." : String(total)}
         />
         <MetricCard
           icon={<div className="p-2.5 bg-amber-50 rounded-xl"><AlertTriangle className="w-5 h-5 text-amber-500" /></div>}
-          label="Alertas Registrados"
-          value={String(alertas)}
+          label="Pendentes (não vistos)"
+          value={isLoading ? "..." : String(naoVistos)}
+        />
+        <MetricCard
+          icon={<div className="p-2.5 bg-amber-50 rounded-xl"><CalendarDays className="w-5 h-5 text-amber-500" /></div>}
+          label="Último Alerta"
+          value={isLoading ? "..." : (ultimo ? formatDate(ultimo.dataAlerta) : "—")}
         />
       </div>
 
       {/* ── Timeline ─────────────────────────────────────────────── */}
       <div className="bg-white border border-zinc-200 rounded-2xl p-5">
-        <h2 className="text-sm font-bold text-zinc-800 mb-5">Linha do Tempo</h2>
+        <h2 className="text-sm font-bold text-zinc-800 mb-5">Alertas do Animal</h2>
 
-        {MOCK.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-2 text-zinc-400">
+            <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin" />
+            <span className="text-sm font-medium">Carregando alertas...</span>
+          </div>
+        ) : total === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
-            <MessageSquare className="w-8 h-8 text-zinc-200" />
-            <p className="text-sm font-semibold text-zinc-400">Nenhum evento registrado</p>
-            <p className="text-xs text-zinc-300">Observações e ocorrências do animal aparecerão aqui</p>
+            <Bell className="w-8 h-8 text-zinc-200" />
+            <p className="text-sm font-semibold text-zinc-400">
+              {isError ? "Erro ao carregar alertas" : "Nenhum alerta para este animal"}
+            </p>
+            <p className="text-xs text-zinc-300">
+              {isError
+                ? "Não foi possível buscar os alertas. Tente novamente."
+                : "Alertas operacionais e clínicos deste búfalo aparecerão aqui."}
+            </p>
           </div>
         ) : (
           <div className="flex flex-col">
-            {paginated.map((evento) => (
-              <EventoCard key={evento.id} evento={evento} />
+            {paginated.map((alerta) => (
+              <AlertaCard
+                key={alerta.idAlerta}
+                alerta={alerta}
+                onToggleVisto={handleToggleVisto}
+                isToggling={togglingId === alerta.idAlerta}
+              />
             ))}
           </div>
         )}

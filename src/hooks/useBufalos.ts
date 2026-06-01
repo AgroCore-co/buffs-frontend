@@ -370,10 +370,12 @@ export function useBufalos() {
 
   const moverGrupoMutation = useMutation({
     mutationFn: (data: MoverGrupoDTO) => bufalosService.moverGrupo(data),
-    onSuccess: (response) => {
+    // Invalida a partir das variáveis enviadas — a resposta da API não inclui
+    // a lista de animais, então confiar nela quebrava a mutação silenciosamente.
+    onSuccess: (_response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['bufalos', 'grupo'] });
       queryClient.invalidateQueries({ queryKey: ['bufalos', 'filtro'] });
-      response.animais.forEach(({ idBufalo }) => {
+      variables.idsBufalos.forEach((idBufalo) => {
         queryClient.invalidateQueries({ queryKey: BUFALOS_QUERY_KEYS.byId(idBufalo) });
       });
     },
