@@ -1143,6 +1143,11 @@
           "optional": "(optional)",
           "descriptionPlaceholder": "Details about the medication..."
         },
+        "errors": {
+          "nameRequired": "Medication name is required.",
+          "nameMax": "Name can be at most 30 characters.",
+          "descriptionMax": "Description can be at most 100 characters."
+        },
         "actions": {
           "cancel": "Cancel",
           "save": "Save Changes",
@@ -1290,6 +1295,9 @@
           "observations": "Observations",
           "observationsPlaceholder": "Additional information..."
         },
+        "errors": {
+          "nameRequired": "Industry name is required."
+        },
         "actions": {
           "cancel": "Cancel",
           "save": "Save Changes",
@@ -1407,6 +1415,7 @@
     "contentAreaDesc": "Select an item from the sidebar to get started or add components here."
   },
   "General": {
+    "loading": "Loading...",
     "loadingSession": "Loading session...",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
@@ -1677,6 +1686,13 @@
         "status": "Status",
         "optional": "(optional)"
       },
+      "errors": {
+        "femeaRequired": "Select the recipient female.",
+        "semenRequired": "Select the genetic material.",
+        "machoRequired": "Select the sire buffalo.",
+        "dtEventoRequired": "Enter the event date.",
+        "dtEventoFuture": "The event date cannot be in the future."
+      },
       "actions": {
         "cancel": "Cancel",
         "save": "Save",
@@ -1762,6 +1778,12 @@
         "fornecedor": "Supplier",
         "fornecedorPlaceholder": "External supplier name...",
         "dataColeta": "Collection / Acquisition Date"
+      },
+      "errors": {
+        "bufaloOrigemRequired": "Select the source buffalo.",
+        "fornecedorRequired": "Enter the supplier.",
+        "dataColetaRequired": "Enter the collection date.",
+        "dataColetaFuture": "The collection date cannot be in the future."
       },
       "actions": {
         "cancel": "Cancel",

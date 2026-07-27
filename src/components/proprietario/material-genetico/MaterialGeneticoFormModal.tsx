@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { FlaskConical } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useMaterialGenetico } from "@/hooks/useMaterialGenetico";
@@ -15,19 +17,17 @@ import {
   type TipoMaterial,
   type OrigemMaterial,
 } from "@/services/material-genetico.service";
+import {
+  createMaterialGeneticoSchema,
+  type MaterialGeneticoFormValues,
+} from "@/schemas/material-genetico.schema";
 
 const inputClass =
   "w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ce7d0a] focus:border-transparent";
+const inputErrorClass =
+  "w-full px-3 py-2 bg-white border border-red-400 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent";
 
-interface FormState {
-  tipo: TipoMaterial;
-  origem: OrigemMaterial;
-  idBufaloOrigem: string;
-  fornecedor: string;
-  dataColeta: string;
-}
-
-const DEFAULT_FORM: FormState = {
+const DEFAULT_FORM: MaterialGeneticoFormValues = {
   tipo: "Sêmen",
   origem: "Coleta Própria",
   idBufaloOrigem: "",
@@ -51,6 +51,7 @@ export function MaterialGeneticoFormModal({
   onSaved,
 }: Props) {
   const t = useTranslations("MaterialGeneticoPage.formModal");
+  const tErrors = useTranslations("MaterialGeneticoPage.formModal.errors");
   const isEdit = !!registro;
 
   const { createMaterialGenetico, isCreating, updateMaterialGenetico, isUpdating } =
@@ -64,12 +65,30 @@ export function MaterialGeneticoFormModal({
   );
   const bufalos = bufalosData?.data ?? [];
 
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const materialGeneticoSchema = useMemo(
+    () => createMaterialGeneticoSchema(tErrors),
+    [tErrors],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<MaterialGeneticoFormValues>({
+    resolver: zodResolver(materialGeneticoSchema),
+    defaultValues: DEFAULT_FORM,
+  });
+
+  const origem = watch("origem");
 
   useEffect(() => {
     if (isOpen) {
       if (registro) {
-        setForm({
+        reset({
           tipo: (registro.tipo as TipoMaterial) ?? "Sêmen",
           origem: (registro.origem as OrigemMaterial) ?? "Coleta Própria",
           idBufaloOrigem: registro.idBufaloOrigem ?? "",
@@ -77,24 +96,23 @@ export function MaterialGeneticoFormModal({
           dataColeta: registro.dataColeta ? registro.dataColeta.slice(0, 10) : "",
         });
       } else {
-        setForm(DEFAULT_FORM);
+        reset(DEFAULT_FORM);
       }
     }
-  }, [isOpen, registro]);
+  }, [isOpen, registro, reset]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: MaterialGeneticoFormValues) => {
     try {
       const payload = {
         idPropriedade,
-        tipo: form.tipo,
-        origem: form.origem,
-        dataColeta: new Date(form.dataColeta).toISOString(),
-        ...(form.origem === "Coleta Própria" && form.idBufaloOrigem
-          ? { idBufaloOrigem: form.idBufaloOrigem }
+        tipo: data.tipo,
+        origem: data.origem,
+        dataColeta: new Date(data.dataColeta).toISOString(),
+        ...(data.origem === "Coleta Própria" && data.idBufaloOrigem
+          ? { idBufaloOrigem: data.idBufaloOrigem }
           : {}),
-        ...(form.origem === "Compra" && form.fornecedor
-          ? { fornecedor: form.fornecedor }
+        ...(data.origem === "Compra" && data.fornecedor
+          ? { fornecedor: data.fornecedor }
           : {}),
       };
 
@@ -120,16 +138,11 @@ export function MaterialGeneticoFormModal({
       title={isEdit ? t("editTitle") : t("createTitle")}
       size="md"
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
         {/* Tipo */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-zinc-700">{t("fields.tipo")}</label>
-          <select
-            required
-            value={form.tipo}
-            onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value as TipoMaterial }))}
-            className={inputClass}
-          >
+          <select {...register("tipo")} className={inputClass}>
             {TIPO_MATERIAL_OPTIONS.map((o) => (
               <option key={o} value={o}>
                 {o}
@@ -141,36 +154,36 @@ export function MaterialGeneticoFormModal({
         {/* Origem */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-zinc-700">{t("fields.origem")}</label>
-          <select
-            required
-            value={form.origem}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                origem: e.target.value as OrigemMaterial,
-                idBufaloOrigem: "",
-                fornecedor: "",
-              }))
-            }
-            className={inputClass}
-          >
-            {ORIGEM_MATERIAL_OPTIONS.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </select>
+          <Controller
+            name="origem"
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                onChange={(e) => {
+                  field.onChange(e.target.value as OrigemMaterial);
+                  setValue("idBufaloOrigem", "");
+                  setValue("fornecedor", "");
+                }}
+                className={inputClass}
+              >
+                {ORIGEM_MATERIAL_OPTIONS.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
         </div>
 
         {/* Condicional: Coleta Própria → selecionar búfalo; Compra → fornecedor */}
-        {form.origem === "Coleta Própria" ? (
+        {origem === "Coleta Própria" ? (
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-zinc-700">{t("fields.bufaloOrigem")}</label>
             <select
-              required
-              value={form.idBufaloOrigem}
-              onChange={(e) => setForm((f) => ({ ...f, idBufaloOrigem: e.target.value }))}
-              className={inputClass}
+              {...register("idBufaloOrigem")}
+              className={errors.idBufaloOrigem ? inputErrorClass : inputClass}
             >
               <option value="">{t("fields.bufaloOrigemPlaceholder")}</option>
               {bufalos.map((b) => (
@@ -179,19 +192,23 @@ export function MaterialGeneticoFormModal({
                 </option>
               ))}
             </select>
+            {errors.idBufaloOrigem && (
+              <p className="text-[11px] text-red-500">{errors.idBufaloOrigem.message}</p>
+            )}
           </div>
         ) : (
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-zinc-700">{t("fields.fornecedor")}</label>
             <input
               type="text"
-              required
               maxLength={100}
-              value={form.fornecedor}
-              onChange={(e) => setForm((f) => ({ ...f, fornecedor: e.target.value }))}
               placeholder={t("fields.fornecedorPlaceholder")}
-              className={inputClass}
+              className={errors.fornecedor ? inputErrorClass : inputClass}
+              {...register("fornecedor")}
             />
+            {errors.fornecedor && (
+              <p className="text-[11px] text-red-500">{errors.fornecedor.message}</p>
+            )}
           </div>
         )}
 
@@ -200,12 +217,13 @@ export function MaterialGeneticoFormModal({
           <label className="text-sm font-medium text-zinc-700">{t("fields.dataColeta")}</label>
           <input
             type="date"
-            required
             max={new Date().toISOString().slice(0, 10)}
-            value={form.dataColeta}
-            onChange={(e) => setForm((f) => ({ ...f, dataColeta: e.target.value }))}
-            className={inputClass}
+            {...register("dataColeta")}
+            className={errors.dataColeta ? inputErrorClass : inputClass}
           />
+          {errors.dataColeta && (
+            <p className="text-[11px] text-red-500">{errors.dataColeta.message}</p>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">

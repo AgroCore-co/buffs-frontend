@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import { Activity } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useReproducaoMutations } from "@/hooks/useReproducao";
@@ -17,20 +19,14 @@ import {
   type TipoInseminacao,
   type StatusReproducao,
 } from "@/services/reproducao.service";
+import { createCoberturaSchema, type CoberturaFormValues } from "@/schemas/cobertura.schema";
 
 const inputClass =
   "w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ce7d0a] focus:border-transparent";
+const inputErrorClass =
+  "w-full px-3 py-2 bg-white border border-red-400 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent";
 
-interface FormState {
-  idBufala: string;
-  tipoInseminacao: TipoInseminacao;
-  idSemen: string;
-  idBufalo: string;
-  dtEvento: string;
-  status: StatusReproducao;
-}
-
-const DEFAULT_FORM: FormState = {
+const DEFAULT_FORM: CoberturaFormValues = {
   idBufala: "",
   tipoInseminacao: "IA",
   idSemen: "",
@@ -55,6 +51,7 @@ export function CoberturaFormModal({
   onSaved,
 }: Props) {
   const t = useTranslations("ReproducaoPage.formModal");
+  const tErrors = useTranslations("ReproducaoPage.formModal.errors");
   const isEdit = !!registro;
 
   const { createReproducao, isCreating, updateReproducao, isUpdating } = useReproducaoMutations();
@@ -67,7 +64,22 @@ export function CoberturaFormModal({
     { page: 1, limit: 100 },
   );
 
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const coberturaSchema = useMemo(() => createCoberturaSchema(tErrors), [tErrors]);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CoberturaFormValues>({
+    resolver: zodResolver(coberturaSchema),
+    defaultValues: DEFAULT_FORM,
+  });
+
+  const tipoInseminacao = watch("tipoInseminacao");
 
   const allBufalos = bufalosData?.data ?? [];
   const femeas = allBufalos.filter((b) => b.sexo === "F");
@@ -75,14 +87,14 @@ export function CoberturaFormModal({
   const materiais = materialData?.data ?? [];
 
   const materiaisFiltrados = materiais.filter(
-    (m) => m.tipo === (form.tipoInseminacao === "TE" ? "Embrião" : "Sêmen"),
+    (m) => m.tipo === (tipoInseminacao === "TE" ? "Embrião" : "Sêmen"),
   );
 
   // Redefine form quando abre ou troca de registro
   useEffect(() => {
     if (isOpen) {
       if (registro) {
-        setForm({
+        reset({
           idBufala: registro.idBufala ?? "",
           tipoInseminacao: (registro.tipoInseminacao as TipoInseminacao) ?? "IA",
           idSemen: registro.idSemen ?? "",
@@ -91,29 +103,22 @@ export function CoberturaFormModal({
           status: (registro.status as StatusReproducao) ?? "Em andamento",
         });
       } else {
-        setForm(DEFAULT_FORM);
+        reset(DEFAULT_FORM);
       }
     }
-  }, [isOpen, registro]);
+  }, [isOpen, registro, reset]);
 
-  const handleTipoChange = (tipo: TipoInseminacao) => {
-    setForm((f) => ({ ...f, tipoInseminacao: tipo, idSemen: "", idBufalo: "" }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: CoberturaFormValues) => {
     try {
       const payload = {
         idPropriedade,
-        idBufala: form.idBufala,
-        tipoInseminacao: form.tipoInseminacao,
-        dtEvento: new Date(form.dtEvento).toISOString(),
-        status: form.status,
-        ...(showMaterial && form.idSemen
-          ? { idSemen: form.idSemen }
-          : {}),
-        ...(form.tipoInseminacao === "Monta Natural" && form.idBufalo
-          ? { idBufalo: form.idBufalo }
+        idBufala: data.idBufala,
+        tipoInseminacao: data.tipoInseminacao,
+        dtEvento: new Date(data.dtEvento).toISOString(),
+        status: data.status,
+        ...(showMaterial && data.idSemen ? { idSemen: data.idSemen } : {}),
+        ...(data.tipoInseminacao === "Monta Natural" && data.idBufalo
+          ? { idBufalo: data.idBufalo }
           : {}),
       };
 
@@ -136,8 +141,8 @@ export function CoberturaFormModal({
     }
   };
 
-  const showMaterial = form.tipoInseminacao === "IA" || form.tipoInseminacao === "IATF" || form.tipoInseminacao === "TE";
-  const showMacho = form.tipoInseminacao === "Monta Natural";
+  const showMaterial = tipoInseminacao === "IA" || tipoInseminacao === "IATF" || tipoInseminacao === "TE";
+  const showMacho = tipoInseminacao === "Monta Natural";
 
   return (
     <Modal
@@ -146,15 +151,13 @@ export function CoberturaFormModal({
       title={isEdit ? t("editTitle") : t("createTitle")}
       size="md"
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
         {/* Fêmea receptora */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-zinc-700">{t("fields.femea")}</label>
           <select
-            required
-            value={form.idBufala}
-            onChange={(e) => setForm((f) => ({ ...f, idBufala: e.target.value }))}
-            className={inputClass}
+            {...register("idBufala")}
+            className={errors.idBufala ? inputErrorClass : inputClass}
           >
             <option value="">{t("fields.femeaPlaceholder")}</option>
             {femeas.map((b) => (
@@ -163,37 +166,49 @@ export function CoberturaFormModal({
               </option>
             ))}
           </select>
+          {errors.idBufala && (
+            <p className="text-[11px] text-red-500">{errors.idBufala.message}</p>
+          )}
         </div>
 
         {/* Tipo de inseminação */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-zinc-700">{t("fields.tipo")}</label>
-          <select
-            required
-            value={form.tipoInseminacao}
-            onChange={(e) => handleTipoChange(e.target.value as TipoInseminacao)}
-            className={inputClass}
-          >
-            {TIPO_INSEMINACAO_OPTIONS.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </select>
-          <p className="text-[11px] text-zinc-400">{t(`fields.tipoDesc.${form.tipoInseminacao.replace(" ", "_")}`)}</p>
+          <Controller
+            name="tipoInseminacao"
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                onChange={(e) => {
+                  field.onChange(e.target.value as TipoInseminacao);
+                  setValue("idSemen", "");
+                  setValue("idBufalo", "");
+                }}
+                className={errors.tipoInseminacao ? inputErrorClass : inputClass}
+              >
+                {TIPO_INSEMINACAO_OPTIONS.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+          <p className="text-[11px] text-zinc-400">
+            {t(`fields.tipoDesc.${tipoInseminacao.replace(" ", "_")}`)}
+          </p>
         </div>
 
         {/* Material genético (IA, IATF, TE) */}
         {showMaterial && (
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-zinc-700">
-              {form.tipoInseminacao === "TE" ? t("fields.embriao") : t("fields.semen")}
+              {tipoInseminacao === "TE" ? t("fields.embriao") : t("fields.semen")}
             </label>
             <select
-              required
-              value={form.idSemen}
-              onChange={(e) => setForm((f) => ({ ...f, idSemen: e.target.value }))}
-              className={inputClass}
+              {...register("idSemen")}
+              className={errors.idSemen ? inputErrorClass : inputClass}
             >
               <option value="">{t("fields.semenPlaceholder")}</option>
               {materiaisFiltrados.map((m) => (
@@ -206,6 +221,9 @@ export function CoberturaFormModal({
                 </option>
               ))}
             </select>
+            {errors.idSemen && (
+              <p className="text-[11px] text-red-500">{errors.idSemen.message}</p>
+            )}
             {materiaisFiltrados.length === 0 && (
               <p className="text-[11px] text-amber-600">{t("fields.semenEmpty")}</p>
             )}
@@ -217,10 +235,8 @@ export function CoberturaFormModal({
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-zinc-700">{t("fields.macho")}</label>
             <select
-              required
-              value={form.idBufalo}
-              onChange={(e) => setForm((f) => ({ ...f, idBufalo: e.target.value }))}
-              className={inputClass}
+              {...register("idBufalo")}
+              className={errors.idBufalo ? inputErrorClass : inputClass}
             >
               <option value="">{t("fields.machoPlaceholder")}</option>
               {machos.map((b) => (
@@ -229,6 +245,9 @@ export function CoberturaFormModal({
                 </option>
               ))}
             </select>
+            {errors.idBufalo && (
+              <p className="text-[11px] text-red-500">{errors.idBufalo.message}</p>
+            )}
           </div>
         )}
 
@@ -237,12 +256,13 @@ export function CoberturaFormModal({
           <label className="text-sm font-medium text-zinc-700">{t("fields.dtEvento")}</label>
           <input
             type="date"
-            required
             max={new Date().toISOString().slice(0, 10)}
-            value={form.dtEvento}
-            onChange={(e) => setForm((f) => ({ ...f, dtEvento: e.target.value }))}
-            className={inputClass}
+            {...register("dtEvento")}
+            className={errors.dtEvento ? inputErrorClass : inputClass}
           />
+          {errors.dtEvento && (
+            <p className="text-[11px] text-red-500">{errors.dtEvento.message}</p>
+          )}
         </div>
 
         {/* Status */}
@@ -251,11 +271,7 @@ export function CoberturaFormModal({
             {t("fields.status")}{" "}
             <span className="text-zinc-400 font-normal">{t("fields.optional")}</span>
           </label>
-          <select
-            value={form.status}
-            onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as StatusReproducao }))}
-            className={inputClass}
-          >
+          <select {...register("status")} className={inputClass}>
             {STATUS_REPRODUCAO_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {s}

@@ -1143,6 +1143,11 @@
           "optional": "(opcional)",
           "descriptionPlaceholder": "Detalhes sobre a medicação..."
         },
+        "errors": {
+          "nameRequired": "O nome da medicação é obrigatório.",
+          "nameMax": "O nome pode ter no máximo 30 caracteres.",
+          "descriptionMax": "A descrição pode ter no máximo 100 caracteres."
+        },
         "actions": {
           "cancel": "Cancelar",
           "save": "Salvar Alterações",
@@ -1290,6 +1295,9 @@
           "observations": "Observações",
           "observationsPlaceholder": "Informações adicionais..."
         },
+        "errors": {
+          "nameRequired": "O nome da indústria é obrigatório."
+        },
         "actions": {
           "cancel": "Cancelar",
           "save": "Salvar Alterações",
@@ -1407,6 +1415,7 @@
     "contentAreaDesc": "Selecione um item no menu lateral para começar ou adicione componentes aqui."
   },
   "General": {
+    "loading": "Carregando...",
     "loadingSession": "Carregando sessão...",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
@@ -1677,6 +1686,13 @@
         "status": "Status",
         "optional": "(opcional)"
       },
+      "errors": {
+        "femeaRequired": "Selecione a fêmea receptora.",
+        "semenRequired": "Selecione o material genético.",
+        "machoRequired": "Selecione o touro reprodutor.",
+        "dtEventoRequired": "Informe a data do evento.",
+        "dtEventoFuture": "A data do evento não pode ser no futuro."
+      },
       "actions": {
         "cancel": "Cancelar",
         "save": "Salvar",
@@ -1762,6 +1778,12 @@
         "fornecedor": "Fornecedor",
         "fornecedorPlaceholder": "Nome do fornecedor externo...",
         "dataColeta": "Data de Coleta / Aquisição"
+      },
+      "errors": {
+        "bufaloOrigemRequired": "Selecione o búfalo de origem.",
+        "fornecedorRequired": "Informe o fornecedor.",
+        "dataColetaRequired": "Informe a data de coleta.",
+        "dataColetaFuture": "A data de coleta não pode ser no futuro."
       },
       "actions": {
         "cancel": "Cancelar",

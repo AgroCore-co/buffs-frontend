@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Pill } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useMedicamentos } from "@/hooks/useMedicamentos";
@@ -13,17 +15,20 @@ import {
   type Medicacao,
   type TipoTratamentoMedicacao,
 } from "@/services/medicamentos.service";
+import { createMedicamentoSchema, type MedicamentoFormValues } from "@/schemas/medicamento.schema";
 
 const inputClass =
   "w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ce7d0a] focus:border-transparent";
+const inputErrorClass =
+  "w-full px-3 py-2 bg-white border border-red-400 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent";
 
 const TIPOS = Object.keys(TIPO_TRATAMENTO_LABELS) as TipoTratamentoMedicacao[];
 
-interface FormState {
-  tipoTratamento: TipoTratamentoMedicacao;
-  medicacao: string;
-  descricao: string;
-}
+const DEFAULT_FORM: MedicamentoFormValues = {
+  tipoTratamento: "VACINACAO",
+  medicacao: "",
+  descricao: "",
+};
 
 interface Props {
   isOpen: boolean;
@@ -36,45 +41,55 @@ interface Props {
 
 export function MedicamentoFormModal({ isOpen, onClose, idPropriedade, medicamento, onSaved }: Props) {
   const t = useTranslations("Proprietario.medicamentos.formModal");
+  const tErrors = useTranslations("Proprietario.medicamentos.formModal.errors");
   const isEdit = !!medicamento;
   const { createMedicamento, isCreatingMedicamento, updateMedicamento, isUpdatingMedicamento } = useMedicamentos();
   const isSaving = isCreatingMedicamento || isUpdatingMedicamento;
 
-  const [form, setForm] = useState<FormState>({
-    tipoTratamento: "VACINACAO",
-    medicacao: "",
-    descricao: "",
+  const medicamentoSchema = useMemo(() => createMedicamentoSchema(tErrors), [tErrors]);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<MedicamentoFormValues>({
+    resolver: zodResolver(medicamentoSchema),
+    defaultValues: DEFAULT_FORM,
   });
+
+  const medicacao = watch("medicacao");
+  const descricao = watch("descricao");
 
   useEffect(() => {
     if (isOpen) {
-      setForm({
+      reset({
         tipoTratamento: medicamento ? tipoToEnum(medicamento.tipoTratamento) : "VACINACAO",
         medicacao: medicamento?.medicacao ?? "",
         descricao: medicamento?.descricao ?? "",
       });
     }
-  }, [isOpen, medicamento]);
+  }, [isOpen, medicamento, reset]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: MedicamentoFormValues) => {
     try {
       if (isEdit && medicamento) {
         await updateMedicamento({
           id: medicamento.idMedicacao,
           data: {
-            tipoTratamento: form.tipoTratamento,
-            medicacao: form.medicacao,
-            descricao: form.descricao || undefined,
+            tipoTratamento: data.tipoTratamento,
+            medicacao: data.medicacao,
+            descricao: data.descricao || undefined,
           },
         });
         toast.success(t("toast.updated"));
       } else {
         await createMedicamento({
           idPropriedade,
-          tipoTratamento: form.tipoTratamento,
-          medicacao: form.medicacao,
-          descricao: form.descricao || undefined,
+          tipoTratamento: data.tipoTratamento,
+          medicacao: data.medicacao,
+          descricao: data.descricao || undefined,
         });
         toast.success(t("toast.created"));
       }
@@ -87,19 +102,14 @@ export function MedicamentoFormModal({ isOpen, onClose, idPropriedade, medicamen
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? t("editTitle") : t("createTitle")} size="md">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
 
         {/* Tipo de tratamento */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-zinc-700">{t("fields.type")}</label>
-          <select
-            required
-            value={form.tipoTratamento}
-            onChange={e => setForm(f => ({ ...f, tipoTratamento: e.target.value as TipoTratamentoMedicacao }))}
-            className={inputClass}
-          >
-            {TIPOS.map(t => (
-              <option key={t} value={t}>{TIPO_TRATAMENTO_LABELS[t]}</option>
+          <select {...register("tipoTratamento")} className={inputClass}>
+            {TIPOS.map(tipo => (
+              <option key={tipo} value={tipo}>{TIPO_TRATAMENTO_LABELS[tipo]}</option>
             ))}
           </select>
         </div>
@@ -109,14 +119,15 @@ export function MedicamentoFormModal({ isOpen, onClose, idPropriedade, medicamen
           <label className="text-sm font-medium text-zinc-700">{t("fields.name")}</label>
           <input
             type="text"
-            required
             maxLength={30}
-            value={form.medicacao}
-            onChange={e => setForm(f => ({ ...f, medicacao: e.target.value }))}
             placeholder={t("fields.namePlaceholder")}
-            className={inputClass}
+            className={errors.medicacao ? inputErrorClass : inputClass}
+            {...register("medicacao")}
           />
-          <p className="text-[11px] text-zinc-400 text-right">{form.medicacao.length}/30</p>
+          {errors.medicacao && (
+            <p className="text-[11px] text-red-500">{errors.medicacao.message}</p>
+          )}
+          <p className="text-[11px] text-zinc-400 text-right">{medicacao.length}/30</p>
         </div>
 
         {/* Descrição */}
@@ -125,12 +136,14 @@ export function MedicamentoFormModal({ isOpen, onClose, idPropriedade, medicamen
           <textarea
             rows={3}
             maxLength={100}
-            value={form.descricao}
-            onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
             placeholder={t("fields.descriptionPlaceholder")}
-            className={`${inputClass} resize-none`}
+            className={`${errors.descricao ? inputErrorClass : inputClass} resize-none`}
+            {...register("descricao")}
           />
-          <p className="text-[11px] text-zinc-400 text-right">{form.descricao.length}/100</p>
+          {errors.descricao && (
+            <p className="text-[11px] text-red-500">{errors.descricao.message}</p>
+          )}
+          <p className="text-[11px] text-zinc-400 text-right">{descricao.length}/100</p>
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">

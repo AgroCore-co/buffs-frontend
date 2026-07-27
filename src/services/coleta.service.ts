@@ -50,7 +50,7 @@ export interface CreateLaticinioDTO {
   representante?: string;
   contato?: string;
   observacao?: string;
-  id_propriedade: string;
+  idPropriedade: string;
 }
 
 export interface UpdateLaticinioDTO {
@@ -58,7 +58,6 @@ export interface UpdateLaticinioDTO {
   representante?: string;
   contato?: string;
   observacao?: string;
-  id_propriedade?: string;
 }
 
 // ==========================================
