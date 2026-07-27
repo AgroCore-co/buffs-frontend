@@ -1,11 +1,20 @@
 "use client";
 
 import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
-import ProducaoLeiteChart from "@/components/proprietario/dashboard/ProducaoLeiteChart";
-import TopBufalasChart from "@/components/proprietario/dashboard/TopBufalasChart";
 import Container from "@/components/ui/Container";
 import MetricCard from "@/components/ui/MetricCard";
+import ChartSkeleton from "@/components/ui/ChartSkeleton";
+
+const ProducaoLeiteChart = dynamic(
+  () => import("@/components/proprietario/dashboard/ProducaoLeiteChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={380} /> },
+);
+const TopBufalasChart = dynamic(
+  () => import("@/components/proprietario/dashboard/TopBufalasChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={300} /> },
+);
 import { Layers, Target, Heart, Users, Truck, CheckCircle, XCircle } from "lucide-react";
 import { useDashboardGeral, useDashboardLactacao, useDashboardProducaoMensal } from "@/hooks/useDashboard";
 import { useLaticiniosByPropriedade, useColetas } from "@/hooks/useColeta";

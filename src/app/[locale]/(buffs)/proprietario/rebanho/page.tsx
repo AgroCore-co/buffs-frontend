@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
+import ChartSkeleton from "@/components/ui/ChartSkeleton";
 import MaturidadeChart from "@/components/proprietario/rebanho/MaturidadeChart";
-import RacaChart from "@/components/proprietario/rebanho/RacaChart";
 import SexoChart from "@/components/proprietario/rebanho/SexoChart";
 import { BufalosFilterBar } from "@/components/proprietario/rebanho/BufalosFilterBar";
 import {
@@ -26,6 +27,11 @@ import { Bufalo, FiltroAvancadoParams } from "@/services/bufalos.service";
 import { usePropriedadeStore } from "@/stores/propriedade.store";
 
 import { Database, Venus, Mars, Droplets } from "lucide-react";
+
+const RacaChart = dynamic(
+  () => import("@/components/proprietario/rebanho/RacaChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={250} /> },
+);
 
 interface BufaloListItem extends Bufalo {
   raca?: { nome?: string | null } | null;

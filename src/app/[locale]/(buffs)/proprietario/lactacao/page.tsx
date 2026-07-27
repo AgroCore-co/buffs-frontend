@@ -1,17 +1,16 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import {
   Activity, Droplets, RefreshCw,
   ChevronLeft, ChevronRight, BarChart3, Bell,
 } from "lucide-react";
-import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
-} from "recharts";
 
 import Container from "@/components/ui/Container";
 import MetricCard from "@/components/ui/MetricCard";
+import ChartSkeleton from "@/components/ui/ChartSkeleton";
 import {
   DataTable, TableBody, TableCell, TableEmptyState, TableHead, TableHeader, TableRow,
 } from "@/components/ui/DataTable";
@@ -23,6 +22,11 @@ import { useAlertasByPropriedade } from "@/hooks/useAlertas";
 import type { FemeaEmLactacao } from "@/services/lactacao.service";
 import { ResumoProducaoModal } from "@/components/proprietario/lactacao/ResumoProducaoModal";
 import { AlertasProducaoModal } from "@/components/proprietario/lactacao/AlertasProducaoModal";
+
+const ProducaoMensalChart = dynamic(
+  () => import("@/components/proprietario/lactacao/ProducaoMensalChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={350} /> },
+);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -209,28 +213,7 @@ export default function LactacaoPage() {
 
           <div className="w-full h-[350px]">
             {hasActive && hasChartData ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }} barCategoryGap="5%">
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                  <XAxis dataKey="mes" tick={{ fontSize: 13, fill: "#6B7280", fontWeight: 500 }} axisLine={false} tickLine={false} />
-                  <YAxis domain={[0, "auto"]} tick={{ fontSize: 13, fill: "#6B7280", fontWeight: 500 }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    cursor={{ fill: "#F3F4F6" }}
-                    contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-                    formatter={(value, _name, item) => {
-                      const v = typeof value === "number" ? value : parseFloat(String(value));
-                      const varMes = Number(item?.payload?.variacao ?? 0);
-                      const sufixo = varMes !== 0 ? ` (${varMes > 0 ? "▲" : "▼"} ${Math.abs(varMes).toFixed(1)}%)` : "";
-                      return [`${(Number.isNaN(v) ? 0 : v).toFixed(1)} L${sufixo}`, t('chart.production')];
-                    }}
-                  />
-                  <Bar dataKey="producao" radius={[4, 4, 0, 0]} barSize={64}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={index} fill={entry.variacao > 0 ? "#FCA90F" : entry.variacao < 0 ? "#CE7D0A" : "#FFCF78"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <ProducaoMensalChart data={chartData} tooltipLabel={t('chart.production')} />
             ) : (
               <div className="h-full flex flex-col items-center justify-center gap-2 text-zinc-300">
                 <BarChart3 className="w-8 h-8" />

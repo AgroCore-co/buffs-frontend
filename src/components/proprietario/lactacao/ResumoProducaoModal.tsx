@@ -1,18 +1,26 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import {
   Activity, Calendar, Droplet, TrendingUp, TrendingDown, AlertCircle,
 } from "lucide-react";
-import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-} from "recharts";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Pagination } from "@/components/ui/Pagination";
+import ChartSkeleton from "@/components/ui/ChartSkeleton";
 import { useResumoProducaoBufala, useOrdenhasByCiclo } from "@/hooks/useOrdenhas";
 import { CiclosLactacao } from "@/components/proprietario/rebanho/producao/CiclosLactacao";
+
+const ResumoProducaoChart = dynamic(() => import("./ResumoProducaoChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] w-full bg-zinc-50/50 rounded-xl border border-zinc-100 p-4">
+      <ChartSkeleton height={268} />
+    </div>
+  ),
+});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -237,20 +245,7 @@ export function ResumoProducaoModal({ isOpen, onClose, idFemea }: Props) {
                   <span className="text-sm">{t("noMilkings30")}</span>
                 </div>
               ) : (
-                <div className="h-[300px] w-full bg-zinc-50/50 rounded-xl border border-zinc-100 p-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
-                      <XAxis dataKey="dia" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                      <Tooltip
-                        contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-                        formatter={(value) => [`${toNumber(value as number).toFixed(2)} L`, t("tooltipProduction")]}
-                      />
-                      <Line type="monotone" dataKey="litros" stroke="#d97706" strokeWidth={3} dot={{ r: 3, fill: "#d97706" }} activeDot={{ r: 6 }} name="Litros" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                <ResumoProducaoChart data={chartData} tooltipLabel={t("tooltipProduction")} />
               )
             )}
           </div>

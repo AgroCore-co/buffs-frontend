@@ -1,17 +1,21 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Droplets, TrendingUp, CalendarClock, Plus, AlertCircle } from "lucide-react";
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-} from "recharts";
 import { Button } from "@/components/ui/Button";
 import MetricCard from "@/components/ui/MetricCard";
+import ChartSkeleton from "@/components/ui/ChartSkeleton";
 import { Bufalo } from "@/services/bufalos.service";
 import { useResumoProducaoBufala } from "@/hooks/useOrdenhas";
 import { RegistrarOrdenhaModal } from "./producao/RegistrarOrdenhaModal";
 import { CiclosLactacao } from "./producao/CiclosLactacao";
 import { PredicaoProducaoCard } from "./producao/PredicaoProducaoCard";
+
+const ProducaoChart = dynamic(() => import("./producao/ProducaoChart"), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={220} />,
+});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -19,11 +23,6 @@ import { PredicaoProducaoCard } from "./producao/PredicaoProducaoCard";
 function shortDay(value: string) {
   const [, month, day] = value.slice(0, 10).split("-");
   return day && month ? `${day}/${month}` : value;
-}
-
-function toNumber(value: string | number | null | undefined): number {
-  const n = typeof value === "number" ? value : parseFloat(value ?? "");
-  return Number.isNaN(n) ? 0 : n;
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
@@ -89,32 +88,7 @@ export function ProducaoTab({ bufalo }: { bufalo: Bufalo }) {
             <span className="text-sm">Sem ordenhas nos últimos 30 dias</span>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <defs>
-                <linearGradient id="prodGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#10b981" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}    />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
-              <XAxis dataKey="dia" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-                formatter={(value) => [`${toNumber(value as number).toFixed(1)} L`, "Produção"]}
-              />
-              <Area
-                type="monotone"
-                dataKey="litros"
-                stroke="#10b981"
-                strokeWidth={2}
-                fill="url(#prodGradient)"
-                dot={{ r: 3, fill: "#10b981" }}
-                activeDot={{ r: 5 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <ProducaoChart data={chartData} />
         )}
       </div>
 
