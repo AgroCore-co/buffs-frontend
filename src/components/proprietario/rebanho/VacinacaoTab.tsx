@@ -2,6 +2,14 @@
 
 import React, { useState } from "react";
 import { Syringe, History, Calendar, Clock, Trash2, Plus } from "lucide-react";
+import {
+  DataTable,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
 import { Button } from "@/components/ui/Button";
 import MetricCard from "@/components/ui/MetricCard";
@@ -118,63 +126,47 @@ export function VacinacaoTab({ bufalo }: { bufalo: Bufalo }) {
         {/* Tabela */}
         {!isLoading && registros.length > 0 && (
           <>
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-zinc-100">
-                  <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-6 py-3 whitespace-nowrap">
-                    Data Aplicação
-                  </th>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 w-full">
-                    Vacina
-                  </th>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 whitespace-nowrap">
-                    Doença / Prevenção
-                  </th>
-                  <th className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-4 py-3 whitespace-nowrap">
-                    Dosagem
-                  </th>
-                  <th className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-6 py-3 whitespace-nowrap">
-                    Retorno
-                  </th>
-                </tr>
-              </thead>
+            <DataTable isEmpty={false} emptyState={null}>
+              <TableHeader>
+                <TableHead>Data Aplicação</TableHead>
+                <TableHead>Vacina</TableHead>
+                <TableHead>Doença / Prevenção</TableHead>
+                <TableHead align="right">Dosagem</TableHead>
+                <TableHead align="right">Retorno</TableHead>
+              </TableHeader>
 
-              <tbody className="divide-y divide-zinc-50">
+              <TableBody>
                 {registros.map((reg) => {
                   const med = getMedicacao(reg);
                   return (
-                    <tr
-                      key={reg.idSanit}
-                      onClick={() => setSelectedRegistro(reg)}
-                      className="hover:bg-zinc-50/80 transition-colors cursor-pointer"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <TableRow key={reg.idSanit} onClick={() => setSelectedRegistro(reg)}>
+                      <TableCell>
                         <div className="flex items-center gap-2 text-sm text-zinc-600">
                           <Calendar className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
                           {formatDate(reg.dtAplicacao)}
                         </div>
-                      </td>
+                      </TableCell>
 
-                      <td className="px-4 py-4">
+                      <TableCell>
                         <div className="flex items-center gap-2">
                           <Syringe className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
                           <p className="text-sm text-zinc-700 font-medium leading-tight">
                             {med?.medicacao ?? "—"}
                           </p>
                         </div>
-                      </td>
+                      </TableCell>
 
-                      <td className="px-4 py-4 whitespace-nowrap">
+                      <TableCell>
                         <span className="text-sm text-zinc-500 capitalize">{reg.doenca}</span>
-                      </td>
+                      </TableCell>
 
-                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                      <TableCell align="right">
                         <span className="text-sm font-mono text-zinc-600">
                           {reg.dosagem} {reg.unidadeMedida}
                         </span>
-                      </td>
+                      </TableCell>
 
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <TableCell align="right">
                         {reg.necessitaRetorno ? (
                           <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                             {reg.dtRetorno ? formatDate(reg.dtRetorno) : "A definir"}
@@ -182,12 +174,12 @@ export function VacinacaoTab({ bufalo }: { bufalo: Bufalo }) {
                         ) : (
                           <span className="text-sm text-zinc-300">—</span>
                         )}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </DataTable>
 
             <Pagination
               page={page}

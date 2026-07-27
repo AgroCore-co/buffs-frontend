@@ -74,10 +74,26 @@ export function TableBody({ children }: { children: React.ReactNode }) {
 }
 
 export function TableRow({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  const handleKeyDown = onClick
+    ? (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+        if (e.key === "Enter" || e.key === " ") {
+          if (e.key === " ") e.preventDefault();
+          onClick();
+        }
+      }
+    : undefined;
+
   return (
     <tr
-      className={`odd:bg-white even:bg-zinc-50 hover:bg-zinc-100 transition-colors group ${onClick ? "cursor-pointer" : ""}`}
+      className={`odd:bg-white even:bg-zinc-50 hover:bg-zinc-100 transition-colors group ${
+        onClick
+          ? "cursor-pointer focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ce7d0a] focus-visible:ring-inset"
+          : ""
+      }`}
       onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={handleKeyDown}
     >
       {children}
     </tr>
