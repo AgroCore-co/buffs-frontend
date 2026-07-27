@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter } from "next/font/google";
 // Importante: Note o '../' pois agora o layout está dentro de app/[locale]
 import "@/app/[locale]/globals.css"; 
@@ -29,7 +30,14 @@ export default async function RootLayout(
   // No Next.js 15+, params é async e precisa ser await
   const { locale } = await props.params;
   const { children } = props;
-  
+
+  // Lê o nonce gerado por request em src/proxy.ts. O Next usa esse mesmo
+  // nonce automaticamente nos scripts de hidratação que ele injeta (o CSP
+  // do proxy já expõe 'nonce-<valor>' no header da resposta); a leitura
+  // aqui também força renderização dinâmica, necessária para nonce por request.
+  // Mantido caso algum script/estilo inline nosso precise referenciá-lo no futuro.
+  const _nonce = (await headers()).get("x-nonce");
+
   // Busca os dicionários de tradução (JSONs) no servidor antes de renderizar a página
   const messages = await getMessages();
 

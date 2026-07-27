@@ -3,38 +3,16 @@ import type { NextConfig } from "next";
 
 const withNextIntl = createNextIntlPlugin();
 
-const isDev = process.env.NODE_ENV === "development";
-
-// pega da env
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
+// Content-Security-Policy NÃO é definida aqui: o nonce muda a cada request,
+// então ela é montada dinamicamente em src/proxy.ts (fonte única de verdade
+// para o CSP). Definir CSP aqui de novo duplicaria o header e o navegador
+// passaria a aplicar a interseção das duas políticas — quebrando o nonce.
 const nextConfig: NextConfig = {
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: [
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-
-              "img-src 'self' data: blob: https:",
-
-              "font-src 'self' https://fonts.gstatic.com data:",
-
-              isDev
-                ? `connect-src 'self' https: http://localhost:* ${API_URL}`
-                : `connect-src 'self' https: ${API_URL}`,
-
-              "frame-ancestors 'none'",
-            ].join("; "),
-          },
-
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
