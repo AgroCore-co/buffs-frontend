@@ -80,6 +80,96 @@ export interface CreateReproducaoDTO {
 export type UpdateReproducaoDTO = Partial<CreateReproducaoDTO>;
 
 // ==========================================
+// RESUMO REPRODUTIVO POR ANIMAL (GET /reproducao/bufalo/:id/resumo)
+// ==========================================
+
+/**
+ * Registro resumido de cobertura para o histórico da fêmea.
+ */
+export interface HistoricoReprodutivoFemea {
+  idReproducao: string;
+  dtEvento: string;
+  tipoInseminacao: string;
+  status: string;
+  tipoParto: string | null;
+  dtParto: string | null;
+}
+
+/**
+ * Registro resumido de cobertura para o histórico do macho.
+ */
+export interface HistoricoReprodutivoMacho {
+  idReproducao: string;
+  idBufala: string | null;
+  nomeBufala: string | null;
+  dtEvento: string;
+  tipoInseminacao: string;
+  status: string;
+  tipoParto: string | null;
+}
+
+export interface CicloAtivo {
+  numeroCiclo: number;
+  diasEmLactacao: number;
+  status: string;
+  dtParto: string;
+}
+
+/** Resumo reprodutivo para búfalas fêmeas (sexo = 'F'). */
+export interface ResumoReprodutivoFemea {
+  sexo: 'F';
+  idBufalo: string;
+  nome: string;
+  brinco: string;
+  idadeMeses: number;
+  raca: string;
+  statusReprodutivo: string;
+  situacaoAtual:
+    | 'Vazia'
+    | 'Coberta'
+    | 'Prenha'
+    | 'Em Lactação'
+    | 'Período Pós-Parto'
+    | 'Aguardando Diagnóstico';
+  ultimaCobertura: string | null;
+  diasDesdeUltimaCobertura: number | null;
+  ultimoParto: string | null;
+  totalCiclos: number;
+  iepMedioDias: number | null;
+  cicloAtivo: CicloAtivo | null;
+  historico: HistoricoReprodutivoFemea[];
+}
+
+/** Resumo reprodutivo para búfalos machos (sexo = 'M'). */
+export interface ResumoReprodutivoMacho {
+  sexo: 'M';
+  idBufalo: string;
+  nome: string;
+  brinco: string;
+  idadeMeses: number;
+  raca: string;
+  categoriaAbcb: string | null;
+  statusReprodutivo: string;
+  ultimaCobertura: string | null;
+  diasDesdeUltimaCobertura: number | null;
+  totalCoberturasRealizadas: number;
+  totalFemeasCobertas: number;
+  totalPrenhezes: number;
+  taxaSucessoReprodutivoPercent: number | null;
+  'taxaConcepçãoAjustada': number | null;
+  confiabilidade: 'Baixa' | 'Média' | 'Alta' | null;
+  historico: HistoricoReprodutivoMacho[];
+}
+
+/** União discriminada pelo campo `sexo`, espelhando o DTO do backend. */
+export type ResumoReprodutivo = ResumoReprodutivoFemea | ResumoReprodutivoMacho;
+
+export interface ResumoReprodutivoParams {
+  historicoLimit?: number;
+  includeGenealogia?: boolean;
+}
+
+// ==========================================
 // SERVIÇO DE REPRODUÇÃO (COBERTURAS)
 // ==========================================
 
@@ -121,5 +211,25 @@ export const reproducaoService = {
 
   async restore(id: string): Promise<void> {
     await apiClient.post(`/cobertura/${id}/restore`);
+  },
+
+  /**
+   * Resumo reprodutivo consolidado de um búfalo (fêmea ou macho).
+   * A resposta é discriminada pelo campo `sexo`.
+   */
+  async getResumoByBufalo(
+    idBufalo: string,
+    params?: ResumoReprodutivoParams,
+  ): Promise<ResumoReprodutivo> {
+    const response = await apiClient.get<ResumoReprodutivo>(
+      `/reproducao/bufalo/${idBufalo}/resumo`,
+      {
+        params: {
+          historicoLimit: params?.historicoLimit,
+          includeGenealogia: params?.includeGenealogia,
+        },
+      },
+    );
+    return response.data;
   },
 };

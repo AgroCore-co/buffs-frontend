@@ -8,12 +8,15 @@ import {
   PaginacaoParams,
   CreateReproducaoDTO,
   UpdateReproducaoDTO,
+  ResumoReprodutivoParams,
 } from '@/services/reproducao.service';
 
 export const REPRODUCAO_QUERY_KEYS = {
   byPropriedade: (idPropriedade: string, params?: PaginacaoParams) =>
     ['reproducao', 'propriedade', idPropriedade, params] as const,
   byId: (id: string) => ['reproducao', id] as const,
+  resumoByBufalo: (idBufalo: string, params?: ResumoReprodutivoParams) =>
+    ['reproducao', 'resumo', idBufalo, params] as const,
 };
 
 // ==========================================
@@ -38,6 +41,24 @@ export function useReproducaoById(id?: string) {
     queryKey: REPRODUCAO_QUERY_KEYS.byId(id!),
     queryFn: () => reproducaoService.getById(id!),
     enabled: !!id,
+    staleTime: 1 * 60 * 1000,
+  });
+}
+
+/**
+ * Resumo reprodutivo consolidado de um búfalo (fêmea ou macho), via
+ * GET /reproducao/bufalo/:id/resumo. Substitui a antiga busca por
+ * propriedade + filtro client-side.
+ */
+export function useResumoReprodutivo(
+  idBufalo?: string,
+  params?: ResumoReprodutivoParams,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: REPRODUCAO_QUERY_KEYS.resumoByBufalo(idBufalo!, params),
+    queryFn: () => reproducaoService.getResumoByBufalo(idBufalo!, params),
+    enabled: !!idBufalo && options?.enabled !== false,
     staleTime: 1 * 60 * 1000,
   });
 }

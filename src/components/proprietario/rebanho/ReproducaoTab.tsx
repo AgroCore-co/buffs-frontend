@@ -1,39 +1,39 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Baby, Heart, Syringe, Stethoscope, AlertCircle, Calendar } from "lucide-react";
 import {
   DataTable, TableHeader, TableHead, TableBody, TableRow, TableCell, TableEmptyState,
 } from "@/components/ui/DataTable";
-import { Pagination } from "@/components/ui/Pagination";
 import { Bufalo } from "@/services/bufalos.service";
+import { useResumoReprodutivo } from "@/hooks/useReproducao";
+import Badge from "@/components/ui/Badge";
+import type {
+  HistoricoReprodutivoFemea,
+  HistoricoReprodutivoMacho,
+  ResumoReprodutivoFemea,
+  ResumoReprodutivoMacho,
+} from "@/services/reproducao.service";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 type TipoEvento = "cobertura" | "inseminacao" | "diagnostico" | "parto" | "aborto";
+type EventoHistorico = HistoricoReprodutivoFemea | HistoricoReprodutivoMacho;
 
-interface EventoReproducao {
-  id: string;
-  data: string;
-  tipo: TipoEvento;
-  resultado: string;
-  observacao?: string;
+const HISTORICO_LIMIT = 10;
+
+function classificarEvento(ev: EventoHistorico): TipoEvento {
+  if (ev.tipoParto) return ev.tipoParto === "Aborto" ? "aborto" : "parto";
+  if (ev.status === "Falha") return "aborto";
+  if (ev.status === "Confirmada" || ev.status === "Concluída") return "diagnostico";
+  if (ev.tipoInseminacao && ev.tipoInseminacao !== "Monta Natural") return "inseminacao";
+  return "cobertura";
 }
 
-// ─── Mock ─────────────────────────────────────────────────────────────────────
-
-const MOCK: EventoReproducao[] = [
-  { id: "1", data: "2025-10-15", tipo: "parto",       resultado: "Bezerro Macho — Saudável",    observacao: "Parto normal, sem complicações"      },
-  { id: "2", data: "2025-06-20", tipo: "diagnostico", resultado: "Positivo",                     observacao: "Gestação confirmada — 60 dias"       },
-  { id: "3", data: "2025-05-10", tipo: "inseminacao", resultado: "Realizada",                    observacao: "Sêmen touro Brahma BM-230"           },
-  { id: "4", data: "2024-11-08", tipo: "parto",       resultado: "Bezerra Fêmea — Saudável",     observacao: "Parto normal"                       },
-  { id: "5", data: "2024-07-14", tipo: "diagnostico", resultado: "Positivo",                     observacao: "Gestação 45 dias"                   },
-  { id: "6", data: "2024-06-01", tipo: "cobertura",   resultado: "Realizada",                    observacao: "Touro BM-001"                       },
-  { id: "7", data: "2024-01-20", tipo: "aborto",      resultado: "Abortamento espontâneo",       observacao: "3º mês de gestação"                 },
-  { id: "8", data: "2023-10-05", tipo: "parto",       resultado: "Bezerro Macho — Saudável",     observacao: "Parto normal"                       },
-  { id: "9", data: "2023-06-10", tipo: "inseminacao", resultado: "Realizada",                    observacao: "Protocolo IATF"                     },
-  { id: "10",data: "2023-05-28", tipo: "diagnostico", resultado: "Negativo",                     observacao: "Repetição de protocolo necessária"  },
-];
+function resultadoEvento(ev: EventoHistorico): string {
+  if (ev.tipoParto) return ev.tipoParto;
+  return ev.status || "—";
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -45,20 +45,39 @@ const TIPO_CONFIG: Record<TipoEvento, { icon: React.ReactNode; label: string; bg
   aborto:      { icon: <AlertCircle className="w-3 h-3"/>, label: "Abortamento",  bg: "bg-red-50",    text: "text-red-700",    border: "border-red-200"    },
 };
 
-function formatDate(v: string) {
+function formatDate(v?: string | null) {
+  if (!v) return "—";
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
 }
 
+const SITUACAO_BADGE: Record<ResumoReprodutivoFemea["situacaoAtual"], "active" | "inactive" | "info"> = {
+  "Prenha": "active",
+  "Em Lactação": "active",
+  "Coberta": "info",
+  "Aguardando Diagnóstico": "info",
+  "Período Pós-Parto": "info",
+  "Vazia": "inactive",
+};
+
+const CONFIABILIDADE_BADGE: Record<NonNullable<ResumoReprodutivoMacho["confiabilidade"]>, "active" | "inactive" | "info"> = {
+  "Alta": "active",
+  "Média": "info",
+  "Baixa": "inactive",
+};
+
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
-function MetricCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function MetricCard({ icon, label, value, badge }: { icon: React.ReactNode; label: string; value: string; badge?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-4 bg-white border border-zinc-200 rounded-xl p-5">
       <div className="flex-shrink-0">{icon}</div>
       <div>
         <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{label}</p>
-        <p className="text-lg font-bold text-zinc-800 leading-tight">{value}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-lg font-bold text-zinc-800 leading-tight">{value}</p>
+          {badge}
+        </div>
       </div>
     </div>
   );
@@ -66,39 +85,55 @@ function MetricCard({ icon, label, value }: { icon: React.ReactNode; label: stri
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-const LIMIT = 8;
+export function ReproducaoTab({ bufalo }: { bufalo: Bufalo }) {
+  const { data: resumo, isLoading, isError } = useResumoReprodutivo(bufalo.idBufalo, {
+    historicoLimit: HISTORICO_LIMIT,
+  });
 
-export function ReproducaoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
-  const [page, setPage] = useState(1);
+  const historico = resumo?.historico ?? [];
 
-  const total      = MOCK.length;
-  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
-  const paginated  = MOCK.slice((page - 1) * LIMIT, page * LIMIT);
-
-  const partos       = MOCK.filter(e => e.tipo === "parto");
-  const ultimoParto  = partos[0];
-  const totalCrias   = partos.length;
+  // Métricas adaptadas ao sexo: fêmea e macho têm indicadores reprodutivos distintos.
+  const metrics = resumo?.sexo === "M"
+    ? [
+        { icon: <Heart className="w-5 h-5 text-rose-500" />, label: "Coberturas Realizadas", value: String(resumo.totalCoberturasRealizadas) },
+        { icon: <Calendar className="w-5 h-5 text-rose-500" />, label: "Última Cobertura", value: formatDate(resumo.ultimaCobertura) },
+        {
+          icon: <Baby className="w-5 h-5 text-rose-500" />,
+          label: "Taxa de Concepção (TCA)",
+          value: resumo.taxaConcepçãoAjustada != null ? `${resumo.taxaConcepçãoAjustada.toFixed(1)}%` : "—",
+          badge: resumo.confiabilidade ? (
+            <Badge type={CONFIABILIDADE_BADGE[resumo.confiabilidade]}>{resumo.confiabilidade}</Badge>
+          ) : undefined,
+        },
+      ]
+    : [
+        { icon: <Baby className="w-5 h-5 text-rose-500" />, label: "Total de Partos", value: String(resumo?.totalCiclos ?? 0) },
+        { icon: <Calendar className="w-5 h-5 text-rose-500" />, label: "Último Parto", value: formatDate(resumo?.ultimoParto) },
+        { icon: <Heart className="w-5 h-5 text-rose-500" />, label: "Crias Registradas", value: String(resumo?.totalCiclos ?? 0) },
+      ];
 
   return (
     <div className="animate-in fade-in duration-300 flex flex-col gap-5">
 
+      {/* ── Status reprodutivo (fêmea) ─────────────────────────────── */}
+      {resumo?.sexo === "F" && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Situação Atual</span>
+          <Badge type={SITUACAO_BADGE[resumo.situacaoAtual]}>{resumo.situacaoAtual}</Badge>
+        </div>
+      )}
+
       {/* ── Métricas ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetricCard
-          icon={<div className="p-2.5 bg-rose-50 rounded-xl"><Baby className="w-5 h-5 text-rose-500" /></div>}
-          label="Total de Partos"
-          value={String(partos.length)}
-        />
-        <MetricCard
-          icon={<div className="p-2.5 bg-rose-50 rounded-xl"><Calendar className="w-5 h-5 text-rose-500" /></div>}
-          label="Último Parto"
-          value={ultimoParto ? formatDate(ultimoParto.data) : "—"}
-        />
-        <MetricCard
-          icon={<div className="p-2.5 bg-rose-50 rounded-xl"><Heart className="w-5 h-5 text-rose-500" /></div>}
-          label="Crias Registradas"
-          value={String(totalCrias)}
-        />
+        {metrics.map((m, i) => (
+          <MetricCard
+            key={i}
+            icon={<div className="p-2.5 bg-rose-50 rounded-xl">{m.icon}</div>}
+            label={m.label}
+            value={isLoading ? "..." : m.value}
+            badge={isLoading ? undefined : "badge" in m ? m.badge : undefined}
+          />
+        ))}
       </div>
 
       {/* ── Tabela ───────────────────────────────────────────────── */}
@@ -108,12 +143,16 @@ export function ReproducaoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
         </div>
 
         <DataTable
-          isEmpty={MOCK.length === 0}
+          isEmpty={!isLoading && historico.length === 0}
           emptyState={
             <TableEmptyState
               icon={Baby}
-              title="Nenhum evento reprodutivo"
-              description="Coberturas, inseminações e partos aparecerão aqui."
+              title={isError ? "Erro ao carregar histórico" : "Nenhum evento reprodutivo"}
+              description={
+                isError
+                  ? "Não foi possível buscar os registros. Tente novamente."
+                  : "Coberturas, inseminações e partos aparecerão aqui."
+              }
             />
           }
         >
@@ -124,43 +163,46 @@ export function ReproducaoTab({ bufalo: _bufalo }: { bufalo: Bufalo }) {
             <TableHead>Observação</TableHead>
           </TableHeader>
           <TableBody>
-            {paginated.map((ev) => {
-              const cfg = TIPO_CONFIG[ev.tipo];
-              return (
-                <TableRow key={ev.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-sm text-zinc-600">
-                      <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      {formatDate(ev.data)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-                      {cfg.icon}{cfg.label}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-zinc-700">{ev.resultado}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-zinc-400">{ev.observacao ?? "—"}</span>
-                  </TableCell>
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 4 }).map((__, j) => (
+                    <TableCell key={j}>
+                      <div className="h-4 bg-zinc-100 rounded animate-pulse w-24" />
+                    </TableCell>
+                  ))}
                 </TableRow>
-              );
-            })}
+              ))
+            ) : (
+              historico.map((ev) => {
+                const tipo = classificarEvento(ev);
+                const cfg = TIPO_CONFIG[tipo];
+                const observacao = "nomeBufala" in ev ? (ev.nomeBufala ?? "—") : formatDate(ev.dtParto);
+                return (
+                  <TableRow key={ev.idReproducao}>
+                    <TableCell>
+                      <div className="flex items-center gap-2 text-sm text-zinc-600">
+                        <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        {formatDate(ev.dtEvento)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                        {cfg.icon}{cfg.label}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-zinc-700">{resultadoEvento(ev)}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-zinc-400">{observacao}</span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </DataTable>
-
-        {totalPages > 1 && (
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            total={total}
-            limit={LIMIT}
-            className="px-6 py-4 border-t border-zinc-100"
-          />
-        )}
       </div>
     </div>
   );
