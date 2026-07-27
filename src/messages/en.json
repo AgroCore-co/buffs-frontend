@@ -76,6 +76,8 @@
     "noLactationDesc": "Register milking to see top producers",
     "mainIndustries": "Main Industries",
     "lastDeliveries": "Latest Deliveries",
+    "noIndustries": "No industries registered",
+    "noDeliveries": "No deliveries registered",
     "approved": "Approved",
     "rejected": "Rejected",
     "production": "Production",

@@ -76,6 +76,8 @@
     "noLactationDesc": "Registre ordenhas para ver as melhores produtoras",
     "mainIndustries": "Principais Indústrias",
     "lastDeliveries": "Últimas Entregas",
+    "noIndustries": "Nenhuma indústria cadastrada",
+    "noDeliveries": "Nenhuma entrega registrada",
     "approved": "Aprovado",
     "rejected": "Reprovado",
     "production": "Produção",
