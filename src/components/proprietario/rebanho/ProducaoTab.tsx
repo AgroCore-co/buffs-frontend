@@ -6,6 +6,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
 import { Button } from "@/components/ui/Button";
+import MetricCard from "@/components/ui/MetricCard";
 import { Bufalo } from "@/services/bufalos.service";
 import { useResumoProducaoBufala } from "@/hooks/useOrdenhas";
 import { RegistrarOrdenhaModal } from "./producao/RegistrarOrdenhaModal";
@@ -23,23 +24,6 @@ function shortDay(value: string) {
 function toNumber(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : parseFloat(value ?? "");
   return Number.isNaN(n) ? 0 : n;
-}
-
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
-
-function MetricCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
-  return (
-    <div className="flex items-center gap-4 bg-white border border-zinc-200 rounded-xl p-5">
-      <div className="flex-shrink-0">{icon}</div>
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{label}</p>
-        <p className="text-lg font-bold text-zinc-800 leading-tight">
-          {value}
-          {sub && <span className="text-sm font-normal text-zinc-400 ml-1">{sub}</span>}
-        </p>
-      </div>
-    </div>
-  );
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
@@ -63,20 +47,23 @@ export function ProducaoTab({ bufalo }: { bufalo: Bufalo }) {
       {/* ── Métricas ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-emerald-50 rounded-xl"><Droplets className="w-5 h-5 text-emerald-500" /></div>}
-          label="Produção do Ciclo"
+          title="Produção do Ciclo"
           value={isLoadingResumo ? "..." : (ciclo ? ciclo.totalProduzido.toFixed(1) : "—")}
           sub={ciclo ? "L" : undefined}
         />
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-emerald-50 rounded-xl"><TrendingUp className="w-5 h-5 text-emerald-500" /></div>}
-          label="Média por Ordenha"
+          title="Média por Ordenha"
           value={isLoadingResumo ? "..." : (ciclo ? ciclo.mediaDiaria.toFixed(1) : "—")}
           sub={ciclo ? "L" : undefined}
         />
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-emerald-50 rounded-xl"><CalendarClock className="w-5 h-5 text-emerald-500" /></div>}
-          label="Dias em Lactação"
+          title="Dias em Lactação"
           value={isLoadingResumo ? "..." : (ciclo ? String(ciclo.diasEmLactacao) : "—")}
           sub={ciclo ? `· ${ciclo.numeroCiclo}º ciclo` : undefined}
         />

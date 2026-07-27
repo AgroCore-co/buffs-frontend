@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import { Button } from "@/components/ui/Button";
+import MetricCard from "@/components/ui/MetricCard";
 import { Bufalo } from "@/services/bufalos.service";
 import { useAlertasByPropriedade, useAlertasMutations } from "@/hooks/useAlertas";
 import type { Alerta, NichoAlerta, PrioridadeAlerta } from "@/services/alertas.service";
@@ -50,18 +51,6 @@ function formatDate(value?: string | null) {
 }
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
-
-function MetricCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-4 bg-white border border-zinc-200 rounded-xl p-5">
-      <div className="flex-shrink-0">{icon}</div>
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{label}</p>
-        <p className="text-lg font-bold text-zinc-800 leading-tight">{value}</p>
-      </div>
-    </div>
-  );
-}
 
 function AlertaCard({
   alerta, onToggleVisto, isToggling,
@@ -185,18 +174,21 @@ export function EventosTab({ bufalo }: { bufalo: Bufalo }) {
       {/* ── Métricas ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-amber-50 rounded-xl"><Bell className="w-5 h-5 text-amber-500" /></div>}
-          label="Total de Alertas"
+          title="Total de Alertas"
           value={isLoading ? "..." : String(total)}
         />
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-amber-50 rounded-xl"><AlertTriangle className="w-5 h-5 text-amber-500" /></div>}
-          label="Pendentes (não vistos)"
+          title="Pendentes (não vistos)"
           value={isLoading ? "..." : String(naoVistos)}
         />
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-amber-50 rounded-xl"><CalendarDays className="w-5 h-5 text-amber-500" /></div>}
-          label="Último Alerta"
+          title="Último Alerta"
           value={isLoading ? "..." : (ultimo ? formatDate(ultimo.dataAlerta) : "—")}
         />
       </div>

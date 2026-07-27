@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Syringe, History, Calendar, Clock, Trash2, Plus } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import { Button } from "@/components/ui/Button";
+import MetricCard from "@/components/ui/MetricCard";
 import { Bufalo } from "@/services/bufalos.service";
 import { useVacinacaoByBufalo } from "@/hooks/useVacinacao";
 import type { Vacinacao } from "@/services/vacinacao.service";
@@ -27,22 +28,6 @@ function formatDate(value?: string | null) {
 
 function getMedicacao(reg: Vacinacao) {
   return reg.medicacoe ?? reg.medicacoes;
-}
-
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
-
-function MetricCard({
-  icon, label, value, valueClass = "text-zinc-800",
-}: { icon: React.ReactNode; label: string; value: string; valueClass?: string }) {
-  return (
-    <div className="flex items-center gap-4 bg-white border border-zinc-200 rounded-xl p-5">
-      <div className="flex-shrink-0">{icon}</div>
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{label}</p>
-        <p className={`text-lg font-bold ${valueClass}`}>{value}</p>
-      </div>
-    </div>
-  );
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
@@ -71,18 +56,21 @@ export function VacinacaoTab({ bufalo }: { bufalo: Bufalo }) {
       {/* ── Métricas ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-green-50 rounded-xl"><Syringe className="w-5 h-5 text-green-500" /></div>}
-          label="Total de Vacinações"
+          title="Total de Vacinações"
           value={isLoading ? "..." : String(total)}
         />
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-blue-50 rounded-xl"><History className="w-5 h-5 text-blue-500" /></div>}
-          label="Última Aplicação"
+          title="Última Aplicação"
           value={isLoading ? "..." : formatDate(ultimaAplicacao)}
         />
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-amber-50 rounded-xl"><Clock className="w-5 h-5 text-amber-500" /></div>}
-          label="Retornos Pendentes (página)"
+          title="Retornos Pendentes (página)"
           value={isLoading ? "..." : String(retornosPendentes)}
           valueClass={retornosPendentes > 0 ? "text-amber-600" : "text-zinc-800"}
         />

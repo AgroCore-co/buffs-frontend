@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import { Button } from "@/components/ui/Button";
+import MetricCard from "@/components/ui/MetricCard";
 import { useDadosSanitariosByBufalo } from "@/hooks/useDadosSanitarios";
 import { DadoSanitarioDetailsModal } from "./sanitario/DadoSanitarioDetailsModal";
 import { DeletedRegistrosModal } from "./sanitario/DeletedRegistrosModal";
@@ -56,20 +57,6 @@ const TIPO_ICONS: Record<TipoTratamento, React.ReactNode> = {
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
-function MetricCard({
-  icon, label, value, valueClass = "text-zinc-800",
-}: { icon: React.ReactNode; label: string; value: string; valueClass?: string }) {
-  return (
-    <div className="flex items-center gap-4 bg-white border border-zinc-200 rounded-xl p-5">
-      <div className="flex-shrink-0">{icon}</div>
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{label}</p>
-        <p className={`text-lg font-bold ${valueClass}`}>{value}</p>
-      </div>
-    </div>
-  );
-}
-
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 const LIMIT = 10;
@@ -104,19 +91,22 @@ export function SanitarioTab({ bufaloId, idPropriedade }: SanitarioTabProps) {
       {/* ── Métricas superiores ──────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-blue-50 rounded-xl"><Syringe className="w-5 h-5 text-blue-500" /></div>}
-          label={t("metrics.total")}
+          title={t("metrics.total")}
           value={isLoading ? "..." : String(total)}
         />
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-green-50 rounded-xl"><CheckCircle2 className="w-5 h-5 text-green-500" /></div>}
-          label={t("metrics.situation")}
+          title={t("metrics.situation")}
           value={isLoading ? "..." : situacaoDisplay}
           valueClass={situacaoColor}
         />
         <MetricCard
+          variant="plain"
           icon={<div className="p-2.5 bg-amber-50 rounded-xl"><History className="w-5 h-5 text-amber-500" /></div>}
-          label={t("metrics.lastApplication")}
+          title={t("metrics.lastApplication")}
           value={isLoading ? "..." : formatDate(ultimaAplicacao)}
         />
       </div>
