@@ -68,6 +68,13 @@ function withNonceCsp(request: NextRequest, baseResponse: NextResponse): NextRes
   const nonce = crypto.randomUUID();
   const csp = buildCsp(nonce);
 
+  // next-intl pode devolver um redirect (ex: "/" -> "/pt"). Recriar a resposta
+  // via NextResponse.next() descartaria o status 3xx e sobraria um 200 com
+  // header location — o browser não segue e a tela fica em branco.
+  if (baseResponse.status !== 200) {
+    return withCspOnly(baseResponse);
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
 
